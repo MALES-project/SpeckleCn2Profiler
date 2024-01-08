@@ -1,0 +1,16 @@
+Metadata-Version: 2.1
+Name: speckcn2
+Version: -VERSION-PLACEHOLDER-
+Summary: Estimate Cn2 from Speckle patterns
+Home-page: https://github.com/MALES-project/SpeckleCn2Profiler
+Author: Simone Ciarella
+Author-email: <s.ciarella@esciencecenter.com>
+License: UNKNOWN
+Keywords: python,optical satelites,machine learning,turbolence
+Platform: UNKNOWN
+Classifier: Development Status :: 1 - Planning
+Classifier: Intended Audience :: Education
+Classifier: Programming Language :: Python :: 3
+Classifier: Operating System :: Unix
+
+A Python package that uses machine learning to predict turbolence profiles from static patterns

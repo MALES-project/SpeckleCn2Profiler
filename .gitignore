@@ -1,0 +1,12 @@
+*.pkl
+*.swp
+tasks.json
+.DS_Store
+.vscode/
+
+tmp/
+__pycache__/
+build/
+.mypy_cache/
+.ruff_cache/
+pyrkm.egg-info/
