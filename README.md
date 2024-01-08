@@ -1,7 +1,7 @@
 [![Python application test](https://github.com/MALES-project/SpeckleCn2Profiler/actions/workflows/test.yaml/badge.svg)](https://github.com/MALES-project/SpeckleCn2Profiler/actions/workflows/test.yaml)
 
-![MALES banner](https://raw.githubusercontent.com/MALES-repos/SpeckleCn2Profiler/main/speckcn2/assets/logo_on_white.png#gh-light-mode-only)
-![MALES banner](https://raw.githubusercontent.com/MALES-repos/SpeckleCn2Profiler/main/speckcn2/assets/logo_on_black.png#gh-dark-mode-only)
+![MALES banner](https://raw.githubusercontent.com/MALES-project/SpeckleCn2Profiler/main/speckcn2/assets/logo_on_white.png#gh-light-mode-only)
+![MALES banner](https://raw.githubusercontent.com/MALES-project/SpeckleCn2Profiler/main/speckcn2/assets/logo_on_black.png#gh-dark-mode-only)
 
 # SpeckleCn2Profiler: Improving Satellite Communications with SCIDAR and Machine Learning
 
