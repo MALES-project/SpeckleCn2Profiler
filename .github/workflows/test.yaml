@@ -17,6 +17,11 @@ jobs:
       uses: actions/setup-python@v2
       with:
         python-version: 3.11
+    - name: Automatic requirements.txt for Python Project
+      uses: ryan-rozario/pipreqs-action@master
+      with:
+        PROJECT_PATH: speckcn2
+        REQUIREMENT_PATH: requirements.txt
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
