@@ -1,7 +1,7 @@
 import unittest
 import torch
 import matplotlib.pyplot as plt
-from your_module import tags_distribution
+from histos import tags_distribution
 
 
 class TestTagsDistribution(unittest.TestCase):

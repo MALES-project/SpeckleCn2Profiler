@@ -1,6 +1,6 @@
 import unittest
 import torch
-from your_module import test
+from mlops import test
 
 
 class TestMLOps(unittest.TestCase):
