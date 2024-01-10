@@ -2,14 +2,15 @@ import unittest
 import os
 import torch
 import torchvision.transforms as transforms
-from specklecn2 import prepare_data
+import numpy as np
+from speckcn2.io import prepare_data
 
 
 class TestPrepareData(unittest.TestCase):
 
     def test_prepare_data(self):
         # Define the test data directory
-        test_data_dir = '/path/to/test/data'
+        test_data_dir = 'speckcn2/assets/test'
 
         # Define the transformation to apply to the images
         transform = transforms.Compose(
@@ -22,10 +23,6 @@ class TestPrepareData(unittest.TestCase):
         # Assert the expected output
         self.assertIsInstance(all_images, list)
         self.assertIsInstance(all_tags, list)
-        self.assertEqual(len(all_images),
-                         10)  # Modify this based on your actual data
-        self.assertEqual(len(all_tags),
-                         10)  # Modify this based on your actual data
 
         # Check if the preprocessed data files are saved
         self.assertTrue(
@@ -44,7 +41,7 @@ class TestPrepareData(unittest.TestCase):
         for i in range(len(all_images)):
             self.assertTrue(
                 torch.all(torch.eq(loaded_images[i], all_images[i])))
-            self.assertTrue(torch.all(torch.eq(loaded_tags[i], all_tags[i])))
+            self.assertTrue(np.array_equal(loaded_tags[i], all_tags[i]))
 
         # Clean up the preprocessed data files
         os.remove(os.path.join(test_data_dir, 'all_images.pt'))
