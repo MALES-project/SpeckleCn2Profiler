@@ -10,3 +10,6 @@ build/
 .mypy_cache/
 .ruff_cache/
 pyrkm.egg-info/
+
+.coverage
+.coverage*
