@@ -1,12 +1,17 @@
 import matplotlib.pyplot as plt
 import numpy as np
+from typing import Callable, Optional
+from torch import Tensor
+from torch.utils.data import Dataset
+from torch import device as Device
 
 
-def tags_distribution(dataset,
-                      test_tags,
-                      device,
-                      rescale=False,
-                      recover_tag=None):
+def tags_distribution(
+        dataset: Dataset,
+        test_tags: Tensor,
+        device: Device,
+        rescale: bool = False,
+        recover_tag: Optional[Callable[[Tensor], Tensor]] = None) -> None:
     """Plots the distribution of the tags.
 
     Parameters
@@ -19,6 +24,8 @@ def tags_distribution(dataset,
         The device to use
     rescale : bool, optional
         Whether to rescale the tags using recover_tag() or leave them between 0 and 1
+    recover_tag : callable, optional
+        Function to recover a tag
     """
 
     train_tags = np.array([tag for _, tag in dataset])
@@ -32,7 +39,7 @@ def tags_distribution(dataset,
     # plot the distribution of each tag element
     fig, axs = plt.subplots(2, 4, figsize=(20, 10))
     for i in range(8):
-        if rescale:
+        if rescale and recover_tag is not None:
             axs[i // 4, i % 4].hist(recover_tag(predic_tags[:, i]),
                                     bins=20,
                                     color='tab:red',

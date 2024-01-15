@@ -20,6 +20,8 @@ setup(
         'torch',
         'torchvision',
         'scipy',
+        'pytest',
+        'coverage',
     ],
     keywords=['python', 'optical satelites', 'machine learning', 'turbolence'],
     classifiers=[

@@ -1,9 +1,11 @@
 import torch
 import torchvision
 import os
+from typing import Tuple
+from torch import nn
 
 
-def get_resnet50(nscreens, datadirectory):
+def get_resnet50(nscreens: int, datadirectory: str) -> Tuple[nn.Module, int]:
     """Returns a pretrained ResNet50 model, with the last layer corresponding
     to the number of screens.
 
@@ -38,7 +40,7 @@ def get_resnet50(nscreens, datadirectory):
     return load_model_state(model, datadirectory)
 
 
-def get_resnet152(nscreens, datadirectory):
+def get_resnet152(nscreens: int, datadirectory: str) -> Tuple[nn.Module, int]:
     """Returns a pretrained ResNet152 model, with the last layer corresponding
     to the number of screens.
 

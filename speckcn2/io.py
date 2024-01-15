@@ -3,9 +3,15 @@ import matplotlib.pyplot as plt
 from PIL import Image
 import os
 import numpy as np
+from typing import Callable, List, Tuple
+from torchvision.transforms import Compose
+from torch.utils.data import DataLoader
 
 
-def prepare_data(datadirectory, transform, nimg_print=5, nreps=1):
+def prepare_data(datadirectory: str,
+                 transform: Compose,
+                 nimg_print: int = 5,
+                 nreps: int = 1) -> Tuple[List, List]:
     """If not already available, preprocesses the data by loading images and
     tags from the given directory, applying a transformation to the images.
 
@@ -13,10 +19,12 @@ def prepare_data(datadirectory, transform, nimg_print=5, nreps=1):
     ----------
     datadirectory: str
         Path to the directory containing the data
-    transform: torchvision.transforms
+    transform: torchvision.transforms.Compose
         Transformation to apply to the images
     nimg_print: int
         Number of images to print
+    nreps: int
+        Number of repetitions for each image
 
     Returns
     -------
@@ -111,7 +119,10 @@ def prepare_data(datadirectory, transform, nimg_print=5, nreps=1):
     return all_images, all_tags
 
 
-def normalize_tags(all_images, all_tags):
+def normalize_tags(
+    all_images: List[torch.tensor], all_tags: List[np.ndarray]
+) -> Tuple[List[Tuple[torch.tensor, np.ndarray]], Callable[
+    [np.ndarray], np.ndarray], Callable[[np.ndarray], np.ndarray]]:
     """Normalize the tags to be between 0 and 1.
 
     Parameters
@@ -121,7 +132,8 @@ def normalize_tags(all_images, all_tags):
     all_tags : list
         List of all tags
 
-    Returns:
+    Returns
+    -------
     dataset : list
         List of tuples (image, normalized_tag)
     normalize_tag : function
@@ -132,7 +144,8 @@ def normalize_tags(all_images, all_tags):
 
     # I process the arrays of tags, such that each tag is a number between 0 and 1
     tags = [tag for tag in all_tags]
-    tags = np.array(tags)
+    #tags = np.array(tags, dtype=object)
+    tags = np.stack(tags)
 
     # I need to find the minimum and maximum value of each tag
     # I will use this to normalize the tags
@@ -155,7 +168,10 @@ def normalize_tags(all_images, all_tags):
     return dataset, normalize_tag, recover_tag
 
 
-def train_test_split(dataset, batch_size=32, train_test_split=0.8):
+def train_test_split(
+        dataset: List[Tuple[torch.tensor, float]],
+        batch_size: int = 32,
+        train_test_split: float = 0.8) -> Tuple[DataLoader, DataLoader]:
     """Splits the data into training and testing sets.
 
     Parameters

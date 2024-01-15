@@ -1,9 +1,14 @@
 import torch
 import matplotlib.pyplot as plt
+from torch import nn, optim, Tensor
+from torch.utils.data import DataLoader
+from typing import Callable, List, Tuple
 
 
-def train(model, last_model_state, final_epoch, train_loader, device,
-          optimizer, criterion):
+def train(model: nn.Module, last_model_state: int, final_epoch: int,
+          train_loader: DataLoader, device: torch.device,
+          optimizer: optim.Optimizer,
+          criterion: nn.Module) -> Tuple[nn.Module, float]:
     """Trains the model for the given number of epochs.
 
     Parameters
@@ -22,6 +27,13 @@ def train(model, last_model_state, final_epoch, train_loader, device,
         The optimizer to use
     criterion : torch.nn
         The loss function to use
+
+    Returns
+    -------
+    model : torch.nn.Module
+        The trained model
+    average_loss : float
+        The average loss of the last epoch
     """
 
     average_loss = 0.0
@@ -56,7 +68,12 @@ def train(model, last_model_state, final_epoch, train_loader, device,
     return model, average_loss
 
 
-def test(model, test_loader, device, criterion, recover_tag, nimg_plot=20):
+def score(model: nn.Module,
+          test_loader: DataLoader,
+          device: torch.device,
+          criterion: nn.Module,
+          recover_tag: Callable[[Tensor], Tensor],
+          nimg_plot: int = 20) -> List[Tensor]:
     """Tests the model.
 
     Parameters
