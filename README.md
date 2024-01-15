@@ -1,4 +1,5 @@
 [![Python application test](https://github.com/MALES-project/SpeckleCn2Profiler/actions/workflows/test.yaml/badge.svg)](https://github.com/MALES-project/SpeckleCn2Profiler/actions/workflows/test.yaml)
+[![FAIR checklist badge](https://fairsoftwarechecklist.net/badge.svg)](https://fairsoftwarechecklist.net/v0.2?f=31&a=30110&i=21202&r=132)
 
 ![MALES banner](https://raw.githubusercontent.com/MALES-project/SpeckleCn2Profiler/main/speckcn2/assets/logo_on_white.png#gh-light-mode-only)
 ![MALES banner](https://raw.githubusercontent.com/MALES-project/SpeckleCn2Profiler/main/speckcn2/assets/logo_on_black.png#gh-dark-mode-only)
