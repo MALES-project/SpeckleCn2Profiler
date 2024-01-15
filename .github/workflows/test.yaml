@@ -23,6 +23,13 @@ jobs:
       with:
         PROJECT_PATH: speckcn2
         REQUIREMENT_PATH: requirements.txt
+    - name: Cache dependencies
+      uses: actions/cache@v2
+      with:
+        path: ~/.cache/pip
+        key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+        restore-keys: |
+          ${{ runner.os }}-pip-
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
@@ -30,6 +37,7 @@ jobs:
 
     - name: Test with pytest
       run: |
+          pip install pytest coverage
           coverage run -p -m pytest
 
     - name: Combine

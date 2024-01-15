@@ -20,10 +20,11 @@ setup(
         'torch',
         'torchvision',
         'scipy',
-        'pytest',
-        'coverage',
     ],
-    keywords=['python', 'optical satelites', 'machine learning', 'turbolence'],
+    keywords=[
+        'python', 'optical satelites', 'machine learning', 'turbolence',
+        'laser communication'
+    ],
     classifiers=[
         'Development Status :: 1 - Planning',
         'Intended Audience :: Education',
