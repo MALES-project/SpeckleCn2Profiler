@@ -22,6 +22,7 @@ def test_score():
                       device,
                       criterion,
                       recover_tag,
+                      data_dir='speckcn2/assets/test',
                       nimg_plot=1)
 
     # Assert the expected output

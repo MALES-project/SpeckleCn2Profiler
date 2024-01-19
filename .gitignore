@@ -4,10 +4,12 @@ tasks.json
 .DS_Store
 .vscode/
 
+.mypy_cache/
+.mypy*
+
 tmp/
 __pycache__/
 build/
-.mypy_cache/
 .ruff_cache/
 pyrkm.egg-info/
 

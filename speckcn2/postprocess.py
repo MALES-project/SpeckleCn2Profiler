@@ -1,3 +1,4 @@
+import os
 import matplotlib.pyplot as plt
 import numpy as np
 from typing import Callable, Optional
@@ -10,6 +11,7 @@ def tags_distribution(
         dataset: Dataset,
         test_tags: Tensor,
         device: Device,
+        data_directory: str,
         rescale: bool = False,
         recover_tag: Optional[Callable[[Tensor], Tensor]] = None) -> None:
     """Plots the distribution of the tags.
@@ -22,11 +24,17 @@ def tags_distribution(
         The predicted tags for the test dataset
     device : torch.device
         The device to use
+    data_directory : str
+        The directory where the data is stored
     rescale : bool, optional
         Whether to rescale the tags using recover_tag() or leave them between 0 and 1
     recover_tag : callable, optional
         Function to recover a tag
     """
+
+    # create a folder to store the plots
+    if not os.path.isdir(f'{data_directory}/plots'):
+        os.mkdir(f'{data_directory}/plots')
 
     train_tags = np.array([tag for _, tag in dataset])
     predic_tags = np.array([n.cpu().numpy() for n in test_tags])
@@ -67,4 +75,5 @@ def tags_distribution(
                                     label='Training data')
         axs[i // 4, i % 4].set_title(f'Tag {i}')
     axs[0, 1].legend()
-    plt.show()
+    plt.savefig(f'{data_directory}/plots/tags_distribution.png')
+    plt.close()

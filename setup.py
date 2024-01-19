@@ -20,6 +20,7 @@ setup(
         'torch',
         'torchvision',
         'scipy',
+        'PyYAML',
     ],
     keywords=[
         'python', 'optical satelites', 'machine learning', 'turbolence',

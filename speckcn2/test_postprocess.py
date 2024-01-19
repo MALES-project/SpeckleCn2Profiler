@@ -1,8 +1,8 @@
-import io
+import io  # type: ignore
 import torch
 from contextlib import redirect_stdout
 import matplotlib.pyplot as plt
-from speckcn2.histos import tags_distribution
+from speckcn2.postprocess import tags_distribution
 
 
 def test_tags_distribution():
@@ -14,7 +14,11 @@ def test_tags_distribution():
     # Temporarily redirect stdout to a string buffer
     with io.StringIO() as buf, redirect_stdout(buf):
         # Call the function
-        tags_distribution(dataset, test_tags, device, rescale=False)
+        tags_distribution(dataset,
+                          test_tags,
+                          device,
+                          data_directory='speckcn2/assets/test',
+                          rescale=False)
 
         # Now we can check if the print statements in your function are as expected
         assert 'Data shape:' in buf.getvalue()

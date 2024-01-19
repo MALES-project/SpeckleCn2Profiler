@@ -1,3 +1,4 @@
+import os
 import torch
 import matplotlib.pyplot as plt
 from torch import nn, optim, Tensor
@@ -5,7 +6,7 @@ from torch.utils.data import DataLoader
 from typing import Callable, List, Tuple
 
 
-def train(model: nn.Module, last_model_state: int, final_epoch: int,
+def train(model: nn.Module, last_model_state: int, conf: dict,
           train_loader: DataLoader, device: torch.device,
           optimizer: optim.Optimizer,
           criterion: nn.Module) -> Tuple[nn.Module, float]:
@@ -17,8 +18,8 @@ def train(model: nn.Module, last_model_state: int, final_epoch: int,
         The model to train
     last_model_state : int
         The number of the last model state
-    final_epoch : int
-        The final epoch
+    conf : dict
+        Dictionary containing the configuration
     train_loader : torch.utils.data.DataLoader
         The training data loader
     device : torch.device
@@ -36,6 +37,11 @@ def train(model: nn.Module, last_model_state: int, final_epoch: int,
         The average loss of the last epoch
     """
 
+    final_epoch = conf['hyppar']['maxepochs']
+    save_every = conf['model']['save_every']
+    datadirectory = conf['speckle']['datadirectory']
+
+    print(f'Training the model from epoch {last_model_state} to {final_epoch}')
     average_loss = 0.0
     for epoch in range(last_model_state, final_epoch):
         total_loss = 0.0
@@ -65,6 +71,11 @@ def train(model: nn.Module, last_model_state: int, final_epoch: int,
         print(
             f'Epoch {epoch+1}/{final_epoch}, Average Loss: {average_loss:.4f}')
 
+        if (epoch + 1) % save_every == 0 or epoch == final_epoch - 1:
+            # Save the model state
+            torch.save(model.state_dict(),
+                       f'{datadirectory}/model_states/model_{epoch+1}.pth')
+
     return model, average_loss
 
 
@@ -73,6 +84,7 @@ def score(model: nn.Module,
           device: torch.device,
           criterion: nn.Module,
           recover_tag: Callable[[Tensor], Tensor],
+          data_dir: str,
           nimg_plot: int = 20) -> List[Tensor]:
     """Tests the model.
 
@@ -88,6 +100,8 @@ def score(model: nn.Module,
         The loss function to use
     recover_tag : function
         Function to recover a tag
+    data_dir : str
+        The directory where the data is stored
     nimg_plot : int
         Number of images to plot
 
@@ -99,6 +113,9 @@ def score(model: nn.Module,
 
     with torch.no_grad():
         test_tags = []
+        # create the directory where the images will be stored
+        if not os.path.isdir(f'{data_dir}/score_images'):
+            os.mkdir(f'{data_dir}/score_images')
         for idx, (inputs, tags) in enumerate(test_loader):
             # Move input and label tensors to the device
             inputs = inputs.to(device)
@@ -109,13 +126,13 @@ def score(model: nn.Module,
             loss = criterion(outputs, tags)
 
             # Print the loss for every epoch
-            print(f'Loss: {loss.item():.4f}')
+            print(f'Item {idx} loss: {loss.item():.4f}')
 
             if idx < nimg_plot:
                 # Plot the image and output side by side
                 fig, axs = plt.subplots(1, 3, figsize=(9, 2.5))
                 axs[0].imshow(inputs[0].detach().cpu().squeeze(), cmap='bone')
-                axs[0].set_title('Test Image')
+                axs[0].set_title('Loss: {:.4f}'.format(loss.item()))
                 axs[1].plot(10**(recover_tag(tags[0].detach().cpu().numpy())),
                             'o',
                             label='True')
@@ -135,7 +152,8 @@ def score(model: nn.Module,
                 axs[2].set_title('Unnormalized out')
                 axs[2].set_ylim(0, 1)
                 axs[2].legend()
-                plt.show()
+                plt.savefig(f'{data_dir}/score_images/score_{idx}.png')
+                plt.close()
 
             # and get all the tags for statistic analysis
             for tag in tags:

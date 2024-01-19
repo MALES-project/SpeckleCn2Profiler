@@ -1,0 +1,12 @@
+speckle:
+  nscreens: 8
+  original_res: 1024
+  datadirectory: /home/simone/Dropbox/eScience_projects/MALES-project/8screens_1024x1024
+model:
+  type: resnet50
+hyppar:
+  maxepoch: 5
+  batch_size: 32
+  lr: 0.001
+  criterion: MSE
+  optimizer: Adam
