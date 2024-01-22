@@ -23,7 +23,7 @@ def setup_model(config: dict) -> Tuple[nn.Module, int]:
     """
 
     model_name = config['model']['name']
-    model_type = config['model']['name']
+    model_type = config['model']['type']
     nscreens = config['speckle']['nscreens']
     data_directory = config['speckle']['datadirectory']
 
