@@ -11,14 +11,19 @@ def test_tags_distribution():
     test_tags = torch.rand((8, 32))
     device = torch.device('cpu')
 
+    conf = {
+        'model': {
+            'name': 'test_model',
+        },
+        'speckle': {
+            'datadirectory': 'speckcn2/assets/test'
+        }
+    }
+
     # Temporarily redirect stdout to a string buffer
     with io.StringIO() as buf, redirect_stdout(buf):
         # Call the function
-        tags_distribution(dataset,
-                          test_tags,
-                          device,
-                          data_directory='speckcn2/assets/test',
-                          rescale=False)
+        tags_distribution(conf, dataset, test_tags, device, rescale=False)
 
         # Now we can check if the print statements in your function are as expected
         assert 'Data shape:' in buf.getvalue()

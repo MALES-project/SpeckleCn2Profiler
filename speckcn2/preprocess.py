@@ -8,7 +8,7 @@ from torchvision.transforms import Compose
 from torch.utils.data import DataLoader
 
 
-def prepare_data(datadirectory: str,
+def prepare_data(conf: dict,
                  transform: Compose,
                  nimg_print: int = 5,
                  nreps: int = 1) -> Tuple[List, List]:
@@ -17,8 +17,8 @@ def prepare_data(datadirectory: str,
 
     Parameters
     ----------
-    datadirectory: str
-        Path to the directory containing the data
+    conf : dict
+        Dictionary containing the configuration
     transform: torchvision.transforms.Compose
         Transformation to apply to the images
     nimg_print: int
@@ -34,12 +34,17 @@ def prepare_data(datadirectory: str,
         List of all tags
     """
 
+    datadirectory = conf['speckle']['datadirectory']
+    mname = conf['model']['name']
+
     # First, check if the data has already been preprocessed
-    if os.path.exists(os.path.join(datadirectory, 'all_images.pt')):
+    if os.path.exists(os.path.join(datadirectory, f'all_images_{mname}.pt')):
         print('*** Loading preprocessed data')
         # If so, load it
-        all_images = torch.load(os.path.join(datadirectory, 'all_images.pt'))
-        all_tags = torch.load(os.path.join(datadirectory, 'all_tags.pt'))
+        all_images = torch.load(
+            os.path.join(datadirectory, f'all_images_{mname}.pt'))
+        all_tags = torch.load(
+            os.path.join(datadirectory, f'all_tags_{mname}.pt'))
         return all_images, all_tags
 
     # Otherwise, preprocess the raw data:
@@ -56,8 +61,8 @@ def prepare_data(datadirectory: str,
     if nimg_print > 0:
         show_image = True
         # and create a folder to store the images
-        if not os.path.isdir(f'{datadirectory}/images'):
-            os.mkdir(f'{datadirectory}/images')
+        if not os.path.isdir(f'{datadirectory}/images_{mname}'):
+            os.mkdir(f'{datadirectory}/images_{mname}')
     else:
         show_image = False
 
@@ -106,7 +111,7 @@ def prepare_data(datadirectory: str,
                 axs[1].legend()
 
                 fig.subplots_adjust(wspace=0.3)
-                plt.savefig(f'{datadirectory}/images/{counter}.png')
+                plt.savefig(f'{datadirectory}/images_{mname}/{counter}.png')
                 plt.close()
 
             # Preprocess the tags
@@ -116,8 +121,11 @@ def prepare_data(datadirectory: str,
             all_tags.append(tags)
 
     # Finally, store them before returning
-    torch.save(all_images, os.path.join(datadirectory, 'all_images.pt'))
-    torch.save(all_tags, os.path.join(datadirectory, 'all_tags.pt'))
+    torch.save(all_images, os.path.join(datadirectory,
+                                        f'all_images_{mname}.pt'))
+    torch.save(all_tags, os.path.join(datadirectory, f'all_tags_{mname}.pt'))
+
+    print('*** Preprocessing complete.', flush=True)
 
     return all_images, all_tags
 

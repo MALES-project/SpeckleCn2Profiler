@@ -8,16 +8,18 @@ from torch import device as Device
 
 
 def tags_distribution(
+        conf: dict,
         dataset: Dataset,
         test_tags: Tensor,
         device: Device,
-        data_directory: str,
         rescale: bool = False,
         recover_tag: Optional[Callable[[Tensor], Tensor]] = None) -> None:
     """Plots the distribution of the tags.
 
     Parameters
     ----------
+    conf : dict
+        Dictionary containing the configuration
     dataset : torch.utils.data.Dataset
         The dataset used for training
     test_tags : torch.Tensor
@@ -32,9 +34,12 @@ def tags_distribution(
         Function to recover a tag
     """
 
+    data_directory = conf['speckle']['datadirectory']
+    model_name = conf['model']['name']
+
     # create a folder to store the plots
-    if not os.path.isdir(f'{data_directory}/plots'):
-        os.mkdir(f'{data_directory}/plots')
+    if not os.path.isdir(f'{data_directory}/{model_name}_plots'):
+        os.mkdir(f'{data_directory}/{model_name}_plots')
 
     train_tags = np.array([tag for _, tag in dataset])
     predic_tags = np.array([n.cpu().numpy() for n in test_tags])
@@ -75,5 +80,5 @@ def tags_distribution(
                                     label='Training data')
         axs[i // 4, i % 4].set_title(f'Tag {i}')
     axs[0, 1].legend()
-    plt.savefig(f'{data_directory}/plots/tags_distribution.png')
+    plt.savefig(f'{data_directory}/{model_name}_plots/tags_distribution.png')
     plt.close()

@@ -23,20 +23,22 @@ def setup_model(config: dict) -> Tuple[nn.Module, int]:
     """
 
     model_name = config['model']['name']
+    model_type = config['model']['name']
     nscreens = config['speckle']['nscreens']
     data_directory = config['speckle']['datadirectory']
 
-    if model_name == 'resnet18':
-        return get_resnet18(nscreens, data_directory)
-    elif model_name == 'resnet50':
-        return get_resnet50(nscreens, data_directory)
-    elif model_name == 'resnet152':
-        return get_resnet152(nscreens, data_directory)
+    if model_type == 'resnet18':
+        return get_resnet18(nscreens, data_directory, model_name)
+    elif model_type == 'resnet50':
+        return get_resnet50(nscreens, data_directory, model_name)
+    elif model_type == 'resnet152':
+        return get_resnet152(nscreens, data_directory, model_name)
     else:
         raise ValueError(f'Unknown model {model_name}')
 
 
-def get_resnet18(nscreens: int, datadirectory: str) -> Tuple[nn.Module, int]:
+def get_resnet18(nscreens: int, datadirectory: str,
+                 model_name: str) -> Tuple[nn.Module, int]:
     """Returns a pretrained ResNet18 model, with the last layer corresponding
     to the number of screens.
 
@@ -46,6 +48,8 @@ def get_resnet18(nscreens: int, datadirectory: str) -> Tuple[nn.Module, int]:
         Number of screens
     datadirectory : str
         Path to the directory containing the data
+    model_name : str
+        The name of the model
 
     Returns
     -------
@@ -56,6 +60,9 @@ def get_resnet18(nscreens: int, datadirectory: str) -> Tuple[nn.Module, int]:
     """
 
     model = torchvision.models.resnet18(pretrained=True)
+
+    # give it its name
+    model.name = model_name
 
     # Change the model to process black and white input
     model.conv1 = torch.nn.Conv2d(1,
@@ -71,7 +78,8 @@ def get_resnet18(nscreens: int, datadirectory: str) -> Tuple[nn.Module, int]:
     return load_model_state(model, datadirectory)
 
 
-def get_resnet50(nscreens: int, datadirectory: str) -> Tuple[nn.Module, int]:
+def get_resnet50(nscreens: int, datadirectory: str,
+                 model_name: str) -> Tuple[nn.Module, int]:
     """Returns a pretrained ResNet50 model, with the last layer corresponding
     to the number of screens.
 
@@ -81,6 +89,8 @@ def get_resnet50(nscreens: int, datadirectory: str) -> Tuple[nn.Module, int]:
         Number of screens
     datadirectory : str
         Path to the directory containing the data
+    model_name : str
+        The name of the model
 
     Returns
     -------
@@ -92,6 +102,9 @@ def get_resnet50(nscreens: int, datadirectory: str) -> Tuple[nn.Module, int]:
 
     model = torchvision.models.resnet50(pretrained=True)
 
+    # give it its name
+    model.name = model_name
+
     # Change the model to process black and white input
     model.conv1 = torch.nn.Conv2d(1,
                                   64,
@@ -106,7 +119,8 @@ def get_resnet50(nscreens: int, datadirectory: str) -> Tuple[nn.Module, int]:
     return load_model_state(model, datadirectory)
 
 
-def get_resnet152(nscreens: int, datadirectory: str) -> Tuple[nn.Module, int]:
+def get_resnet152(nscreens: int, datadirectory: str,
+                  model_name: str) -> Tuple[nn.Module, int]:
     """Returns a pretrained ResNet152 model, with the last layer corresponding
     to the number of screens.
 
@@ -116,6 +130,8 @@ def get_resnet152(nscreens: int, datadirectory: str) -> Tuple[nn.Module, int]:
         Number of screens
     datadirectory : str
         Path to the directory containing the data
+    model_name : str
+        The name of the model
 
     Returns
     -------
@@ -127,6 +143,9 @@ def get_resnet152(nscreens: int, datadirectory: str) -> Tuple[nn.Module, int]:
 
     model = torchvision.models.resnet152(weights='IMAGENET1K_V2')
 
+    # give it its name
+    model.name = model_name
+
     # Change the model to process black and white input
     model.conv1 = torch.nn.Conv2d(1,
                                   64,
@@ -141,7 +160,8 @@ def get_resnet152(nscreens: int, datadirectory: str) -> Tuple[nn.Module, int]:
     return load_model_state(model, datadirectory)
 
 
-def load_model_state(model, datadirectory):
+def load_model_state(model: nn.Module,
+                     datadirectory: str) -> Tuple[nn.Module, int]:
     """Loads the model state from the given directory.
 
     Parameters
@@ -160,14 +180,14 @@ def load_model_state(model, datadirectory):
     """
 
     # If no model is stored, create the folder
-    if not os.path.isdir(f'{datadirectory}/model_states'):
-        os.mkdir(f'{datadirectory}/model_states')
+    if not os.path.isdir(f'{datadirectory}/{model.name}_states'):
+        os.mkdir(f'{datadirectory}/{model.name}_states')
 
     # check what is the last model state
     try:
         last_model_state = sorted([
             int(file_name.split('.pth')[0].split('_')[-1])
-            for file_name in os.listdir(f'{datadirectory}/model_states')
+            for file_name in os.listdir(f'{datadirectory}/{model.name}_states')
         ])[-1]
     except Exception as e:
         print(f'Warning: {e}')
@@ -177,7 +197,8 @@ def load_model_state(model, datadirectory):
         print(f'Loading model at epoch {last_model_state}')
         model.load_state_dict(
             torch.load(
-                f'{datadirectory}/model_states/model_{last_model_state}.pth'))
+                f'{datadirectory}/{model.name}_states/{model.name}_{last_model_state}.pth'
+            ))
         return model, last_model_state
     else:
         print('No pretrained model to load')

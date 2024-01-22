@@ -69,12 +69,15 @@ def train(model: nn.Module, last_model_state: int, conf: dict,
 
         # Print the average loss for every epoch
         print(
-            f'Epoch {epoch+1}/{final_epoch}, Average Loss: {average_loss:.4f}')
+            f'Epoch {epoch+1}/{final_epoch}, Average Loss: {average_loss:.5f}',
+            flush=True)
 
         if (epoch + 1) % save_every == 0 or epoch == final_epoch - 1:
             # Save the model state
-            torch.save(model.state_dict(),
-                       f'{datadirectory}/model_states/model_{epoch+1}.pth')
+            torch.save(
+                model.state_dict(),
+                f'{datadirectory}/{model.name}_states/{model.name}_{epoch+1}.pth'
+            )
 
     return model, average_loss
 
@@ -85,7 +88,7 @@ def score(model: nn.Module,
           criterion: nn.Module,
           recover_tag: Callable[[Tensor], Tensor],
           data_dir: str,
-          nimg_plot: int = 20) -> List[Tensor]:
+          nimg_plot: int = 1000) -> List[Tensor]:
     """Tests the model.
 
     Parameters
@@ -114,8 +117,8 @@ def score(model: nn.Module,
     with torch.no_grad():
         test_tags = []
         # create the directory where the images will be stored
-        if not os.path.isdir(f'{data_dir}/score_images'):
-            os.mkdir(f'{data_dir}/score_images')
+        if not os.path.isdir(f'{data_dir}/score_{model.name}'):
+            os.mkdir(f'{data_dir}/score_{model.name}')
         for idx, (inputs, tags) in enumerate(test_loader):
             # Move input and label tensors to the device
             inputs = inputs.to(device)
@@ -152,7 +155,7 @@ def score(model: nn.Module,
                 axs[2].set_title('Unnormalized out')
                 axs[2].set_ylim(0, 1)
                 axs[2].legend()
-                plt.savefig(f'{data_dir}/score_images/score_{idx}.png')
+                plt.savefig(f'{data_dir}/score_{model.name}/score_{idx}.png')
                 plt.close()
 
             # and get all the tags for statistic analysis

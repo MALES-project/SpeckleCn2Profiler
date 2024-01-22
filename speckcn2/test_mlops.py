@@ -7,6 +7,7 @@ def test_score():
     dmodel = torch.nn.Sequential(torch.nn.Flatten(),
                                  torch.nn.Linear(32 * 32, 1024),
                                  torch.nn.ReLU(), torch.nn.Linear(1024, 8))
+    dmodel.name = 'test_model'
     # Create a dummy test loader
     dataset = [(torch.rand(1, 1, 32, 32), torch.rand(1, 8)) for _ in range(32)]
     test_loader = torch.utils.data.DataLoader(dataset)
