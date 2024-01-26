@@ -28,7 +28,7 @@ setup(
         'laser communication'
     ],
     classifiers=[
-        'Development Status :: 2 - Pre-alpha',
+        'Development Status :: 2 - Pre-Alpha',
         'Intended Audience :: Science/Research',
         'Programming Language :: Python :: 3',
         'Programming Language :: Python :: 3.10',

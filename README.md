@@ -10,8 +10,8 @@ Uncomment for the correct banners when the repo is public
 ![MALES banner](https://raw.githubusercontent.com/MALES-project/SpeckleCn2Profiler/main/speckcn2/assets/logo_on_black.png#gh-dark-mode-only)
 -->
 
-![MALES banner](https://raw.githubusercontent.com/MALES-project/SpeckleCn2Profiler/main/speckcn2/assets/logo_on_white.png?token=GHSAT0AAAAAACIRDCHC3ZRFZKSPZRYVQQYMZNTN34A#gh-light-mode-only)
-![MALES banner](https://raw.githubusercontent.com/MALES-project/SpeckleCn2Profiler/main/speckcn2/assets/logo_on_black.png?token=GHSAT0AAAAAACIRDCHCGRBF6OEO3JATAUFKZNTN2FA#gh-dark-mode-only)
+![MALES banner](https://github.com/MALES-project/SpeckleCn2Profiler/blob/main/speckcn2/assets/logo_on_white.png#gh-light-mode-only)
+![MALES banner](https://github.com/MALES-project/SpeckleCn2Profiler/blob/main/speckcn2/assets/logo_on_black.png#gh-dark-mode-only)
 
 # SpeckleCn2Profiler: Improving Satellite Communications with SCIDAR and Machine Learning
 
