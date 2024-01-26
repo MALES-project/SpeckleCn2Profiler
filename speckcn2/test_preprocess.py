@@ -1,6 +1,5 @@
 import os
 import torch
-import torchvision.transforms as transforms
 import numpy as np
 from speckcn2.preprocess import prepare_data
 
@@ -9,22 +8,24 @@ def test_prepare_data(tmpdir):
     # Define the test data directory
     test_data_dir = 'speckcn2/assets/test'
 
-    # Define the transformation to apply to the images
-    transform = transforms.Compose(
-        [transforms.Resize((256, 256)),
-         transforms.ToTensor()])
-
     conf = {
         'speckle': {
             'datadirectory': test_data_dir
         },
         'model': {
             'name': 'test_model'
+        },
+        'preproc': {
+            'polarize': False,
+            'equivariant': False,
+            'randomrotate': False,
+            'centercrop': 100,
+            'resize': 100,
         }
     }
 
     # Call the function
-    all_images, all_tags = prepare_data(conf, transform)
+    all_images, all_tags = prepare_data(conf)
 
     # Assert the expected output
     assert isinstance(all_images, list)

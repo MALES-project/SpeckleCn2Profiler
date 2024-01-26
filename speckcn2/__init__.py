@@ -8,5 +8,6 @@ from .postprocess import tags_distribution
 
 __all__ = [
     'prepare_data', 'normalize_tags', 'train_test_split', 'setup_model',
-    'get_a_resnet', 'setup_loss', 'setup_optimizer', 'train', 'score', 'tags_distribution'
+    'get_a_resnet', 'setup_loss', 'setup_optimizer', 'train', 'score',
+    'tags_distribution'
 ]

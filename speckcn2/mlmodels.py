@@ -27,16 +27,16 @@ def setup_model(config: dict) -> Tuple[nn.Module, int]:
     nscreens = config['speckle']['nscreens']
     data_directory = config['speckle']['datadirectory']
 
-    if model_type in ['resnet18','resnet50','resnet152']:
+    if model_type in ['resnet18', 'resnet50', 'resnet152']:
         return get_a_resnet(nscreens, data_directory, model_name, model_type)
     else:
         raise ValueError(f'Unknown model {model_name}')
 
 
-def get_a_resnet(nscreens: int, datadirectory: str,
-                 model_name: str, model_type: str) -> Tuple[nn.Module, int]:
-    """Returns a pretrained ResNet model, with the last layer corresponding
-    to the number of screens.
+def get_a_resnet(nscreens: int, datadirectory: str, model_name: str,
+                 model_type: str) -> Tuple[nn.Module, int]:
+    """Returns a pretrained ResNet model, with the last layer corresponding to
+    the number of screens.
 
     Parameters
     ----------
@@ -81,7 +81,6 @@ def get_a_resnet(nscreens: int, datadirectory: str,
                                    torch.nn.Sigmoid())
 
     return load_model_state(model, datadirectory)
-
 
 
 def load_model_state(model: nn.Module,

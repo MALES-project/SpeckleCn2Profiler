@@ -24,8 +24,9 @@ def assemble_transform(conf: dict) -> transforms.Compose:
     list_transforms = []
 
     if conf['preproc']['centercrop']:
-        # Take only the center of the image 
-        list_transforms.append(transforms.CenterCrop(conf['preproc']['centercrop']))
+        # Take only the center of the image
+        list_transforms.append(
+            transforms.CenterCrop(conf['preproc']['centercrop']))
 
     if conf['preproc']['polarize']:
         # make the image larger for better polar conversion
@@ -39,20 +40,22 @@ def assemble_transform(conf: dict) -> transforms.Compose:
 
     if conf['preproc']['resize']:
         # Optionally, downscale it
-        list_transforms.append(transforms.Resize((conf['preproc']['resize'],conf['preproc']['resize'])))
+        list_transforms.append(
+            transforms.Resize(
+                (conf['preproc']['resize'], conf['preproc']['resize'])))
 
     if conf['preproc']['equivariant']:
         # Apply the equivariant transform
         list_transforms.append(ShiftRowsTransform())
 
     list_transforms.append(transforms.ToTensor())
-    
+
     return transforms.Compose(list_transforms)
 
 
 class PolarCoordinateTransform(torch.nn.Module):
-    """ Transform a Cartesian image to polar coordinates.
-    """
+    """Transform a Cartesian image to polar coordinates."""
+
     def __init__(self):
         super(PolarCoordinateTransform, self).__init__()
 
@@ -64,7 +67,7 @@ class PolarCoordinateTransform(torch.nn.Module):
         Returns:
             PIL Image or Tensor: Rescaled image.
         """
-        
+
         img = np.array(img)  # Convert PIL image to NumPy array
 
         # Assuming img is a grayscale image
@@ -92,24 +95,21 @@ class PolarCoordinateTransform(torch.nn.Module):
         r = np.round(r * (height - 1) / max_r).astype(int)
 
         # Rescale theta to [0, width)
-        theta = np.round((theta + 2 * np.pi) % (2 * np.pi) * (width - 1) / (2 * np.pi)).astype(int)
+        theta = np.round((theta + 2 * np.pi) % (2 * np.pi) * (width - 1) /
+                         (2 * np.pi)).astype(int)
 
         # Use a 2D histogram to accumulate all values that map to the same polar coordinate
-        histogram, _, _ = np.histogram2d(
-            theta.flatten(),
-            r.flatten(),
-            bins=[height, width],
-            range=[[0, height], [0, width]],
-            weights=img.flatten()
-        )
+        histogram, _, _ = np.histogram2d(theta.flatten(),
+                                         r.flatten(),
+                                         bins=[height, width],
+                                         range=[[0, height], [0, width]],
+                                         weights=img.flatten())
 
         # Count how many Cartesian coordinates map to each polar coordinate
-        counts, _, _ = np.histogram2d(
-            theta.flatten(),
-            r.flatten(),
-            bins=[height, width],
-            range=[[0, height], [0, width]]
-        )
+        counts, _, _ = np.histogram2d(theta.flatten(),
+                                      r.flatten(),
+                                      bins=[height, width],
+                                      range=[[0, height], [0, width]])
 
         # Take the average of all values that map to the same polar coordinate
         polar_image = histogram / counts
@@ -130,8 +130,9 @@ class PolarCoordinateTransform(torch.nn.Module):
 
 
 class ShiftRowsTransform(torch.nn.Module):
-    """ Shift the rows of an image such that the row with the largest sum is at the top.
-    """
+    """Shift the rows of an image such that the row with the largest sum is at
+    the top."""
+
     def __init__(self):
         super(ShiftRowsTransform, self).__init__()
 
@@ -253,11 +254,11 @@ def prepare_data(conf: dict,
                 axs[0].set_title(f'Training Image {file_name}')
                 # Plot the preprocessd image
                 axs[1].imshow(image.squeeze(), cmap='bone')
-                axs[1].set_title(f'Processed as')
+                axs[1].set_title('Processed as')
                 axs[1].set_xlabel(r'$r$')
                 axs[1].set_ylabel(r'$\theta$')
 
-                # Plot the tags 
+                # Plot the tags
                 axs[2].plot(tags, 'o')
                 axs[2].set_yscale('log')
                 axs[2].set_title('Screen Tags')
