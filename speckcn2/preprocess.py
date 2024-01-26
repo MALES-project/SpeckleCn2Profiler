@@ -4,12 +4,152 @@ from PIL import Image
 import os
 import numpy as np
 from typing import Callable, List, Tuple
-from torchvision.transforms import Compose
+import torchvision.transforms as transforms
 from torch.utils.data import DataLoader
 
 
+def assemble_transform(conf: dict) -> transforms.Compose:
+    """Assembles the transformation to apply to each image.
+
+    Parameters
+    ----------
+    conf : dict
+        Dictionary containing the configuration
+
+    Returns
+    -------
+    transform : torchvision.transforms.Compose
+        Transformation to apply to the images
+    """
+    list_transforms = []
+
+    if conf['preproc']['centercrop']:
+        # Take only the center of the image 
+        list_transforms.append(transforms.CenterCrop(conf['preproc']['centercrop']))
+
+    if conf['preproc']['polarize']:
+        # make the image larger for better polar conversion
+        list_transforms.append(transforms.Resize(conf['preproc']['polresize']))
+        # Convert to polar coordinates
+        list_transforms.append(PolarCoordinateTransform())
+
+    if conf['preproc']['randomrotate'] and not conf['preproc']['polarize']:
+        # Randomly rotate the image, since it is symmetric (not if it is polarized)
+        list_transforms.append(transforms.RandomRotation(degrees=(-180, 180)))
+
+    if conf['preproc']['resize']:
+        # Optionally, downscale it
+        list_transforms.append(transforms.Resize((conf['preproc']['resize'],conf['preproc']['resize'])))
+
+    if conf['preproc']['equivariant']:
+        # Apply the equivariant transform
+        list_transforms.append(ShiftRowsTransform())
+
+    list_transforms.append(transforms.ToTensor())
+    
+    return transforms.Compose(list_transforms)
+
+
+class PolarCoordinateTransform(torch.nn.Module):
+    """ Transform a Cartesian image to polar coordinates.
+    """
+    def __init__(self):
+        super(PolarCoordinateTransform, self).__init__()
+
+    def forward(self, img):
+        """ forward method of the transform
+        Args:
+            img (PIL Image or Tensor): Image to be scaled.
+
+        Returns:
+            PIL Image or Tensor: Rescaled image.
+        """
+        
+        img = np.array(img)  # Convert PIL image to NumPy array
+
+        # Assuming img is a grayscale image
+        height, width = img.shape
+        polar_image = np.zeros_like(img)
+
+        # Center of the image
+        center_x, center_y = width // 2, height // 2
+
+        # Maximum possible value of r
+        max_r = np.sqrt(center_x**2 + center_y**2)
+
+        # Create a grid of (x, y) coordinates
+        y, x = np.ogrid[:height, :width]
+
+        # Shift the grid so that the center of the image is at (0, 0)
+        x = x - center_x
+        y = y - center_y
+
+        # Convert Cartesian to Polar coordinates
+        r = np.sqrt(x**2 + y**2)
+        theta = np.arctan2(y, x)
+
+        # Rescale r to [0, height)
+        r = np.round(r * (height - 1) / max_r).astype(int)
+
+        # Rescale theta to [0, width)
+        theta = np.round((theta + 2 * np.pi) % (2 * np.pi) * (width - 1) / (2 * np.pi)).astype(int)
+
+        # Use a 2D histogram to accumulate all values that map to the same polar coordinate
+        histogram, _, _ = np.histogram2d(
+            theta.flatten(),
+            r.flatten(),
+            bins=[height, width],
+            range=[[0, height], [0, width]],
+            weights=img.flatten()
+        )
+
+        # Count how many Cartesian coordinates map to each polar coordinate
+        counts, _, _ = np.histogram2d(
+            theta.flatten(),
+            r.flatten(),
+            bins=[height, width],
+            range=[[0, height], [0, width]]
+        )
+
+        # Take the average of all values that map to the same polar coordinate
+        polar_image = histogram / counts
+
+        # Handle any divisions by zero
+        polar_image[np.isnan(polar_image)] = 0
+
+        # Crop the large r part that is not used
+        for x in range(width - 1, -1, -1):
+            # If the column contains at least one non-black pixel
+            if np.any(polar_image[:, x] != 0):
+                # Crop at this x position
+                polar_image = polar_image[:, :x]
+                break
+
+        # reconvert to PIL image before returning
+        return Image.fromarray(polar_image)
+
+
+class ShiftRowsTransform(torch.nn.Module):
+    """ Shift the rows of an image such that the row with the largest sum is at the top.
+    """
+    def __init__(self):
+        super(ShiftRowsTransform, self).__init__()
+
+    def forward(self, img):
+        img = np.array(img)  # Convert PIL image to NumPy array
+
+        # Find the row with the largest sum
+        row_sums = np.sum(img, axis=1)
+        max_sum_row_index = np.argmax(row_sums)
+
+        # Shift all rows respecting periodicity
+        shifted_img = np.roll(img, -max_sum_row_index, axis=0)
+
+        # reconvert to PIL image before returning
+        return Image.fromarray(shifted_img)
+
+
 def prepare_data(conf: dict,
-                 transform: Compose,
                  nimg_print: int = 5,
                  nreps: int = 1) -> Tuple[List, List]:
     """If not already available, preprocesses the data by loading images and
@@ -19,8 +159,6 @@ def prepare_data(conf: dict,
     ----------
     conf : dict
         Dictionary containing the configuration
-    transform: torchvision.transforms.Compose
-        Transformation to apply to the images
     nimg_print: int
         Number of images to print
     nreps: int
@@ -33,9 +171,17 @@ def prepare_data(conf: dict,
     all_tags : list
         List of all tags
     """
-
     datadirectory = conf['speckle']['datadirectory']
     mname = conf['model']['name']
+
+    # Dummy transformation to get the original image
+    transform_orig = transforms.Compose([
+        transforms.CenterCrop(conf['preproc']['centercrop']),
+        transforms.ToTensor(),
+    ])
+
+    # and get the transformation to apply to each image
+    transform = assemble_transform(conf)
 
     # First, check if the data has already been preprocessed
     if os.path.exists(os.path.join(datadirectory, f'all_images_{mname}.pt')):
@@ -82,10 +228,11 @@ def prepare_data(conf: dict,
                                     dtype=np.float32)
 
             # Create the image
-            image = Image.fromarray(pixel_values, mode='F')
+            image_orig = Image.fromarray(pixel_values, mode='F')
 
             # Apply the transformation
-            image = transform(image)
+            image = transform(image_orig)
+            image_orig = transform_orig(image_orig)
 
             # and add it to the collection
             all_images.append(image)
@@ -100,15 +247,21 @@ def prepare_data(conf: dict,
             if counter > nimg_print:
                 show_image = False
             if show_image:
-                fig, axs = plt.subplots(1, 2, figsize=(6, 3))
-                axs[0].imshow(image.squeeze(), cmap='bone')
+                fig, axs = plt.subplots(1, 3, figsize=(15, 5))
+                # Plot the original image
+                axs[0].imshow(image_orig.squeeze(), cmap='bone')
                 axs[0].set_title(f'Training Image {file_name}')
+                # Plot the preprocessd image
+                axs[1].imshow(image.squeeze(), cmap='bone')
+                axs[1].set_title(f'Processed as')
+                axs[1].set_xlabel(r'$r$')
+                axs[1].set_ylabel(r'$\theta$')
 
-                # Plot the tags on the same plot
-                axs[1].plot(tags, 'o')
-                axs[1].set_yscale('log')
-                axs[1].set_title('Screen Tags')
-                axs[1].legend()
+                # Plot the tags 
+                axs[2].plot(tags, 'o')
+                axs[2].set_yscale('log')
+                axs[2].set_title('Screen Tags')
+                axs[2].legend()
 
                 fig.subplots_adjust(wspace=0.3)
                 plt.savefig(f'{datadirectory}/images_{mname}/{counter}.png')

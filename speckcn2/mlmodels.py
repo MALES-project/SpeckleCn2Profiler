@@ -27,19 +27,15 @@ def setup_model(config: dict) -> Tuple[nn.Module, int]:
     nscreens = config['speckle']['nscreens']
     data_directory = config['speckle']['datadirectory']
 
-    if model_type == 'resnet18':
-        return get_resnet18(nscreens, data_directory, model_name)
-    elif model_type == 'resnet50':
-        return get_resnet50(nscreens, data_directory, model_name)
-    elif model_type == 'resnet152':
-        return get_resnet152(nscreens, data_directory, model_name)
+    if model_type in ['resnet18','resnet50','resnet152']:
+        return get_a_resnet(nscreens, data_directory, model_name, model_type)
     else:
         raise ValueError(f'Unknown model {model_name}')
 
 
-def get_resnet18(nscreens: int, datadirectory: str,
-                 model_name: str) -> Tuple[nn.Module, int]:
-    """Returns a pretrained ResNet18 model, with the last layer corresponding
+def get_a_resnet(nscreens: int, datadirectory: str,
+                 model_name: str, model_type: str) -> Tuple[nn.Module, int]:
+    """Returns a pretrained ResNet model, with the last layer corresponding
     to the number of screens.
 
     Parameters
@@ -50,6 +46,8 @@ def get_resnet18(nscreens: int, datadirectory: str,
         Path to the directory containing the data
     model_name : str
         The name of the model
+    model_type : str
+        The type of the ResNet
 
     Returns
     -------
@@ -59,48 +57,14 @@ def get_resnet18(nscreens: int, datadirectory: str,
         The number of the last model state
     """
 
-    model = torchvision.models.resnet18(pretrained=True)
-
-    # give it its name
-    model.name = model_name
-
-    # Change the model to process black and white input
-    model.conv1 = torch.nn.Conv2d(1,
-                                  64,
-                                  kernel_size=(7, 7),
-                                  stride=(2, 2),
-                                  padding=(3, 3),
-                                  bias=False)
-    # Add a final layer to predict the output
-    model.fc = torch.nn.Sequential(torch.nn.Linear(512, nscreens),
-                                   torch.nn.Sigmoid())
-
-    return load_model_state(model, datadirectory)
-
-
-def get_resnet50(nscreens: int, datadirectory: str,
-                 model_name: str) -> Tuple[nn.Module, int]:
-    """Returns a pretrained ResNet50 model, with the last layer corresponding
-    to the number of screens.
-
-    Parameters
-    ----------
-    nscreens : int
-        Number of screens
-    datadirectory : str
-        Path to the directory containing the data
-    model_name : str
-        The name of the model
-
-    Returns
-    -------
-    model : torch.nn.Module
-        The model with the loaded state
-    last_model_state : int
-        The number of the last model state
-    """
-
-    model = torchvision.models.resnet50(pretrained=True)
+    if model_type == 'resnet18':
+        model = torchvision.models.resnet18(pretrained=True)
+    elif model_type == 'resnet50':
+        model = torchvision.models.resnet50(pretrained=True)
+    elif model_type == 'resnet152':
+        model = torchvision.models.resnet152(weights='IMAGENET1K_V2')
+    else:
+        raise ValueError(f'Unknown model {model_type}')
 
     # give it its name
     model.name = model_name
@@ -118,46 +82,6 @@ def get_resnet50(nscreens: int, datadirectory: str,
 
     return load_model_state(model, datadirectory)
 
-
-def get_resnet152(nscreens: int, datadirectory: str,
-                  model_name: str) -> Tuple[nn.Module, int]:
-    """Returns a pretrained ResNet152 model, with the last layer corresponding
-    to the number of screens.
-
-    Parameters
-    ----------
-    nscreens : int
-        Number of screens
-    datadirectory : str
-        Path to the directory containing the data
-    model_name : str
-        The name of the model
-
-    Returns
-    -------
-    model : torch.nn.Module
-        The model with the loaded state
-    last_model_state : int
-        The number of the last model state
-    """
-
-    model = torchvision.models.resnet152(weights='IMAGENET1K_V2')
-
-    # give it its name
-    model.name = model_name
-
-    # Change the model to process black and white input
-    model.conv1 = torch.nn.Conv2d(1,
-                                  64,
-                                  kernel_size=(7, 7),
-                                  stride=(2, 2),
-                                  padding=(3, 3),
-                                  bias=False)
-    # Add a final layer to predict the output
-    model.fc = torch.nn.Sequential(torch.nn.Linear(2048, nscreens),
-                                   torch.nn.Sigmoid())
-
-    return load_model_state(model, datadirectory)
 
 
 def load_model_state(model: nn.Module,
