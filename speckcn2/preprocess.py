@@ -130,8 +130,8 @@ class PolarCoordinateTransform(torch.nn.Module):
 
 
 class ShiftRowsTransform(torch.nn.Module):
-    """Shift the rows of an image such that the row with the largest sum is at
-    the top."""
+    """Shift the rows of an image such that the row with the smallest sum is at
+    the bottom."""
 
     def __init__(self):
         super(ShiftRowsTransform, self).__init__()
@@ -141,7 +141,7 @@ class ShiftRowsTransform(torch.nn.Module):
 
         # Find the row with the largest sum
         row_sums = np.sum(img, axis=1)
-        max_sum_row_index = np.argmax(row_sums)
+        max_sum_row_index = np.argmin(row_sums)
 
         # Shift all rows respecting periodicity
         shifted_img = np.roll(img, -max_sum_row_index, axis=0)
@@ -197,7 +197,7 @@ def prepare_data(conf: dict,
     # Otherwise, preprocess the raw data:
     file_list = [
         file_name for file_name in os.listdir(datadirectory)
-        if 'MALES' in file_name and 'tag' not in file_name
+        if '.txt' in file_name and 'tag' not in file_name
     ]
     # and randomly shuffle them
     np.random.shuffle(file_list)
@@ -239,40 +239,47 @@ def prepare_data(conf: dict,
             all_images.append(image)
 
             # Then load the screen tags
-            tagname = file_name.replace('.txt', '_tag.txt')
-            tags = np.loadtxt(os.path.join(datadirectory, tagname),
-                              delimiter=',',
-                              dtype=np.float32)
+            #tagname = file_name.replace('.txt', '_tag.txt')
+            base_name, _, _ = file_name.rpartition('_')
+            tagname = base_name + '_tag.txt'
 
-            # Plot the image using maplotlib
-            if counter > nimg_print:
-                show_image = False
-            if show_image:
-                fig, axs = plt.subplots(1, 3, figsize=(15, 5))
-                # Plot the original image
-                axs[0].imshow(image_orig.squeeze(), cmap='bone')
-                axs[0].set_title(f'Training Image {file_name}')
-                # Plot the preprocessd image
-                axs[1].imshow(image.squeeze(), cmap='bone')
-                axs[1].set_title('Processed as')
-                axs[1].set_xlabel(r'$r$')
-                axs[1].set_ylabel(r'$\theta$')
+            if os.path.exists(os.path.join(datadirectory, tagname)):
+                tags = np.loadtxt(os.path.join(datadirectory, tagname),
+                                  delimiter=',',
+                                  dtype=np.float32)
 
-                # Plot the tags
-                axs[2].plot(tags, 'o')
-                axs[2].set_yscale('log')
-                axs[2].set_title('Screen Tags')
-                axs[2].legend()
+                # Plot the image using maplotlib
+                if counter > nimg_print:
+                    show_image = False
+                if show_image:
+                    fig, axs = plt.subplots(1, 3, figsize=(15, 5))
+                    # Plot the original image
+                    axs[0].imshow(image_orig.squeeze(), cmap='bone')
+                    axs[0].set_title(f'Training Image {file_name}')
+                    # Plot the preprocessd image
+                    axs[1].imshow(image.squeeze(), cmap='bone')
+                    axs[1].set_title('Processed as')
+                    axs[1].set_xlabel(r'$r$')
+                    axs[1].set_ylabel(r'$\theta$')
 
-                fig.subplots_adjust(wspace=0.3)
-                plt.savefig(f'{datadirectory}/images_{mname}/{counter}.png')
-                plt.close()
+                    # Plot the tags
+                    axs[2].plot(tags, 'o')
+                    axs[2].set_yscale('log')
+                    axs[2].set_title('Screen Tags')
+                    axs[2].legend()
 
-            # Preprocess the tags
-            tags = np.log10(tags)
+                    fig.subplots_adjust(wspace=0.3)
+                    plt.savefig(
+                        f'{datadirectory}/images_{mname}/{counter}.png')
+                    plt.close()
 
-            # Add the tag to the colleciton
-            all_tags.append(tags)
+                # Preprocess the tags
+                tags = np.log10(tags)
+
+                # Add the tag to the colleciton
+                all_tags.append(tags)
+            else:
+                print(f'*** Warning: tag file {tagname} not found.')
 
     # Finally, store them before returning
     torch.save(all_images, os.path.join(datadirectory,

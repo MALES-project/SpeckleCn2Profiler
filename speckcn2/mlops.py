@@ -159,7 +159,7 @@ def score(model: nn.Module,
                 plt.close()
 
             # and get all the tags for statistic analysis
-            for tag in tags:
+            for tag in outputs:
                 test_tags.append(tag)
 
     return test_tags

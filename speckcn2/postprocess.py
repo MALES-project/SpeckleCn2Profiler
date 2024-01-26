@@ -53,31 +53,39 @@ def tags_distribution(
     fig, axs = plt.subplots(2, 4, figsize=(20, 10))
     for i in range(8):
         if rescale and recover_tag is not None:
-            axs[i // 4, i % 4].hist(recover_tag(predic_tags[:, i]),
-                                    bins=20,
-                                    color='tab:red',
-                                    density=True,
-                                    histtype='step',
-                                    label='Model precitions')
-            axs[i // 4, i % 4].hist(recover_tag(train_tags[:, i]),
-                                    bins=20,
-                                    color='tab:blue',
-                                    density=True,
-                                    histtype='step',
-                                    label='Training data')
+            axs[i // 4, i % 4].hist(
+                recover_tag(predic_tags[:, i]),
+                bins=20,
+                color='tab:red',
+                density=True,
+                #histtype='step',
+                alpha=0.5,
+                label='Model precitions')
+            axs[i // 4, i % 4].hist(
+                recover_tag(train_tags[:, i]),
+                bins=20,
+                color='tab:blue',
+                density=True,
+                #histtype='step',
+                alpha=0.5,
+                label='Training data')
         else:
-            axs[i // 4, i % 4].hist(predic_tags[:, i],
-                                    bins=20,
-                                    color='tab:red',
-                                    density=True,
-                                    histtype='step',
-                                    label='Model precitions')
-            axs[i // 4, i % 4].hist(train_tags[:, i],
-                                    bins=20,
-                                    color='tab:blue',
-                                    density=True,
-                                    histtype='step',
-                                    label='Training data')
+            axs[i // 4, i % 4].hist(
+                predic_tags[:, i],
+                bins=20,
+                color='tab:red',
+                density=True,
+                #histtype='step',
+                alpha=0.5,
+                label='Model precitions')
+            axs[i // 4, i % 4].hist(
+                train_tags[:, i],
+                bins=20,
+                color='tab:blue',
+                density=True,
+                #histtype='step',
+                alpha=0.5,
+                label='Training data')
         axs[i // 4, i % 4].set_title(f'Tag {i}')
     axs[0, 1].legend()
     plt.savefig(f'{data_directory}/{model_name}_plots/tags_distribution.png')
