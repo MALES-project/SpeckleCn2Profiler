@@ -174,6 +174,8 @@ def prepare_data(conf: dict,
     """
     datadirectory = conf['speckle']['datadirectory']
     mname = conf['model']['name']
+    dataname = conf['preproc']['dataname']
+    tagname = dataname.replace('images', 'tags')
 
     # Dummy transformation to get the original image
     transform_orig = transforms.Compose([
@@ -185,13 +187,11 @@ def prepare_data(conf: dict,
     transform = assemble_transform(conf)
 
     # First, check if the data has already been preprocessed
-    if os.path.exists(os.path.join(datadirectory, f'all_images_{mname}.pt')):
-        print('*** Loading preprocessed data')
+    if os.path.exists(os.path.join(datadirectory, dataname)):
+        print(f'*** Loading preprocessed data from {dataname}')
         # If so, load it
-        all_images = torch.load(
-            os.path.join(datadirectory, f'all_images_{mname}.pt'))
-        all_tags = torch.load(
-            os.path.join(datadirectory, f'all_tags_{mname}.pt'))
+        all_images = torch.load(os.path.join(datadirectory, dataname))
+        all_tags = torch.load(os.path.join(datadirectory, tagname))
         return all_images, all_tags
 
     # Otherwise, preprocess the raw data:
@@ -282,9 +282,8 @@ def prepare_data(conf: dict,
                 print(f'*** Warning: tag file {tagname} not found.')
 
     # Finally, store them before returning
-    torch.save(all_images, os.path.join(datadirectory,
-                                        f'all_images_{mname}.pt'))
-    torch.save(all_tags, os.path.join(datadirectory, f'all_tags_{mname}.pt'))
+    torch.save(all_images, os.path.join(datadirectory, dataname))
+    torch.save(all_tags, os.path.join(datadirectory, tagname))
 
     print('*** Preprocessing complete.', flush=True)
 

@@ -28,6 +28,8 @@ def setup_model(config: dict) -> Tuple[nn.Module, int]:
     nscreens = config['speckle']['nscreens']
     data_directory = config['speckle']['datadirectory']
 
+    print(f'^^^ Loading model {model_name} of type {model_type}')
+
     if model_type in ['resnet18', 'resnet50', 'resnet152']:
         return get_a_resnet(nscreens, data_directory, model_name, model_type,
                             pretrained)
