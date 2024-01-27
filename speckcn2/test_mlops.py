@@ -28,4 +28,4 @@ def test_score():
 
     # Assert the expected output
     assert len(test_tags) == 32
-    assert test_tags[0].shape[1] == 8
+    assert test_tags[0].shape[0] == 8

@@ -24,17 +24,19 @@ def setup_model(config: dict) -> Tuple[nn.Module, int]:
 
     model_name = config['model']['name']
     model_type = config['model']['type']
+    pretrained = config['model']['pretrained']
     nscreens = config['speckle']['nscreens']
     data_directory = config['speckle']['datadirectory']
 
     if model_type in ['resnet18', 'resnet50', 'resnet152']:
-        return get_a_resnet(nscreens, data_directory, model_name, model_type)
+        return get_a_resnet(nscreens, data_directory, model_name, model_type,
+                            pretrained)
     else:
         raise ValueError(f'Unknown model {model_name}')
 
 
 def get_a_resnet(nscreens: int, datadirectory: str, model_name: str,
-                 model_type: str) -> Tuple[nn.Module, int]:
+                 model_type: str, pretrained: bool) -> Tuple[nn.Module, int]:
     """Returns a pretrained ResNet model, with the last layer corresponding to
     the number of screens.
 
@@ -48,6 +50,8 @@ def get_a_resnet(nscreens: int, datadirectory: str, model_name: str,
         The name of the model
     model_type : str
         The type of the ResNet
+    pretrained : bool
+        Whether to use a pretrained model or not
 
     Returns
     -------
@@ -58,16 +62,19 @@ def get_a_resnet(nscreens: int, datadirectory: str, model_name: str,
     """
 
     if model_type == 'resnet18':
-        model = torchvision.models.resnet18(pretrained=True)
+        model = torchvision.models.resnet18(pretrained=pretrained)
     elif model_type == 'resnet50':
-        model = torchvision.models.resnet50(pretrained=True)
+        model = torchvision.models.resnet50(pretrained=pretrained)
     elif model_type == 'resnet152':
-        model = torchvision.models.resnet152(weights='IMAGENET1K_V2')
+        model = torchvision.models.resnet152(
+            weights='IMAGENET1K_V2' if pretrained else None)
     else:
         raise ValueError(f'Unknown model {model_type}')
 
-    # give it its name
+    # Give it its name
     model.name = model_name
+    # put it in evaluation mode
+    model.eval()
 
     # Change the model to process black and white input
     model.conv1 = torch.nn.Conv2d(1,
