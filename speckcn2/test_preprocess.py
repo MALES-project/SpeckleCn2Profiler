@@ -21,6 +21,7 @@ def test_prepare_data(tmpdir):
             'randomrotate': False,
             'centercrop': 100,
             'resize': 100,
+            'dataname': 'all_images_test_model.pt',
         }
     }
 
