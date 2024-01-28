@@ -48,7 +48,7 @@ def assemble_transform(conf: dict) -> transforms.Compose:
         # Apply the equivariant transform
         list_transforms.append(ShiftRowsTransform())
 
-    list_transforms.append(transforms.ToTensor())
+    list_transforms.append(ToUnboundTensor())
 
     return transforms.Compose(list_transforms)
 
@@ -150,6 +150,19 @@ class ShiftRowsTransform(torch.nn.Module):
         return Image.fromarray(shifted_img)
 
 
+class ToUnboundTensor(torch.nn.Module):
+    """Transform the image into a tensor, but do not normalize it like
+    torchvision.ToTensor."""
+
+    def __init__(self):
+        super(ToUnboundTensor, self).__init__()
+
+    def forward(self, img):
+        img = np.array(img)
+        # add a color chanel in dim 0
+        return torch.from_numpy(img).unsqueeze(0)
+
+
 def prepare_data(conf: dict,
                  nimg_print: int = 5,
                  nreps: int = 1) -> Tuple[List, List]:
@@ -239,12 +252,12 @@ def prepare_data(conf: dict,
             all_images.append(image)
 
             # Then load the screen tags
-            #tagname = file_name.replace('.txt', '_tag.txt')
-            base_name, _, _ = file_name.rpartition('_')
-            tagname = base_name + '_tag.txt'
+            ftagname = file_name.replace('.txt', '_tag.txt')
+            #base_name, _, _ = file_name.rpartition('_')
+            #ftagname = base_name + '_tag.txt'
 
-            if os.path.exists(os.path.join(datadirectory, tagname)):
-                tags = np.loadtxt(os.path.join(datadirectory, tagname),
+            if os.path.exists(os.path.join(datadirectory, ftagname)):
+                tags = np.loadtxt(os.path.join(datadirectory, ftagname),
                                   delimiter=',',
                                   dtype=np.float32)
 
@@ -279,7 +292,7 @@ def prepare_data(conf: dict,
                 # Add the tag to the colleciton
                 all_tags.append(tags)
             else:
-                print(f'*** Warning: tag file {tagname} not found.')
+                print(f'*** Warning: tag file {ftagname} not found.')
 
     # Finally, store them before returning
     torch.save(all_images, os.path.join(datadirectory, dataname))
@@ -290,11 +303,12 @@ def prepare_data(conf: dict,
     return all_images, all_tags
 
 
-def normalize_tags(
+def normalize_imgs_and_tags(
     all_images: List[torch.tensor], all_tags: List[np.ndarray]
 ) -> Tuple[List[Tuple[torch.tensor, np.ndarray]], Callable[
-    [np.ndarray], np.ndarray], Callable[[np.ndarray], np.ndarray]]:
-    """Normalize the tags to be between 0 and 1.
+    [np.ndarray], np.ndarray], Callable[[np.ndarray], np.ndarray], Callable[
+        [torch.tensor], torch.tensor], Callable[[torch.tensor], torch.tensor]]:
+    """Normalize both the input images and the tags to be between 0 and 1.
 
     Parameters
     ----------
@@ -307,21 +321,40 @@ def normalize_tags(
     -------
     dataset : list
         List of tuples (image, normalized_tag)
+    normalize_img : function
+        Function to normalize an image
+    recover_img : function
+        Function to recover an image
     normalize_tag : function
         Function to normalize a tag
     recover_tag : function
         Function to recover a tag
     """
+    # Find the maximum between the maximum and minimum values of the images
+    max_img = max([torch.max(image) for image in all_images])
+    print('*** Image max:', max_img)
+    min_img = min([torch.min(image) for image in all_images])
+    print('*** Image min:', min_img)
+    range_img = max_img - min_img
+
+    def normalize_img(img):
+        return (img - min_img) / range_img
+
+    def recover_img(nimg):
+        return nimg * range_img + min_img
+
+    # Normalize the images
+    normalized_images = [normalize_img(image) for image in all_images]
 
     # I process the arrays of tags, such that each tag is a number between 0 and 1
     tags = [tag for tag in all_tags]
-    #tags = np.array(tags, dtype=object)
     tags = np.stack(tags)
 
     # I need to find the minimum and maximum value of each tag
-    # I will use this to normalize the tags
     min_tags = np.min(tags, axis=0)
+    print('*** Tag min:', min_tags)
     max_tags = np.max(tags, axis=0)
+    print('*** Tag max:', max_tags)
     range_tags = max_tags - min_tags
 
     def normalize_tag(tag):
@@ -334,9 +367,10 @@ def normalize_tags(
     normalized_tags = np.array([normalize_tag(tag) for tag in tags])
 
     # I can now create the dataset
-    dataset = [(image, tag) for image, tag in zip(all_images, normalized_tags)]
+    dataset = [(image, tag)
+               for image, tag in zip(normalized_images, normalized_tags)]
 
-    return dataset, normalize_tag, recover_tag
+    return dataset, normalize_img, recover_img, normalize_tag, recover_tag
 
 
 def train_test_split(
