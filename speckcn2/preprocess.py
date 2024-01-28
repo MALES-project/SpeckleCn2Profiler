@@ -252,9 +252,11 @@ def prepare_data(conf: dict,
             all_images.append(image)
 
             # Then load the screen tags
-            ftagname = file_name.replace('.txt', '_tag.txt')
-            #base_name, _, _ = file_name.rpartition('_')
-            #ftagname = base_name + '_tag.txt'
+            if 'MALES' in file_name:
+                ftagname = file_name.replace('.txt', '_tag.txt')
+            else:
+                base_name, _, _ = file_name.rpartition('_')
+                ftagname = base_name + '_tag.txt'
 
             if os.path.exists(os.path.join(datadirectory, ftagname)):
                 tags = np.loadtxt(os.path.join(datadirectory, ftagname),
