@@ -64,12 +64,17 @@ def get_a_resnet(nscreens: int, datadirectory: str, model_name: str,
     """
 
     if model_type == 'resnet18':
-        model = torchvision.models.resnet18(pretrained=pretrained)
+        model = torchvision.models.resnet18(
+            weights='IMAGENET1K_V1' if pretrained else None)
+        finaloutsize = 512
     elif model_type == 'resnet50':
-        model = torchvision.models.resnet50(pretrained=pretrained)
+        model = torchvision.models.resnet50(
+            weights='IMAGENET1K_V2' if pretrained else None)
+        finaloutsize = 2048
     elif model_type == 'resnet152':
         model = torchvision.models.resnet152(
             weights='IMAGENET1K_V2' if pretrained else None)
+        finaloutsize = 2048
     else:
         raise ValueError(f'Unknown model {model_type}')
 
@@ -86,7 +91,7 @@ def get_a_resnet(nscreens: int, datadirectory: str, model_name: str,
                                   padding=(3, 3),
                                   bias=False)
     # Add a final layer to predict the output
-    model.fc = torch.nn.Sequential(torch.nn.Linear(2048, nscreens),
+    model.fc = torch.nn.Sequential(torch.nn.Linear(finaloutsize, nscreens),
                                    torch.nn.Sigmoid())
 
     return load_model_state(model, datadirectory)
