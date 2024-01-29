@@ -3,6 +3,7 @@ import torchvision
 import os
 from typing import Tuple
 from torch import nn
+from speckcn2.scnn import C8SteerableCNN
 
 
 def setup_model(config: dict) -> Tuple[nn.Module, int]:
@@ -27,12 +28,15 @@ def setup_model(config: dict) -> Tuple[nn.Module, int]:
     pretrained = config['model']['pretrained']
     nscreens = config['speckle']['nscreens']
     data_directory = config['speckle']['datadirectory']
+    img_res = config['preproc']['resize']
 
-    print(f'^^^ Loading model {model_name} of type {model_type}')
+    print(f'^^^ Initializing model {model_name} of type {model_type}')
 
     if model_type in ['resnet18', 'resnet50', 'resnet152']:
         return get_a_resnet(nscreens, data_directory, model_name, model_type,
                             pretrained)
+    if model_type == 'scnn':
+        return get_scnn(nscreens, data_directory, model_name, img_res)
     else:
         raise ValueError(f'Unknown model {model_name}')
 
@@ -80,8 +84,6 @@ def get_a_resnet(nscreens: int, datadirectory: str, model_name: str,
 
     # Give it its name
     model.name = model_name
-    # put it in evaluation mode
-    model.eval()
 
     # Change the model to process black and white input
     model.conv1 = torch.nn.Conv2d(1,
@@ -94,7 +96,21 @@ def get_a_resnet(nscreens: int, datadirectory: str, model_name: str,
     model.fc = torch.nn.Sequential(torch.nn.Linear(finaloutsize, nscreens),
                                    torch.nn.Sigmoid())
 
+    # put it in evaluation mode
+    model.eval()
+
     return load_model_state(model, datadirectory)
+
+
+def get_scnn(nscreens: int, datadirectory: str, model_name: str,
+             img_res: str) -> Tuple[nn.Module, int]:
+    """Returns a pretrained Spherical-CNN model, with the last layer
+    corresponding to the number of screens."""
+
+    scnn_model = C8SteerableCNN(nscreens=nscreens, in_image_res=img_res)
+    scnn_model.name = model_name
+
+    return load_model_state(scnn_model, datadirectory)
 
 
 def load_model_state(model: nn.Module,
@@ -115,6 +131,10 @@ def load_model_state(model: nn.Module,
     last_model_state : int
         The number of the last model state
     """
+
+    # Print model informations
+    print(model)
+    print(f'\n--> Nparams = {sum(p.numel() for p in model.parameters())}')
 
     # If no model is stored, create the folder
     if not os.path.isdir(f'{datadirectory}/{model.name}_states'):
