@@ -407,7 +407,7 @@ def train_test_split(
                                                shuffle=True,
                                                num_workers=2)
     test_loader = torch.utils.data.DataLoader(dataset[train_size:],
-                                              batch_size=1,
+                                              batch_size=batch_size,
                                               shuffle=False,
                                               num_workers=2)
 

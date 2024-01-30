@@ -3,7 +3,8 @@ import torchvision
 import os
 from typing import Tuple
 from torch import nn
-from speckcn2.scnn import C8SteerableCNN
+from speckcn2.utils import load
+from speckcn2.scnn import C8SteerableCNN, C16SteerableCNN, small_C16SteerableCNN
 
 
 def setup_model(config: dict) -> Tuple[nn.Module, int]:
@@ -35,8 +36,9 @@ def setup_model(config: dict) -> Tuple[nn.Module, int]:
     if model_type in ['resnet18', 'resnet50', 'resnet152']:
         return get_a_resnet(nscreens, data_directory, model_name, model_type,
                             pretrained)
-    if model_type == 'scnn':
-        return get_scnn(nscreens, data_directory, model_name, img_res)
+    if model_type in ['scnnC8', 'scnnC16', 'small_scnnC16']:
+        return get_scnn(nscreens, data_directory, model_name, model_type,
+                        img_res)
     else:
         raise ValueError(f'Unknown model {model_name}')
 
@@ -92,9 +94,14 @@ def get_a_resnet(nscreens: int, datadirectory: str, model_name: str,
                                   stride=(2, 2),
                                   padding=(3, 3),
                                   bias=False)
-    # Add a final layer to predict the output
-    model.fc = torch.nn.Sequential(torch.nn.Linear(finaloutsize, nscreens),
-                                   torch.nn.Sigmoid())
+    # Add a final fully connected piece to predict the output
+    model.fc = torch.nn.Sequential(
+        torch.nn.Linear(finaloutsize, 64),
+        torch.nn.BatchNorm1d(64),
+        torch.nn.ELU(inplace=True),
+        torch.nn.Linear(64, nscreens),
+        torch.nn.Sigmoid(),
+    )
 
     # put it in evaluation mode
     model.eval()
@@ -103,11 +110,19 @@ def get_a_resnet(nscreens: int, datadirectory: str, model_name: str,
 
 
 def get_scnn(nscreens: int, datadirectory: str, model_name: str,
-             img_res: str) -> Tuple[nn.Module, int]:
+             model_type: str, img_res: str) -> Tuple[nn.Module, int]:
     """Returns a pretrained Spherical-CNN model, with the last layer
     corresponding to the number of screens."""
 
-    scnn_model = C8SteerableCNN(nscreens=nscreens, in_image_res=img_res)
+    if model_type == 'scnnC8':
+        scnn_model = C8SteerableCNN(nscreens=nscreens, in_image_res=img_res)
+    elif model_type == 'scnnC16':
+        scnn_model = C16SteerableCNN(nscreens=nscreens, in_image_res=img_res)
+    elif model_type == 'small_scnnC16':
+        scnn_model = small_C16SteerableCNN(nscreens=nscreens,
+                                           in_image_res=img_res)
+    else:
+        raise ValueError(f'Unknown model {model_type}')
     scnn_model.name = model_name
 
     return load_model_state(scnn_model, datadirectory)
@@ -134,7 +149,8 @@ def load_model_state(model: nn.Module,
 
     # Print model informations
     print(model)
-    print(f'\n--> Nparams = {sum(p.numel() for p in model.parameters())}')
+    model.nparams = sum(p.numel() for p in model.parameters())
+    print(f'\n--> Nparams = {model.nparams}')
 
     # If no model is stored, create the folder
     if not os.path.isdir(f'{datadirectory}/{model.name}_states'):
@@ -152,13 +168,17 @@ def load_model_state(model: nn.Module,
 
     if last_model_state > 0:
         print(f'Loading model at epoch {last_model_state}')
-        model.load_state_dict(
-            torch.load(
-                f'{datadirectory}/{model.name}_states/{model.name}_{last_model_state}.pth'
-            ))
+        load(model, datadirectory, last_model_state)
         return model, last_model_state
     else:
         print('No pretrained model to load')
+
+        # Initialize some model state measure
+        model.loss = []
+        model.val_loss = []
+        model.time = []
+        model.epoch = []
+
         return model, 0
 
 

@@ -90,3 +90,37 @@ def tags_distribution(
     axs[0, 1].legend()
     plt.savefig(f'{data_directory}/{model_name}_plots/tags_distribution.png')
     plt.close()
+
+
+def plot_loss(conf: dict, model, data_dir: str) -> None:
+    """Plots the loss of the model.
+
+    Parameters
+    ----------
+    conf : dict
+        Dictionary containing the configuration
+    model : torch.nn.Module
+        The model to plot the loss of
+    data_dir : str
+        The directory where the data is stored
+    """
+
+    model_name = conf['model']['name']
+
+    # create a folder to store the plots
+    if not os.path.isdir(f'{data_dir}/{model_name}_plots'):
+        os.mkdir(f'{data_dir}/{model_name}_plots')
+
+    # plot the loss
+    fig, axs = plt.subplots(1, 2, figsize=(15, 5))
+    axs[0].plot(model.epoch, model.loss, label='Training loss')
+    axs[0].plot(model.epoch, model.val_loss, label='Validation loss')
+    axs[0].set_xlabel('Epoch')
+    axs[0].set_ylabel('Loss')
+    axs[0].legend()
+    axs[1].plot(model.epoch, model.time, label='Time per epoch')
+    axs[1].set_xlabel('Epoch')
+    axs[1].set_ylabel('Time [s]')
+    axs[1].legend()
+    plt.savefig(f'{data_dir}/{model_name}_plots/loss.png')
+    plt.close()
