@@ -39,6 +39,7 @@ jobs:
       with:
         PROJECT_PATH: speckcn2
         REQUIREMENT_PATH: requirements.txt
+
     - name: Cache dependencies
       uses: actions/cache@v2
       with:
@@ -46,9 +47,11 @@ jobs:
         key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
         restore-keys: |
           ${{ runner.os }}-pip-
+
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
+        python -m pip install git+https://github.com/AMLab-Amsterdam/lie_learn
         pip install -r requirements.txt
 
     - name: Test with pytest

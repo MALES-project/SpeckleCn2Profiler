@@ -16,7 +16,7 @@ setup(
     packages=find_packages(),
     install_requires=[
         'numpy', 'pandas', 'matplotlib', 'torch', 'torchvision', 'scipy',
-        'PyYAML', 'py3nj', 'escnn'
+        'PyYAML', 'Cython', 'escnn'
     ],
     keywords=[
         'python', 'optical satelites', 'machine learning', 'turbolence',
