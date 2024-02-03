@@ -1,10 +1,10 @@
-import os
 import matplotlib.pyplot as plt
 import numpy as np
 from typing import Callable, Optional
 from torch import Tensor
 from torch.utils.data import Dataset
 from torch import device as Device
+from speckcn2.utils import ensure_directory
 
 
 def tags_distribution(
@@ -13,7 +13,8 @@ def tags_distribution(
         test_tags: Tensor,
         device: Device,
         rescale: bool = False,
-        recover_tag: Optional[Callable[[Tensor], Tensor]] = None) -> None:
+        recover_tag: Optional[list[Callable[[Tensor],
+                                            Tensor]]] = None) -> None:
     """Plots the distribution of the tags.
 
     Parameters
@@ -30,16 +31,14 @@ def tags_distribution(
         The directory where the data is stored
     rescale : bool, optional
         Whether to rescale the tags using recover_tag() or leave them between 0 and 1
-    recover_tag : callable, optional
-        Function to recover a tag
+    recover_tag : list, optional
+        List of functions to recover each tag
     """
 
     data_directory = conf['speckle']['datadirectory']
     model_name = conf['model']['name']
 
-    # create a folder to store the plots
-    if not os.path.isdir(f'{data_directory}/{model_name}_plots'):
-        os.mkdir(f'{data_directory}/{model_name}_plots')
+    ensure_directory(f'{data_directory}/result_plots')
 
     train_tags = np.array([tag for _, tag in dataset])
     predic_tags = np.array([n.cpu().numpy() for n in test_tags])
@@ -53,42 +52,35 @@ def tags_distribution(
     fig, axs = plt.subplots(2, 4, figsize=(20, 10))
     for i in range(8):
         if rescale and recover_tag is not None:
-            axs[i // 4, i % 4].hist(
-                recover_tag(predic_tags[:, i]),
-                bins=20,
-                color='tab:red',
-                density=True,
-                #histtype='step',
-                alpha=0.5,
-                label='Model precitions')
-            axs[i // 4, i % 4].hist(
-                recover_tag(train_tags[:, i]),
-                bins=20,
-                color='tab:blue',
-                density=True,
-                #histtype='step',
-                alpha=0.5,
-                label='Training data')
+            axs[i // 4, i % 4].hist(recover_tag[i](predic_tags[:, i]),
+                                    bins=20,
+                                    color='tab:red',
+                                    density=True,
+                                    alpha=0.5,
+                                    label='Model precitions')
+            axs[i // 4, i % 4].hist(recover_tag[i](train_tags[:, i]),
+                                    bins=20,
+                                    color='tab:blue',
+                                    density=True,
+                                    alpha=0.5,
+                                    label='Training data')
         else:
-            axs[i // 4, i % 4].hist(
-                predic_tags[:, i],
-                bins=20,
-                color='tab:red',
-                density=True,
-                #histtype='step',
-                alpha=0.5,
-                label='Model precitions')
-            axs[i // 4, i % 4].hist(
-                train_tags[:, i],
-                bins=20,
-                color='tab:blue',
-                density=True,
-                #histtype='step',
-                alpha=0.5,
-                label='Training data')
+            axs[i // 4, i % 4].hist(predic_tags[:, i],
+                                    bins=20,
+                                    color='tab:red',
+                                    density=True,
+                                    alpha=0.5,
+                                    label='Model precitions')
+            axs[i // 4, i % 4].hist(train_tags[:, i],
+                                    bins=20,
+                                    color='tab:blue',
+                                    density=True,
+                                    alpha=0.5,
+                                    label='Training data')
         axs[i // 4, i % 4].set_title(f'Tag {i}')
     axs[0, 1].legend()
-    plt.savefig(f'{data_directory}/{model_name}_plots/tags_distribution.png')
+    plt.tight_layout()
+    plt.savefig(f'{data_directory}/result_plots/{model_name}_tags.png')
     plt.close()
 
 
@@ -107,20 +99,45 @@ def plot_loss(conf: dict, model, data_dir: str) -> None:
 
     model_name = conf['model']['name']
 
-    # create a folder to store the plots
-    if not os.path.isdir(f'{data_dir}/{model_name}_plots'):
-        os.mkdir(f'{data_dir}/{model_name}_plots')
+    ensure_directory(f'{data_dir}/result_plots')
 
     # plot the loss
-    fig, axs = plt.subplots(1, 2, figsize=(15, 5))
-    axs[0].plot(model.epoch, model.loss, label='Training loss')
-    axs[0].plot(model.epoch, model.val_loss, label='Validation loss')
-    axs[0].set_xlabel('Epoch')
-    axs[0].set_ylabel('Loss')
-    axs[0].legend()
-    axs[1].plot(model.epoch, model.time, label='Time per epoch')
-    axs[1].set_xlabel('Epoch')
-    axs[1].set_ylabel('Time [s]')
-    axs[1].legend()
-    plt.savefig(f'{data_dir}/{model_name}_plots/loss.png')
+    fig, axs = plt.subplots(1, 1, figsize=(5, 5))
+    axs.plot(model.epoch, model.loss, label='Training loss')
+    axs.plot(model.epoch, model.val_loss, label='Validation loss')
+    axs.set_xlabel('Epoch')
+    axs.set_ylabel('Loss')
+    axs.legend()
+    plt.title(f'Model: {model_name}')
+    plt.tight_layout()
+    plt.savefig(f'{data_dir}/result_plots/loss_{model_name}.png')
+    plt.close()
+
+
+def plot_time(conf: dict, model, data_dir: str) -> None:
+    """Plots the time per epoch of the model.
+
+    Parameters
+    ----------
+    conf : dict
+        Dictionary containing the configuration
+    model : torch.nn.Module
+        The model to plot the loss of
+    data_dir : str
+        The directory where the data is stored
+    """
+
+    model_name = conf['model']['name']
+
+    ensure_directory(f'{data_dir}/result_plots')
+
+    # plot the loss
+    fig, axs = plt.subplots(1, 1, figsize=(5, 5))
+    axs.plot(model.epoch, model.time, label='Time per epoch')
+    axs.set_xlabel('Epoch')
+    axs.set_ylabel('Time [s]')
+    axs.legend()
+    plt.title(f'Model: {model_name}')
+    plt.tight_layout()
+    plt.savefig(f'{data_dir}/result_plots/time_{model_name}.png')
     plt.close()

@@ -2,7 +2,7 @@ import torch
 import torchvision
 from typing import Tuple
 from torch import nn
-from speckcn2.utils import load_model_state
+from speckcn2.io import load_model_state
 from speckcn2.scnn import C8SteerableCNN, C16SteerableCNN, small_C16SteerableCNN
 
 
@@ -101,9 +101,6 @@ def get_a_resnet(nscreens: int, datadirectory: str, model_name: str,
         torch.nn.Linear(64, nscreens),
         torch.nn.Sigmoid(),
     )
-
-    # put it in evaluation mode
-    model.eval()
 
     return load_model_state(model, datadirectory)
 
