@@ -5,7 +5,7 @@ import os
 import numpy as np
 from typing import Callable, List, Tuple
 import torchvision.transforms as transforms
-from torch.utils.data import DataLoader
+from speckcn2.utils import ensure_directory
 
 
 def assemble_transform(conf: dict) -> transforms.Compose:
@@ -261,8 +261,7 @@ def imgs_as_single_datapoint(
     if nimg_print > 0:
         show_image = True
         # and create a folder to store the images
-        if not os.path.isdir(f'{datadirectory}/images_{mname}'):
-            os.mkdir(f'{datadirectory}/images_{mname}')
+        ensure_directory(f'{datadirectory}/imgs_to_{mname}')
     else:
         show_image = False
 
@@ -325,7 +324,7 @@ def imgs_as_single_datapoint(
 
                     fig.subplots_adjust(wspace=0.3)
                     plt.savefig(
-                        f'{datadirectory}/images_{mname}/{counter}.png')
+                        f'{datadirectory}/imgs_to_{mname}/{counter}.png')
                     plt.close()
 
                 # Preprocess the tags
@@ -389,6 +388,7 @@ def imgs_as_channels(
         if '.txt' in file_name and 'tag' not in file_name
     ]
     # count them based on the corresponding tag
+    print(multiplicity)
     ...  # TODO
     # optionally, randomly expand the groups in order to form groups of size multiplicity
     ...  # TODO
@@ -404,8 +404,7 @@ def imgs_as_channels(
     if nimg_print > 0:
         show_image = True
         # and create a folder to store the images
-        if not os.path.isdir(f'{datadirectory}/images_{mname}'):
-            os.mkdir(f'{datadirectory}/images_{mname}')
+        ensure_directory(f'{datadirectory}/imgs_to_{mname}')
     else:
         show_image = False
 
@@ -468,7 +467,7 @@ def imgs_as_channels(
 
                     fig.subplots_adjust(wspace=0.3)
                     plt.savefig(
-                        f'{datadirectory}/images_{mname}/{counter}.png')
+                        f'{datadirectory}/imgs_to_{mname}/{counter}.png')
                     plt.close()
 
                 # Preprocess the tags
@@ -490,9 +489,13 @@ def imgs_as_channels(
 
 def normalize_imgs_and_tags(
     all_images: List[torch.tensor], all_tags: List[np.ndarray]
-) -> Tuple[List[Tuple[torch.tensor, np.ndarray]], Callable[
-    [np.ndarray], np.ndarray], Callable[[np.ndarray], np.ndarray], Callable[
-        [torch.tensor], torch.tensor], Callable[[torch.tensor], torch.tensor]]:
+) -> Tuple[
+        List[Tuple[torch.tensor, np.ndarray]],
+        Callable[[np.ndarray], np.ndarray],
+        Callable[[np.ndarray], np.ndarray],
+        List[Callable[[torch.tensor], torch.tensor]],
+        List[Callable[[torch.tensor], torch.tensor]],
+]:
     """Normalize both the input images and the tags to be between 0 and 1.
 
     Parameters
@@ -510,10 +513,10 @@ def normalize_imgs_and_tags(
         Function to normalize an image
     recover_img : function
         Function to recover an image
-    normalize_tag : function
-        Function to normalize a tag
-    recover_tag : function
-        Function to recover a tag
+    normalize_tag : list
+        List of functions to normalize each tag
+    recover_tag : list
+        List of functions to recover each tag
     """
     # Find the maximum between the maximum and minimum values of the images
     max_img = max([torch.max(image) for image in all_images])
@@ -531,67 +534,34 @@ def normalize_imgs_and_tags(
     # Normalize the images
     normalized_images = [normalize_img(image) for image in all_images]
 
-    # I process the arrays of tags, such that each tag is a number between 0 and 1
-    tags = [tag for tag in all_tags]
-    tags = np.stack(tags)
-
-    # I need to find the minimum and maximum value of each tag
-    min_tags = np.min(tags, axis=0)
+    # Then I normalize the tags
+    min_tags = np.min(all_tags, axis=0)
     print('*** Tag min:', min_tags)
-    max_tags = np.max(tags, axis=0)
+    max_tags = np.max(all_tags, axis=0)
     print('*** Tag max:', max_tags)
-    range_tags = max_tags - min_tags
 
-    def normalize_tag(tag):
-        return (tag - min_tags) / range_tags
+    # I create a lambda function for each tag
+    def create_normalize_functions(min_t, max_t):
+        return [(lambda x, min_t=min_t[i], max_t=max_t[i]: (x - min_t) /
+                 (max_t - min_t)) for i in range(len(min_t))]
 
-    def recover_tag(ntag):
-        return ntag * range_tags + min_tags
+    normalize_tag = create_normalize_functions(min_tags, max_tags)
+
+    # And the recover functions
+    def create_recover_functions(min_t, max_t):
+        return [(lambda x, min_t=min_t[i], max_t=max_t[i]: x *
+                 (max_t - min_t) + min_t) for i in range(len(min_t))]
+
+    recover_tag = create_recover_functions(min_tags, max_tags)
 
     # And normalize the tags
-    normalized_tags = np.array([normalize_tag(tag) for tag in tags])
+    normalized_tags = np.array(
+        [[normalize_tag[j](tag) for j, tag in enumerate(tags)]
+         for tags in all_tags])
+    #    normalized_tags = np.array(normalized_tags)
 
     # I can now create the dataset
     dataset = [(image, tag)
                for image, tag in zip(normalized_images, normalized_tags)]
 
     return dataset, normalize_img, recover_img, normalize_tag, recover_tag
-
-
-def train_test_split(
-        dataset: List[Tuple[torch.tensor, float]],
-        batch_size: int = 32,
-        train_test_split: float = 0.8) -> Tuple[DataLoader, DataLoader]:
-    """Splits the data into training and testing sets.
-
-    Parameters
-    ----------
-    dataset : list
-        List of tuples (image, tag)
-    batch_size : int
-        Batch size for the data loaders
-    train_test_split: float
-        Fraction of the data to use for training
-
-    Returns
-    -------
-    train_loader : torch.utils.data.DataLoader
-        Training data loader
-    test_loader : torch.utils.data.DataLoader
-        Testing data loader
-    """
-
-    train_size = int(train_test_split * len(dataset))
-    print(
-        f'*** There are {len(dataset)} images in the dataset, {train_size} for training and {len(dataset)-train_size} for testing.'
-    )
-    train_loader = torch.utils.data.DataLoader(dataset[:train_size],
-                                               batch_size=batch_size,
-                                               shuffle=True,
-                                               num_workers=2)
-    test_loader = torch.utils.data.DataLoader(dataset[train_size:],
-                                              batch_size=batch_size,
-                                              shuffle=False,
-                                              num_workers=2)
-
-    return train_loader, test_loader

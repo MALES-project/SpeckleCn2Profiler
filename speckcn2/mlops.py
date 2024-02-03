@@ -1,11 +1,12 @@
-import os
+import numpy as np
 import time
 import torch
 import matplotlib.pyplot as plt
 from torch import nn, optim, Tensor
 from torch.utils.data import DataLoader
 from typing import Callable, List, Tuple
-from speckcn2.utils import save
+from speckcn2.io import save
+from speckcn2.utils import ensure_directory
 
 
 def train(model: nn.Module, last_model_state: int, conf: dict,
@@ -47,6 +48,7 @@ def train(model: nn.Module, last_model_state: int, conf: dict,
 
     print(f'Training the model from epoch {last_model_state} to {final_epoch}')
     average_loss = 0.0
+    model.train()
     for epoch in range(last_model_state, final_epoch):
         total_loss = 0.0
         t_in = time.time()
@@ -108,7 +110,7 @@ def score(model: nn.Module,
           test_loader: DataLoader,
           device: torch.device,
           criterion: nn.Module,
-          recover_tag: Callable[[Tensor], Tensor],
+          recover_tag: list[Callable[[Tensor], Tensor]],
           data_dir: str,
           nimg_plot: int = 1000) -> List[Tensor]:
     """Tests the model.
@@ -123,8 +125,8 @@ def score(model: nn.Module,
         The device to use
     criterion : torch.nn
         The loss function to use
-    recover_tag : function
-        Function to recover a tag
+    recover_tag : list
+        List of functions to recover each tag
     data_dir : str
         The directory where the data is stored
     nimg_plot : int
@@ -138,10 +140,13 @@ def score(model: nn.Module,
     counter = 0
 
     with torch.no_grad():
+        # Put model in evaluation mode
+        model.eval()
+
         test_tags = []
         # create the directory where the images will be stored
-        if not os.path.isdir(f'{data_dir}/score_{model.name}'):
-            os.mkdir(f'{data_dir}/score_{model.name}')
+        ensure_directory(f'{data_dir}/{model.name}_score')
+
         for idx, (inputs, tags) in enumerate(test_loader):
             # Move input and label tensors to the device
             inputs = inputs.to(device)
@@ -162,12 +167,16 @@ def score(model: nn.Module,
                     axs[0].imshow(inputs[i].detach().cpu().squeeze(),
                                   cmap='bone')
                     axs[0].set_title('Loss: {:.4f}'.format(loss.item()))
-                    axs[1].plot(10**(recover_tag(
-                        tags[i].detach().cpu().numpy())),
-                                'o',
-                                label='True')
-                    axs[1].plot(10**(recover_tag(
-                        outputs[i].detach().cpu().numpy())),
+                    recovered_tag_true = np.asarray([
+                        recover_tag[j](tags[i][j].detach().cpu().numpy())
+                        for j in range(len(tags[i]))
+                    ])
+                    axs[1].plot(10**(recovered_tag_true), 'o', label='True')
+                    recovered_tag_model = np.asarray([
+                        recover_tag[j](outputs[i][j].detach().cpu().numpy())
+                        for j in range(len(tags[i]))
+                    ])
+                    axs[1].plot(10**(recovered_tag_model),
                                 '.',
                                 color='tab:red',
                                 label='Predicted')
@@ -184,8 +193,7 @@ def score(model: nn.Module,
                     axs[2].set_title('Unnormalized out')
                     axs[2].set_ylim(0, 1)
                     axs[2].legend()
-                    plt.savefig(
-                        f'{data_dir}/score_{model.name}/score_{counter}.png')
+                    plt.savefig(f'{data_dir}/{model.name}_score/{counter}.png')
                     plt.close()
 
                 # and get all the tags for statistic analysis
