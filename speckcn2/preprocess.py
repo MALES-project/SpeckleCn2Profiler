@@ -163,9 +163,10 @@ class ToUnboundTensor(torch.nn.Module):
         return torch.from_numpy(img).unsqueeze(0)
 
 
-def prepare_data(conf: dict,
-                 nimg_print: int = 5,
-                 nreps: int = 1) -> Tuple[List, List]:
+def prepare_data(
+    conf: dict,
+    nimg_print: int = 5,
+) -> Tuple[List, List]:
     """If not already available, preprocesses the data by loading images and
     tags from the given directory, applying a transformation to the images.
 
@@ -175,8 +176,54 @@ def prepare_data(conf: dict,
         Dictionary containing the configuration
     nimg_print: int
         Number of images to print
-    nreps: int
-        Number of repetitions for each image
+
+    Returns
+    -------
+    all_images : list
+        List of all images
+    all_tags : list
+        List of all tags
+    """
+    datadirectory = conf['speckle']['datadirectory']
+    dataname = conf['preproc']['dataname']
+    tagname = dataname.replace('images', 'tags')
+
+    # First, check if the data has already been preprocessed
+    if os.path.exists(os.path.join(datadirectory, dataname)):
+        print(f'*** Loading preprocessed data from {dataname}')
+        # If so, load it
+        all_images = torch.load(os.path.join(datadirectory, dataname))
+        all_tags = torch.load(os.path.join(datadirectory, tagname))
+    elif conf['preproc']['multichannel'] > 1:
+        print(
+            f'Preprocessing data as multichannel={conf["preproc"]["multichannel"]}'
+        )
+        raise NotImplementedError(
+            '*** Error in preprocessing: multichannel>1 not implemented yet.')
+    elif conf['preproc']['multichannel'] == 1:
+        # Otherwise, preprocess the raw data separating the single images
+        all_images, all_tags = imgs_as_single_datapoint(conf, nimg_print)
+    else:
+        raise ValueError(
+            '*** Error in preprocessing: multichannel must be either 1 or >1.')
+
+    return all_images, all_tags
+
+
+def imgs_as_single_datapoint(
+    conf: dict,
+    nimg_print: int = 5,
+) -> Tuple[List, List]:
+    """Preprocesses the data by loading images and tags from the given
+    directory, applying a transformation to the images. Each image is treated
+    as a single data point.
+
+    Parameters
+    ----------
+    conf : dict
+        Dictionary containing the configuration
+    nimg_print: int
+        Number of images to print
 
     Returns
     -------
@@ -189,6 +236,7 @@ def prepare_data(conf: dict,
     mname = conf['model']['name']
     dataname = conf['preproc']['dataname']
     tagname = dataname.replace('images', 'tags')
+    nreps = conf['preproc']['speckreps']
 
     # Dummy transformation to get the original image
     transform_orig = transforms.Compose([
@@ -199,19 +247,154 @@ def prepare_data(conf: dict,
     # and get the transformation to apply to each image
     transform = assemble_transform(conf)
 
-    # First, check if the data has already been preprocessed
-    if os.path.exists(os.path.join(datadirectory, dataname)):
-        print(f'*** Loading preprocessed data from {dataname}')
-        # If so, load it
-        all_images = torch.load(os.path.join(datadirectory, dataname))
-        all_tags = torch.load(os.path.join(datadirectory, tagname))
-        return all_images, all_tags
-
-    # Otherwise, preprocess the raw data:
+    # Get the list of images:
     file_list = [
         file_name for file_name in os.listdir(datadirectory)
         if '.txt' in file_name and 'tag' not in file_name
     ]
+    # and randomly shuffle them
+    np.random.shuffle(file_list)
+    # I can also do data augmentation, by using each file multiple times (only if I am also doing a random rotation)
+    file_list = file_list * nreps
+    all_images = []
+    all_tags = []
+    if nimg_print > 0:
+        show_image = True
+        # and create a folder to store the images
+        if not os.path.isdir(f'{datadirectory}/images_{mname}'):
+            os.mkdir(f'{datadirectory}/images_{mname}')
+    else:
+        show_image = False
+
+    # Load each text file as an image
+    for counter, file_name in enumerate(file_list):
+        # Construct the full path to the file
+        file_path = os.path.join(datadirectory, file_name)
+
+        # Open the text file as an image using PIL
+        with open(file_path, 'r') as text_file:
+            lines = text_file.readlines()
+
+            pixel_values = np.array([[
+                0 if value == 'NaN' or value == 'NaN\n' else float(value)
+                for value in line.split(',')
+            ] for line in lines],
+                                    dtype=np.float32)
+
+            # Create the image
+            image_orig = Image.fromarray(pixel_values, mode='F')
+
+            # Apply the transformation
+            image = transform(image_orig)
+            image_orig = transform_orig(image_orig)
+
+            # and add it to the collection
+            all_images.append(image)
+
+            # Then load the screen tags
+            if 'MALES' in file_name:
+                ftagname = file_name.replace('.txt', '_tag.txt')
+            else:
+                base_name, _, _ = file_name.rpartition('_')
+                ftagname = base_name + '_tag.txt'
+
+            if os.path.exists(os.path.join(datadirectory, ftagname)):
+                tags = np.loadtxt(os.path.join(datadirectory, ftagname),
+                                  delimiter=',',
+                                  dtype=np.float32)
+
+                # Plot the image using maplotlib
+                if counter > nimg_print:
+                    show_image = False
+                if show_image:
+                    fig, axs = plt.subplots(1, 3, figsize=(15, 5))
+                    # Plot the original image
+                    axs[0].imshow(image_orig.squeeze(), cmap='bone')
+                    axs[0].set_title(f'Training Image {file_name}')
+                    # Plot the preprocessd image
+                    axs[1].imshow(image.squeeze(), cmap='bone')
+                    axs[1].set_title('Processed as')
+                    axs[1].set_xlabel(r'$r$')
+                    axs[1].set_ylabel(r'$\theta$')
+
+                    # Plot the tags
+                    axs[2].plot(tags, 'o')
+                    axs[2].set_yscale('log')
+                    axs[2].set_title('Screen Tags')
+                    axs[2].legend()
+
+                    fig.subplots_adjust(wspace=0.3)
+                    plt.savefig(
+                        f'{datadirectory}/images_{mname}/{counter}.png')
+                    plt.close()
+
+                # Preprocess the tags
+                tags = np.log10(tags)
+
+                # Add the tag to the colleciton
+                all_tags.append(tags)
+            else:
+                print(f'*** Warning: tag file {ftagname} not found.')
+
+    # Finally, store them before returning
+    torch.save(all_images, os.path.join(datadirectory, dataname))
+    torch.save(all_tags, os.path.join(datadirectory, tagname))
+
+    print('*** Preprocessing complete.', flush=True)
+
+    return all_images, all_tags
+
+
+def imgs_as_channels(
+    conf: dict,
+    nimg_print: int = 5,
+) -> Tuple[List, List]:
+    """Preprocesses the data by loading images and tags from the given
+    directory, applying a transformation to the images. Then the images are
+    treated as color channels and they get grouped based on multiplicity value.
+
+    Parameters
+    ----------
+    conf : dict
+        Dictionary containing the configuration
+    nimg_print: int
+        Number of images to print
+
+    Returns
+    -------
+    all_images : list
+        List of all images
+    all_tags : list
+        List of all tags
+    """
+    datadirectory = conf['speckle']['datadirectory']
+    mname = conf['model']['name']
+    dataname = conf['preproc']['dataname']
+    tagname = dataname.replace('images', 'tags')
+    nreps = conf['preproc']['speckreps']
+    multiplicity = conf['preproc']['multichannel']
+
+    # Dummy transformation to get the original image
+    transform_orig = transforms.Compose([
+        transforms.CenterCrop(conf['preproc']['centercrop']),
+        transforms.ToTensor(),
+    ])
+
+    # and get the transformation to apply to each image
+    transform = assemble_transform(conf)
+
+    # Get the list of images:
+    file_list = [
+        file_name for file_name in os.listdir(datadirectory)
+        if '.txt' in file_name and 'tag' not in file_name
+    ]
+    # count them based on the corresponding tag
+    ...  # TODO
+    # optionally, randomly expand the groups in order to form groups of size multiplicity
+    ...  # TODO
+    # group them based on multiplicity
+    ...  # TODO
+
     # and randomly shuffle them
     np.random.shuffle(file_list)
     # I can also do data augmentation, by using each file multiple times (only if I am also doing a random rotation)

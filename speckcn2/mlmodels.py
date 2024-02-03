@@ -1,9 +1,8 @@
 import torch
 import torchvision
-import os
 from typing import Tuple
 from torch import nn
-from speckcn2.utils import load
+from speckcn2.utils import load_model_state
 from speckcn2.scnn import C8SteerableCNN, C16SteerableCNN, small_C16SteerableCNN
 
 
@@ -126,105 +125,3 @@ def get_scnn(nscreens: int, datadirectory: str, model_name: str,
     scnn_model.name = model_name
 
     return load_model_state(scnn_model, datadirectory)
-
-
-def load_model_state(model: nn.Module,
-                     datadirectory: str) -> Tuple[nn.Module, int]:
-    """Loads the model state from the given directory.
-
-    Parameters
-    ----------
-    model : torch.nn.Module
-        The model to load the state into
-    datadirectory : str
-        The directory where the model states are stored
-
-    Returns
-    -------
-    model : torch.nn.Module
-        The model with the loaded state
-    last_model_state : int
-        The number of the last model state
-    """
-
-    # Print model informations
-    print(model)
-    model.nparams = sum(p.numel() for p in model.parameters())
-    print(f'\n--> Nparams = {model.nparams}')
-
-    # If no model is stored, create the folder
-    if not os.path.isdir(f'{datadirectory}/{model.name}_states'):
-        os.mkdir(f'{datadirectory}/{model.name}_states')
-
-    # check what is the last model state
-    try:
-        last_model_state = sorted([
-            int(file_name.split('.pth')[0].split('_')[-1])
-            for file_name in os.listdir(f'{datadirectory}/{model.name}_states')
-        ])[-1]
-    except Exception as e:
-        print(f'Warning: {e}')
-        last_model_state = 0
-
-    if last_model_state > 0:
-        print(f'Loading model at epoch {last_model_state}')
-        load(model, datadirectory, last_model_state)
-        return model, last_model_state
-    else:
-        print('No pretrained model to load')
-
-        # Initialize some model state measure
-        model.loss = []
-        model.val_loss = []
-        model.time = []
-        model.epoch = []
-
-        return model, 0
-
-
-def setup_loss(config: dict) -> nn.Module:
-    """Returns the criterion specified in the configuration file.
-
-    Parameters
-    ----------
-    config : dict
-        Dictionary containing the configuration
-
-    Returns
-    -------
-    criterion : torch.nn.Module
-        The criterion with the loaded state
-    """
-
-    criterion_name = config['hyppar']['loss']
-    if criterion_name == 'BCELoss':
-        return torch.nn.BCELoss()
-    elif criterion_name == 'MSELoss':
-        return torch.nn.MSELoss()
-    else:
-        raise ValueError(f'Unknown criterion {criterion_name}')
-
-
-def setup_optimizer(config: dict, model: nn.Module) -> nn.Module:
-    """Returns the optimizer specified in the configuration file.
-
-    Parameters
-    ----------
-    config : dict
-        Dictionary containing the configuration
-    model : torch.nn.Module
-        The model to optimize
-
-    Returns
-    -------
-    optimizer : torch.nn.Module
-        The optimizer with the loaded state
-    """
-
-    optimizer_name = config['hyppar']['optimizer']
-    if optimizer_name == 'Adam':
-        return torch.optim.Adam(model.parameters(), lr=config['hyppar']['lr'])
-    elif optimizer_name == 'SGD':
-        return torch.optim.SGD(model.parameters(), lr=config['hyppar']['lr'])
-    else:
-        raise ValueError(f'Unknown optimizer {optimizer_name}')
