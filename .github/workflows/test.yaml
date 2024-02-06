@@ -52,6 +52,7 @@ jobs:
         python -m pip install git+https://github.com/AMLab-Amsterdam/lie_learn
         #python -m pip install --ignore-installed git+https://github.com/QUVA-Lab/escnn
         #pip install --ignore-installed -r requirements.txt
+        sed -i '/^scipy/d' requirements.txt && echo "scipy>1.9.2" >> requirements.txt
         pip install -r requirements.txt
 
     - name: Test with pytest
