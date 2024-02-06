@@ -16,7 +16,7 @@ def test_tags_distribution():
             'name': 'test_model',
         },
         'speckle': {
-            'datadirectory': 'speckcn2/assets/test'
+            'datadirectory': 'tests/test_data',
         }
     }
 

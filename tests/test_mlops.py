@@ -14,8 +14,8 @@ def test_score():
     device = torch.device('cpu')
     criterion = torch.nn.MSELoss()
 
-    def recover_tag(x):
-        return x
+    recover_tag = [(lambda x, min_t=0, max_t=1: x * (max_t - min_t) + min_t)
+                   for i in range(8)]
 
     # Call the function
     test_tags = score(dmodel,
@@ -23,7 +23,7 @@ def test_score():
                       device,
                       criterion,
                       recover_tag,
-                      data_dir='speckcn2/assets/test',
+                      data_dir='tests/test_data',
                       nimg_plot=1)
 
     # Assert the expected output

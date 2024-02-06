@@ -4,29 +4,11 @@ import numpy as np
 from speckcn2.preprocess import prepare_data
 
 
-def test_prepare_data(tmpdir):
-    # Define the test data directory
-    test_data_dir = 'speckcn2/assets/test'
-
-    conf = {
-        'speckle': {
-            'datadirectory': test_data_dir
-        },
-        'model': {
-            'name': 'test_model'
-        },
-        'preproc': {
-            'polarize': False,
-            'equivariant': False,
-            'randomrotate': False,
-            'centercrop': 100,
-            'resize': 100,
-            'dataname': 'all_images_test_model.pt',
-        }
-    }
+def test_prepare_data(my_test_conf, tmpdir):
+    test_data_dir = my_test_conf['speckle']['datadirectory']
 
     # Call the function
-    all_images, all_tags = prepare_data(conf)
+    all_images, all_tags = prepare_data(my_test_conf)
 
     # Assert the expected output
     assert isinstance(all_images, list)

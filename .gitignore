@@ -15,3 +15,6 @@ pyrkm.egg-info/
 
 .coverage
 .coverage*
+
+tests/test_data/*
+!tests/test_data/test_config.yaml

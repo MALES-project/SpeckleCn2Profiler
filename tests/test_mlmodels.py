@@ -1,8 +1,7 @@
 import os
 import torch
 import pytest
-from speckcn2.mlmodels import load_model_state
-from speckcn2.utils import save
+from speckcn2.io import save, load_model_state
 
 
 @pytest.fixture
