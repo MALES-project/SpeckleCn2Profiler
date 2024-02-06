@@ -11,7 +11,7 @@ tmp/
 __pycache__/
 build/
 .ruff_cache/
-pyrkm.egg-info/
+speckcn2.egg-info/
 
 .coverage
 .coverage*
