@@ -47,11 +47,12 @@ jobs:
 
     - name: Install dependencies
       run: |
-        python -m pip install --upgrade pip
-        pip install --config-settings "setup-args=-Dblas=blas" --config-settings "setup-args=-Dlapack=lapack" scipy
-        python -m pip install git+https://github.com/AMLab-Amsterdam/lie_learn
-        python -m pip install --ignore-installed git+https://github.com/QUVA-Lab/escnn
-        pip install --ignore-installed -r requirements.txt
+        #python -m pip install --upgrade pip
+        #pip install --config-settings "setup-args=-Dblas=blas" --config-settings "setup-args=-Dlapack=lapack" scipy
+        #python -m pip install git+https://github.com/AMLab-Amsterdam/lie_learn
+        #python -m pip install --ignore-installed git+https://github.com/QUVA-Lab/escnn
+        #pip install --ignore-installed -r requirements.txt
+        pip install -r requirements.txt
 
     - name: Test with pytest
       run: |
