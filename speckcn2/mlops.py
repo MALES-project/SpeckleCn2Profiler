@@ -1,18 +1,17 @@
-import numpy as np
 import time
 import torch
-import matplotlib.pyplot as plt
 from torch import nn, optim, Tensor
 from torch.utils.data import DataLoader
-from typing import Callable, List, Tuple
+from typing import Callable
 from speckcn2.io import save
 from speckcn2.utils import ensure_directory
+from speckcn2.plots import score_plot
 
 
 def train(model: nn.Module, last_model_state: int, conf: dict,
           train_loader: DataLoader, test_loader: DataLoader,
           device: torch.device, optimizer: optim.Optimizer,
-          criterion: nn.Module) -> Tuple[nn.Module, float]:
+          criterion: nn.Module) -> tuple[nn.Module, float]:
     """Trains the model for the given number of epochs.
 
     Parameters
@@ -112,7 +111,7 @@ def score(model: nn.Module,
           criterion: nn.Module,
           recover_tag: list[Callable[[Tensor], Tensor]],
           data_dir: str,
-          nimg_plot: int = 1000) -> List[Tensor]:
+          nimg_plot: int = 1000) -> list[Tensor]:
     """Tests the model.
 
     Parameters
@@ -162,39 +161,8 @@ def score(model: nn.Module,
                 print(f'Item {counter} loss: {loss.item():.4f}')
 
                 if counter < nimg_plot:
-                    # Plot the image and output side by side
-                    fig, axs = plt.subplots(1, 3, figsize=(12, 3.5))
-                    axs[0].imshow(inputs[i].detach().cpu().squeeze(),
-                                  cmap='bone')
-                    axs[0].set_title('Loss: {:.4f}'.format(loss.item()))
-                    recovered_tag_true = np.asarray([
-                        recover_tag[j](tags[i][j].detach().cpu().numpy())
-                        for j in range(len(tags[i]))
-                    ])
-                    axs[1].plot(10**(recovered_tag_true), 'o', label='True')
-                    recovered_tag_model = np.asarray([
-                        recover_tag[j](outputs[i][j].detach().cpu().numpy())
-                        for j in range(len(tags[i]))
-                    ])
-                    axs[1].plot(10**(recovered_tag_model),
-                                '.',
-                                color='tab:red',
-                                label='Predicted')
-                    axs[1].set_yscale('log')
-                    axs[1].set_title('Screen Tags')
-                    axs[1].legend()
-                    axs[2].plot(tags[i].detach().cpu().numpy(),
-                                'o',
-                                label='True')
-                    axs[2].plot(outputs[i].detach().cpu().numpy(),
-                                '.',
-                                color='tab:red',
-                                label='Predicted')
-                    axs[2].set_title('Unnormalized out')
-                    axs[2].set_ylim(0, 1)
-                    axs[2].legend()
-                    plt.savefig(f'{data_dir}/{model.name}_score/{counter}.png')
-                    plt.close()
+                    score_plot(model.name, inputs, outputs, tags, loss, i,
+                               counter, data_dir, recover_tag)
 
                 # and get all the tags for statistic analysis
                 for tag in outputs:

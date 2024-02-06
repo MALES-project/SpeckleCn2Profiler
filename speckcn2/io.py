@@ -1,7 +1,6 @@
 import os
 import yaml
 import torch
-from typing import Tuple
 from speckcn2.utils import ensure_directory
 
 
@@ -77,7 +76,7 @@ def load(model: torch.nn.Module, datadirectory: str, epoch: int) -> None:
 
 
 def load_model_state(model: torch.nn.Module,
-                     datadirectory: str) -> Tuple[torch.nn.Module, int]:
+                     datadirectory: str) -> tuple[torch.nn.Module, int]:
     """Loads the model state from the given directory.
 
     Parameters

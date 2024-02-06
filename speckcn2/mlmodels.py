@@ -1,12 +1,11 @@
 import torch
 import torchvision
-from typing import Tuple
 from torch import nn
 from speckcn2.io import load_model_state
 from speckcn2.scnn import C8SteerableCNN, C16SteerableCNN, small_C16SteerableCNN
 
 
-def setup_model(config: dict) -> Tuple[nn.Module, int]:
+def setup_model(config: dict) -> tuple[nn.Module, int]:
     """Returns the model specified in the configuration file, with the last
     layer corresponding to the number of screens.
 
@@ -43,7 +42,7 @@ def setup_model(config: dict) -> Tuple[nn.Module, int]:
 
 
 def get_a_resnet(nscreens: int, datadirectory: str, model_name: str,
-                 model_type: str, pretrained: bool) -> Tuple[nn.Module, int]:
+                 model_type: str, pretrained: bool) -> tuple[nn.Module, int]:
     """Returns a pretrained ResNet model, with the last layer corresponding to
     the number of screens.
 
@@ -106,7 +105,7 @@ def get_a_resnet(nscreens: int, datadirectory: str, model_name: str,
 
 
 def get_scnn(nscreens: int, datadirectory: str, model_name: str,
-             model_type: str, img_res: str) -> Tuple[nn.Module, int]:
+             model_type: str, img_res: str) -> tuple[nn.Module, int]:
     """Returns a pretrained Spherical-CNN model, with the last layer
     corresponding to the number of screens."""
 
