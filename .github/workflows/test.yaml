@@ -47,6 +47,7 @@ jobs:
 
     - name: Install dependencies
       run: |
+        apt install libblas-dev liblapack-dev gfortran
         python -m pip install --upgrade pip
         python -m pip install git+https://github.com/AMLab-Amsterdam/lie_learn
         pip install -r requirements.txt
