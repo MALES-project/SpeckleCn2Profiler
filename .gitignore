@@ -6,6 +6,7 @@ tasks.json
 
 .mypy_cache/
 .mypy*
+mypy.ini
 
 tmp/
 __pycache__/
