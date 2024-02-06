@@ -16,7 +16,8 @@ def score_plot(
     data_dir: str,
     recover_tag: list[Callable],
 ) -> None:
-    """Plots the input, output and loss of the model.
+    """Plots side by side the input image, the predicted/exact tags and their
+    normalize value in model units.
 
     Parameters
     ----------
@@ -69,6 +70,76 @@ def score_plot(
     axs[2].set_ylim(0, 1)
     axs[2].legend()
     plt.savefig(f'{data_dir}/{model_name}_score/{counter}.png')
+    plt.close()
+
+
+def altitude_profile_plot(
+    model_name: str,
+    inputs: torch.Tensor,
+    outputs: torch.Tensor,
+    tags: list,
+    i: int,
+    counter: int,
+    data_dir: str,
+    recover_tag: list[Callable],
+) -> None:
+    """Plots side by side the input image and the predicted/exact altitude
+    profile.
+
+    Parameters
+    ----------
+    model_name : str
+        The name of the model
+    inputs : torch.Tensor
+        The input speckle patterns
+    outputs : torch.Tensor
+        The predicted screen tags
+    tags : list
+        The exact tags of the data
+    i : int
+        The batch index of the image
+    counter : int
+        The global index of the image
+    data_dir : str
+        The directory where the data is stored
+    recover_tag : list
+        List of functions to recover each tag
+    """
+
+    # Plot the image and output side by side
+    fig, axs = plt.subplots(1, 2, figsize=(8, 3.5))
+    axs[0].imshow(inputs[i].detach().cpu().squeeze(), cmap='bone')
+    recovered_tag_true = np.asarray([
+        recover_tag[j](tags[i][j].detach().cpu().numpy())
+        for j in range(len(tags[i]))
+    ])
+    h_true = 10**(recovered_tag_true)
+    recovered_tag_model = np.asarray([
+        recover_tag[j](outputs[i][j].detach().cpu().numpy())
+        for j in range(len(tags[i]))
+    ])
+    h_predic = 10**(recovered_tag_model)
+
+    axs[1].plot(h_true, range(len(h_true)), 'o--', label='True')
+
+    plot_model_prediciton = False
+    if plot_model_prediciton:
+        axs[1].plot(h_predic,
+                    range(len(h_predic)),
+                    '.',
+                    color='tab:red',
+                    label='Predicted')
+
+    axs[1].set_xscale('log')
+    axs[1].set_xlabel(r'$C_{n}^{2}$')
+    axs[1].set_ylabel('Altitude [m]')
+    y_tick_labels = [f'{i*400}m' for i in range(0, 8)]
+    axs[1].yaxis.set_ticks(range(0, 8))
+    axs[1].set_yticklabels(y_tick_labels)
+
+    plt.suptitle(r'$C_{n}^{2}(h)$ profile from Speckle Pattern')
+    plt.tight_layout()
+    plt.savefig(f'{data_dir}/{model_name}_score/h_{counter}.png')
     plt.close()
 
 
