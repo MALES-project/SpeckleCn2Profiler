@@ -5,7 +5,7 @@ from torch.utils.data import DataLoader
 from typing import Callable
 from speckcn2.io import save
 from speckcn2.utils import ensure_directory
-from speckcn2.plots import score_plot
+from speckcn2.plots import score_plot, altitude_profile_plot
 
 
 def train(model: nn.Module, last_model_state: int, conf: dict,
@@ -163,6 +163,8 @@ def score(model: nn.Module,
                 if counter < nimg_plot:
                     score_plot(model.name, inputs, outputs, tags, loss, i,
                                counter, data_dir, recover_tag)
+                    altitude_profile_plot(model.name, inputs, outputs, tags, i,
+                                          counter, data_dir, recover_tag)
 
                 # and get all the tags for statistic analysis
                 for tag in outputs:
