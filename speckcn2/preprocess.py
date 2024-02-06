@@ -558,7 +558,6 @@ def normalize_imgs_and_tags(
     normalized_tags = np.array(
         [[normalize_tag[j](tag) for j, tag in enumerate(tags)]
          for tags in all_tags])
-    #    normalized_tags = np.array(normalized_tags)
 
     # I can now create the dataset
     dataset = [(image, tag)
