@@ -2,7 +2,7 @@ import torch
 from PIL import Image
 import os
 import numpy as np
-from typing import Callable, List, Tuple
+from typing import Callable
 import torchvision.transforms as transforms
 from speckcn2.utils import ensure_directory, plot_preprocessed_image
 from speckcn2.transformations import PolarCoordinateTransform, ShiftRowsTransform, ToUnboundTensor
@@ -56,7 +56,7 @@ def assemble_transform(conf: dict) -> transforms.Compose:
 def prepare_data(
     conf: dict,
     nimg_print: int = 5,
-) -> Tuple[List, List]:
+) -> tuple[list, list]:
     """If not already available, preprocesses the data by loading images and
     tags from the given directory, applying a transformation to the images.
 
@@ -103,7 +103,7 @@ def prepare_data(
 def imgs_as_single_datapoint(
     conf: dict,
     nimg_print: int = 5,
-) -> Tuple[List, List]:
+) -> tuple[list, list]:
     """Preprocesses the data by loading images and tags from the given
     directory, applying a transformation to the images. Each image is treated
     as a single data point.
@@ -278,13 +278,13 @@ def imgs_as_channels(
 
 
 def normalize_imgs_and_tags(
-    all_images: List[torch.tensor], all_tags: List[np.ndarray]
-) -> Tuple[
-        List[Tuple[torch.tensor, np.ndarray]],
+    all_images: list[torch.tensor], all_tags: list[np.ndarray]
+) -> tuple[
+        list[tuple[torch.tensor, np.ndarray]],
         Callable[[np.ndarray], np.ndarray],
         Callable[[np.ndarray], np.ndarray],
-        List[Callable[[torch.tensor], torch.tensor]],
-        List[Callable[[torch.tensor], torch.tensor]],
+        list[Callable[[torch.tensor], torch.tensor]],
+        list[Callable[[torch.tensor], torch.tensor]],
 ]:
     """Normalize both the input images and the tags to be between 0 and 1.
 

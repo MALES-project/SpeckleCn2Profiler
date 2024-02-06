@@ -5,7 +5,8 @@ from .io import save, load, load_config
 from .preprocess import prepare_data, normalize_imgs_and_tags
 from .mlmodels import setup_model, get_a_resnet
 from .mlops import train, score
-from .postprocess import tags_distribution, plot_loss, plot_time
+from .postprocess import tags_distribution
+from .plots import plot_loss, plot_time
 from .utils import setup_loss, setup_optimizer, train_test_split
 
 __all__ = [

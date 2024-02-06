@@ -1,7 +1,6 @@
 import torch
 import os
 import torch.nn as nn
-from typing import Tuple, List
 from torch.utils.data import DataLoader
 import matplotlib.pyplot as plt
 
@@ -142,9 +141,9 @@ class PearsonCorrelationLoss(nn.Module):
 
 
 def train_test_split(
-        dataset: List[Tuple[torch.tensor, float]],
+        dataset: list[tuple[torch.tensor, float]],
         batch_size: int = 32,
-        train_test_split: float = 0.8) -> Tuple[DataLoader, DataLoader]:
+        train_test_split: float = 0.8) -> tuple[DataLoader, DataLoader]:
     """Splits the data into training and testing sets.
 
     Parameters
