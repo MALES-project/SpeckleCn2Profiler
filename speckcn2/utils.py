@@ -3,6 +3,52 @@ import os
 import torch.nn as nn
 from typing import Tuple, List
 from torch.utils.data import DataLoader
+import matplotlib.pyplot as plt
+
+
+def plot_preprocessed_image(image_orig: torch.tensor, image: torch.tensor,
+                            tags: torch.tensor, counter: int,
+                            datadirectory: str, mname: str,
+                            file_name: str) -> None:
+    """Plots the original and preprocessed image, and the tags.
+
+    Parameters
+    ----------
+    image_orig : torch.tensor
+        The original image
+    image : torch.tensor
+        The preprocessed image
+    tags : torch.tensor
+        The screen tags
+    counter : int
+        The counter of the image
+    datadirectory : str
+        The directory containing the data
+    mname : str
+        The name of the model
+    file_name : str
+        The name of the original image
+    """
+
+    fig, axs = plt.subplots(1, 3, figsize=(15, 5))
+    # Plot the original image
+    axs[0].imshow(image_orig.squeeze(), cmap='bone')
+    axs[0].set_title(f'Training Image {file_name}')
+    # Plot the preprocessd image
+    axs[1].imshow(image.squeeze(), cmap='bone')
+    axs[1].set_title('Processed as')
+    axs[1].set_xlabel(r'$r$')
+    axs[1].set_ylabel(r'$\theta$')
+
+    # Plot the tags
+    axs[2].plot(tags, 'o')
+    axs[2].set_yscale('log')
+    axs[2].set_title('Screen Tags')
+    axs[2].legend()
+
+    fig.subplots_adjust(wspace=0.3)
+    plt.savefig(f'{datadirectory}/imgs_to_{mname}/{counter}.png')
+    plt.close()
 
 
 def ensure_directory(data_directory: str) -> None:
