@@ -2,8 +2,8 @@ import time
 import torch
 from torch import nn, optim, Tensor
 from torch.utils.data import DataLoader
-from typing import Callable
 from speckcn2.io import save
+from speckcn2.preprocess import Normalizer
 from speckcn2.utils import ensure_directory
 from speckcn2.plots import score_plot, altitude_profile_plot
 
@@ -109,9 +109,8 @@ def score(model: nn.Module,
           test_loader: DataLoader,
           device: torch.device,
           criterion: nn.Module,
-          recover_tag: list[Callable[[Tensor], Tensor]],
-          data_dir: str,
-          nimg_plot: int = 1000) -> list[Tensor]:
+          normalizer: Normalizer,
+          nimg_plot: int = 100) -> list[Tensor]:
     """Tests the model.
 
     Parameters
@@ -124,10 +123,8 @@ def score(model: nn.Module,
         The device to use
     criterion : torch.nn
         The loss function to use
-    recover_tag : list
-        List of functions to recover each tag
-    data_dir : str
-        The directory where the data is stored
+    normalizer : Normalizer
+        The normalizer used to recover the tags
     nimg_plot : int
         Number of images to plot
 
@@ -137,6 +134,7 @@ def score(model: nn.Module,
         List of all the predicted tags of the test set
     """
     counter = 0
+    data_dir = normalizer.conf['speckle']['datadirectory']
 
     with torch.no_grad():
         # Put model in evaluation mode
@@ -162,9 +160,10 @@ def score(model: nn.Module,
 
                 if counter < nimg_plot:
                     score_plot(model.name, inputs, outputs, tags, loss, i,
-                               counter, data_dir, recover_tag)
+                               counter, data_dir, normalizer.recover_tag)
                     altitude_profile_plot(model.name, inputs, outputs, tags, i,
-                                          counter, data_dir, recover_tag)
+                                          counter, data_dir,
+                                          normalizer.recover_tag)
 
                 # and get all the tags for statistic analysis
                 for tag in outputs:
