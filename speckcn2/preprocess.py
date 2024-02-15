@@ -1,4 +1,5 @@
 import torch
+from dataclasses import dataclass
 from PIL import Image
 import os
 import numpy as np
@@ -6,6 +7,7 @@ from typing import Callable
 import torchvision.transforms as transforms
 from speckcn2.utils import ensure_directory, plot_preprocessed_image
 from speckcn2.transformations import PolarCoordinateTransform, ShiftRowsTransform, ToUnboundTensor
+
 
 
 def assemble_transform(conf: dict) -> transforms.Compose:
@@ -155,6 +157,21 @@ def imgs_as_single_datapoint(
     else:
         show_image = False
 
+    # Check existence of tag files
+    tag_files = {}
+    for file_name in file_list:
+        if 'MALES' in file_name:
+            ftagname = file_name.replace('.txt', '_tag.txt')
+        else:
+            base_name, _, _ = file_name.rpartition('_')
+            ftagname = base_name + '_tag.txt'
+
+        tag_path = os.path.join(datadirectory, ftagname)
+        if os.path.exists(tag_path):
+            tag_files[file_name] = tag_path
+        else:
+            print(f'*** Warning: tag file {ftagname} not found.')
+
     # Load each text file as an image
     for counter, file_name in enumerate(file_list):
         # Construct the full path to the file
@@ -162,13 +179,9 @@ def imgs_as_single_datapoint(
 
         # Open the text file as an image using PIL
         with open(file_path, 'r') as text_file:
-            lines = text_file.readlines()
-
-            pixel_values = np.array([[
-                0 if value == 'NaN' or value == 'NaN\n' else float(value)
-                for value in line.split(',')
-            ] for line in lines],
-                                    dtype=np.float32)
+            pixel_values = np.loadtxt(file_path,
+                                      delimiter=',',
+                                      dtype=np.float32)
 
             # Create the image
             image_orig = Image.fromarray(pixel_values, mode='F')
@@ -180,15 +193,9 @@ def imgs_as_single_datapoint(
             # and add it to the collection
             all_images.append(image)
 
-            # Then load the screen tags
-            if 'MALES' in file_name:
-                ftagname = file_name.replace('.txt', '_tag.txt')
-            else:
-                base_name, _, _ = file_name.rpartition('_')
-                ftagname = base_name + '_tag.txt'
-
-            if os.path.exists(os.path.join(datadirectory, ftagname)):
-                tags = np.loadtxt(os.path.join(datadirectory, ftagname),
+            # Process tags if available
+            if file_name in tag_files:
+                tags = np.loadtxt(tag_files[file_name],
                                   delimiter=',',
                                   dtype=np.float32)
 
@@ -200,8 +207,7 @@ def imgs_as_single_datapoint(
                                             datadirectory, mname, file_name)
 
                 # Preprocess the tags
-                tags = np.log10(tags)
-
+                np.log10(tags, out=tags)
                 # Add the tag to the colleciton
                 all_tags.append(tags)
             else:
@@ -277,80 +283,193 @@ def imgs_as_channels(
     ...  # TODO
 
 
-def normalize_imgs_and_tags(
-    all_images: list[torch.tensor], all_tags: list[np.ndarray]
-) -> tuple[
-        list[tuple[torch.tensor, np.ndarray]],
-        Callable[[np.ndarray], np.ndarray],
-        Callable[[np.ndarray], np.ndarray],
-        list[Callable[[torch.tensor], torch.tensor]],
-        list[Callable[[torch.tensor], torch.tensor]],
-]:
-    """Normalize both the input images and the tags to be between 0 and 1.
+@dataclass
+class Normalizer:
+    """Class to handle the normalization of images and tags.
 
     Parameters
     ----------
-    all_images : list
-        List of all images
-    all_tags : list
-        List of all tags
-
-    Returns
-    -------
-    dataset : list
-        List of tuples (image, normalized_tag)
-    normalize_img : function
-        Function to normalize an image
-    recover_img : function
-        Function to recover an image
-    normalize_tag : list
-        List of functions to normalize each tag
-    recover_tag : list
-        List of functions to recover each tag
+    conf : dict
+        Dictionary containing the configuration
     """
-    # Find the maximum between the maximum and minimum values of the images
-    max_img = max([torch.max(image) for image in all_images])
-    print('*** Image max:', max_img)
-    min_img = min([torch.min(image) for image in all_images])
-    print('*** Image min:', min_img)
-    range_img = max_img - min_img
+    conf: dict
 
-    def normalize_img(img):
-        return (img - min_img) / range_img
+    def normalize_imgs_and_tags(
+        self, all_images: list[torch.tensor], all_tags: list[np.ndarray]
+    ) -> tuple[
+            list[tuple[torch.tensor, np.ndarray]],
+    ]:
+        """Normalize both the input images and the tags to be between 0 and 1.
 
-    def recover_img(nimg):
-        return nimg * range_img + min_img
+        Parameters
+        ----------
+        all_images : list
+            List of all images
+        all_tags : list
+            List of all tags
+        conf : dict
+            Dictionary containing the configuration
 
-    # Normalize the images
-    normalized_images = [normalize_img(image) for image in all_images]
+        Returns
+        -------
+        dataset : list
+            List of tuples (image, normalized_tag)
+        """
+        # Get a mask for the NaN values
+        self._mask_img = 1 - np.isnan(all_images[0])
 
-    # Then I normalize the tags
-    min_tags = np.min(all_tags, axis=0)
-    print('*** Tag min:', min_tags)
-    max_tags = np.max(all_tags, axis=0)
-    print('*** Tag max:', max_tags)
+        # Then replace all the nan values with 0
+        all_images = [torch.nan_to_num(image) for image in all_images]
 
-    # I create a lambda function for each tag
-    def create_normalize_functions(min_t, max_t):
-        return [(lambda x, min_t=min_t[i], max_t=max_t[i]: (x - min_t) /
-                 (max_t - min_t)) for i in range(len(min_t))]
+        # Define the normalization functions for the images
+        if not hasattr(self, 'normalize_img'):
+            # Find the maximum between the maximum and minimum values of the images
+            max_img = max([torch.max(image) for image in all_images])
+            print('*** Image max:', max_img)
+            min_img = min([torch.min(image) for image in all_images])
+            print('*** Image min:', min_img)
+            range_img = max_img - min_img
 
-    normalize_tag = create_normalize_functions(min_tags, max_tags)
+            self.normalize_img, self.recover_img = self._img_normalize_functions(
+                min_img, range_img)
 
-    # And the recover functions
-    def create_recover_functions(min_t, max_t):
-        return [(lambda x, min_t=min_t[i], max_t=max_t[i]: x *
-                 (max_t - min_t) + min_t) for i in range(len(min_t))]
+        # Normalize the images
+        normalized_images = [self.normalize_img(image) for image in all_images]
 
-    recover_tag = create_recover_functions(min_tags, max_tags)
+        # Define the normalization functions for the tags
+        if not hasattr(self, 'normalize_tag'):
+            self.min_tags = np.min(all_tags, axis=0)
+            print('*** Tag min:', self.min_tags)
+            self.max_tags = np.max(all_tags, axis=0)
+            print('*** Tag max:', self.max_tags)
 
-    # And normalize the tags
-    normalized_tags = np.array(
-        [[normalize_tag[j](tag) for j, tag in enumerate(tags)]
-         for tags in all_tags])
+            # get the std deviation if using Z-score
+            if self.conf['preproc']['normalization'] == 'zscore':
+                self.mean_tags = np.mean(all_tags, axis=0)
+                print('*** Tag mean:', self.mean_tags)
+                self.std_tags = np.std(all_tags, axis=0)
+                print('*** Tag std:', self.std_tags)
+            # get the empirical cumulative distribution function if using ECDF
+            elif self.conf['preproc']['normalization'] == 'unif':
+                all_tags = np.array(all_tags)
+                # remember the order of the tags
+                self._sorted_indices = np.argsort(all_tags, axis=0)
+                self._sorted_tags = np.stack([
+                    all_tags[self._sorted_indices[:, i], i]
+                    for i in range(all_tags.shape[1])
+                ]).T
+                self.Ndata = all_tags.shape[0]
 
-    # I can now create the dataset
-    dataset = [(image, tag)
-               for image, tag in zip(normalized_images, normalized_tags)]
+            self.normalize_tag, self.recover_tag = self._tag_normalize_functions(
+            )
 
-    return dataset, normalize_img, recover_img, normalize_tag, recover_tag
+        # And normalize the tags
+        normalized_tags = np.array([[
+            self.normalize_tag[j](tag, tag_id) for j, tag in enumerate(tags)
+        ] for tag_id, tags in enumerate(all_tags)],
+                                   dtype=np.float32)
+
+        # I can now create the dataset
+        dataset = [(image, tag)
+                   for image, tag in zip(normalized_images, normalized_tags)]
+
+        return dataset
+
+    def _img_normalize_functions(
+            self, min_img: np.ndarray,
+            range_img: np.ndarray) -> tuple[Callable, Callable]:
+        """Create the normalization and recovery functions for the images. The
+        images are normalized between 0 and 1 using global values.
+
+        Parameters
+        ----------
+        min_img : np.ndarray
+            Minimum value for all the images
+        range_img : np.ndarray
+            Maximum value for all the images
+
+        Returns
+        -------
+        normalize_fn : Callable
+            Function to normalize an image
+        recover_fn : Callable
+            Function to recover an image
+        """
+        normalize_fn = (
+            lambda x, min_img=min_img, range_img=range_img: self._mask_img *
+            (x - min_img) / range_img)
+        recover_fn = (
+            lambda y, min_img=min_img, range_img=range_img: self._mask_img *
+            (y * range_img + min_img))
+
+        return normalize_fn, recover_fn
+
+    def _tag_normalize_functions(
+            self) -> tuple[list[Callable], list[Callable]]:
+        """Create the normalization and recovery functions for the tags.
+
+        Returns
+        -------
+        normalize_functions : list
+            List of functions to normalize each tag
+        recover_functions : list
+            List of functions to recover each tag
+        """
+
+        if self.conf['preproc']['normalization'] == 'unif':
+
+            normalize_functions = [
+                (lambda x, x_id, sorted_id=self._sorted_indices[:, i]:
+                 sorted_id[x_id] / self.Ndata)
+                for i in range(self.conf['speckle']['nscreens'])
+            ]
+            recover_functions = [
+                (lambda y, sorted_id=self._sorted_indices[:, i]: self.
+                 _sorted_tags[int(y * self.Ndata), i])
+                for i in range(self.conf['speckle']['nscreens'])
+            ]
+            return normalize_functions, recover_functions
+        elif self.conf['preproc']['normalization'] == 'zscore':
+            normalize_functions = [
+                (lambda x, mean=self.mean[i], std=self.std[i]:
+                 (x - mean) / std)
+                for i in range(self.conf['speckle']['nscreens'])
+            ]
+            recover_functions = [
+                (lambda y, mean=self.mean[i], std=self.std[i]: y * std + mean)
+                for i in range(self.conf['speckle']['nscreens'])
+            ]
+            return normalize_functions, recover_functions
+        elif self.conf['preproc']['normalization'] == 'log':
+            # The log normalization follows this formula:
+            #   f(x) = (log(x - min + 1) - log(max - min + 1)) / (log(c - min + 1) - log(max - min + 1))
+            # where c=1 sets the range of 0<=f(x)<=c=1
+            normalize_functions = [
+                (lambda x, x_id, min_t=self.min_tags[i], max_t=self.max_tags[
+                    i]: np.log((x - min_t + 1) / (max_t - min_t + 1)) / np.log(
+                        (2 - min_t) / (max_t - min_t + 1)))
+                for i in range(self.conf['speckle']['nscreens'].min_tags)
+            ]
+            recover_functions = [
+                (lambda y, y_id, min_t=self.min_tags[i], max_t=self.max_tags[
+                    i]: np.exp(y) * np.log((2 - min_t) / (max_t - min_t + 1)) *
+                 (max_t - min_t + 1) + min_t - 1)
+                for i in range(self.conf['speckle']['nscreens'].min_tags)
+            ]
+            return normalize_functions, recover_functions
+        elif self.conf['preproc']['normalization'] == 'lin':
+            normalize_functions = [
+                (lambda x, x_id, min_t=self.min_tags[i], max_t=self.max_tags[
+                    i]: (x - min_t) / (max_t - min_t))
+                for i in range(self.conf['speckle']['nscreens'])
+            ]
+            recover_functions = [
+                (lambda y, y_id, min_t=self.min_tags[i], max_t=self.max_tags[
+                    i]: y * (max_t - min_t) + min_t)
+                for i in range(self.conf['speckle']['nscreens'])
+            ]
+            return normalize_functions, recover_functions
+        else:
+            raise ValueError(
+                f"*** Error in normalization: normalization {self.conf['preproc']['normalization']} unknown."
+            )
