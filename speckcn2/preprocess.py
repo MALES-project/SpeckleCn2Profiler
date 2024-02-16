@@ -396,14 +396,13 @@ class Normalizer:
         recover_fn : Callable
             Function to recover an image
         """
-        normalize_fn = [
-            (lambda x, min_img=min_img, range_img=range_img: self._mask_img *
-             (x - min_img) / range_img)
-        ]
-        recover_fn = [
-            (lambda y, min_img=min_img, range_img=range_img: self._mask_img *
-             (y * range_img + min_img))
-        ]
+        normalize_fn = (
+            lambda x, min_img=min_img, range_img=range_img: self._mask_img *
+            (x - min_img) / range_img)
+
+        recover_fn = (
+            lambda y, min_img=min_img, range_img=range_img: self._mask_img *
+            (y * range_img + min_img))
 
         return normalize_fn, recover_fn
 
