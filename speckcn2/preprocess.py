@@ -9,7 +9,6 @@ from speckcn2.utils import ensure_directory, plot_preprocessed_image
 from speckcn2.transformations import PolarCoordinateTransform, ShiftRowsTransform, ToUnboundTensor
 
 
-
 def assemble_transform(conf: dict) -> transforms.Compose:
     """Assembles the transformation to apply to each image.
 
@@ -178,40 +177,37 @@ def imgs_as_single_datapoint(
         file_path = os.path.join(datadirectory, file_name)
 
         # Open the text file as an image using PIL
-        with open(file_path, 'r') as text_file:
-            pixel_values = np.loadtxt(file_path,
-                                      delimiter=',',
-                                      dtype=np.float32)
+        pixel_values = np.loadtxt(file_path, delimiter=',', dtype=np.float32)
 
-            # Create the image
-            image_orig = Image.fromarray(pixel_values, mode='F')
+        # Create the image
+        image_orig = Image.fromarray(pixel_values, mode='F')
 
-            # Apply the transformation
-            image = transform(image_orig)
-            image_orig = transform_orig(image_orig)
+        # Apply the transformation
+        image = transform(image_orig)
+        image_orig = transform_orig(image_orig)
 
-            # and add it to the collection
-            all_images.append(image)
+        # and add it to the collection
+        all_images.append(image)
 
-            # Process tags if available
-            if file_name in tag_files:
-                tags = np.loadtxt(tag_files[file_name],
-                                  delimiter=',',
-                                  dtype=np.float32)
+        # Process tags if available
+        if file_name in tag_files:
+            tags = np.loadtxt(tag_files[file_name],
+                              delimiter=',',
+                              dtype=np.float32)
 
-                # Plot the image using maplotlib
-                if counter > nimg_print:
-                    show_image = False
-                if show_image:
-                    plot_preprocessed_image(image_orig, image, tags, counter,
-                                            datadirectory, mname, file_name)
+            # Plot the image using maplotlib
+            if counter > nimg_print:
+                show_image = False
+            if show_image:
+                plot_preprocessed_image(image_orig, image, tags, counter,
+                                        datadirectory, mname, file_name)
 
-                # Preprocess the tags
-                np.log10(tags, out=tags)
-                # Add the tag to the colleciton
-                all_tags.append(tags)
-            else:
-                print(f'*** Warning: tag file {ftagname} not found.')
+            # Preprocess the tags
+            np.log10(tags, out=tags)
+            # Add the tag to the colleciton
+            all_tags.append(tags)
+        else:
+            print(f'*** Warning: tag file {ftagname} not found.')
 
     # Finally, store them before returning
     torch.save(all_images, os.path.join(datadirectory, dataname))
@@ -351,14 +347,19 @@ class Normalizer:
                 print('*** Tag std:', self.std_tags)
             # get the empirical cumulative distribution function if using ECDF
             elif self.conf['preproc']['normalization'] == 'unif':
-                all_tags = np.array(all_tags)
-                # remember the order of the tags
-                self._sorted_indices = np.argsort(all_tags, axis=0)
+                array_tags = np.array(all_tags)
+
+                # Find the indices that sort the tags
+                _sorting_indices = np.argsort(array_tags, axis=0)
+                # And the corresponding indices that unsort them
+                self._unsorting_indices = np.argsort(np.argsort(array_tags,
+                                                                axis=0),
+                                                     axis=0)
                 self._sorted_tags = np.stack([
-                    all_tags[self._sorted_indices[:, i], i]
-                    for i in range(all_tags.shape[1])
+                    array_tags[_sorting_indices[:, i], i]
+                    for i in range(array_tags.shape[1])
                 ]).T
-                self.Ndata = all_tags.shape[0]
+                self.Ndata = array_tags.shape[0]
 
             self.normalize_tag, self.recover_tag = self._tag_normalize_functions(
             )
@@ -395,12 +396,14 @@ class Normalizer:
         recover_fn : Callable
             Function to recover an image
         """
-        normalize_fn = (
-            lambda x, min_img=min_img, range_img=range_img: self._mask_img *
-            (x - min_img) / range_img)
-        recover_fn = (
-            lambda y, min_img=min_img, range_img=range_img: self._mask_img *
-            (y * range_img + min_img))
+        normalize_fn = [
+            (lambda x, min_img=min_img, range_img=range_img: self._mask_img *
+             (x - min_img) / range_img)
+        ]
+        recover_fn = [
+            (lambda y, min_img=min_img, range_img=range_img: self._mask_img *
+             (y * range_img + min_img))
+        ]
 
         return normalize_fn, recover_fn
 
@@ -419,25 +422,23 @@ class Normalizer:
         if self.conf['preproc']['normalization'] == 'unif':
 
             normalize_functions = [
-                (lambda x, x_id, sorted_id=self._sorted_indices[:, i]:
-                 sorted_id[x_id] / self.Ndata)
-                for i in range(self.conf['speckle']['nscreens'])
+                (lambda x, x_id, i=i: self._unsorting_indices[x_id, i] / self.
+                 Ndata) for i in range(self.conf['speckle']['nscreens'])
             ]
             recover_functions = [
-                (lambda y, sorted_id=self._sorted_indices[:, i]: self.
-                 _sorted_tags[int(y * self.Ndata), i])
+                (lambda y, i=i: self._sorted_tags[round(y * self.Ndata), i])
                 for i in range(self.conf['speckle']['nscreens'])
             ]
             return normalize_functions, recover_functions
         elif self.conf['preproc']['normalization'] == 'zscore':
             normalize_functions = [
-                (lambda x, mean=self.mean[i], std=self.std[i]:
+                (lambda x, mean=self.mean_tags[i], std=self.std_tags[i]:
                  (x - mean) / std)
                 for i in range(self.conf['speckle']['nscreens'])
             ]
             recover_functions = [
-                (lambda y, mean=self.mean[i], std=self.std[i]: y * std + mean)
-                for i in range(self.conf['speckle']['nscreens'])
+                (lambda y, mean=self.mean_tags[i], std=self.std_tags[i]: y *
+                 std + mean) for i in range(self.conf['speckle']['nscreens'])
             ]
             return normalize_functions, recover_functions
         elif self.conf['preproc']['normalization'] == 'log':
