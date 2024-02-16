@@ -1,16 +1,16 @@
 import time
+import random
 import torch
 from torch import nn, optim, Tensor
-from torch.utils.data import DataLoader
 from speckcn2.io import save
+from speckcn2.mlmodels import EnsembleModel
 from speckcn2.preprocess import Normalizer
 from speckcn2.utils import ensure_directory
 from speckcn2.plots import score_plot, altitude_profile_plot
 
 
-def train(model: nn.Module, last_model_state: int, conf: dict,
-          train_loader: DataLoader, test_loader: DataLoader,
-          device: torch.device, optimizer: optim.Optimizer,
+def train(model: nn.Module, last_model_state: int, conf: dict, train_set: list,
+          test_set: list, device: torch.device, optimizer: optim.Optimizer,
           criterion: nn.Module) -> tuple[nn.Module, float]:
     """Trains the model for the given number of epochs.
 
@@ -22,10 +22,10 @@ def train(model: nn.Module, last_model_state: int, conf: dict,
         The number of the last model state
     conf : dict
         Dictionary containing the configuration
-    train_loader : torch.utils.data.DataLoader
-        The training data loader
-    test_loader : torch.utils.data.DataLoader
-        The testing data loader
+    train_set : list
+        The training set
+    test_set : list
+        The testing set
     device : torch.device
         The device to use
     optimizer : torch.optim
@@ -44,6 +44,10 @@ def train(model: nn.Module, last_model_state: int, conf: dict,
     final_epoch = conf['hyppar']['maxepochs']
     save_every = conf['model']['save_every']
     datadirectory = conf['speckle']['datadirectory']
+    batch_size = conf['hyppar']['batch_size']
+
+    # Setup the EnsembleModel wrapper
+    ensemble = EnsembleModel(conf['preproc']['ensemble'], device)
 
     print(f'Training the model from epoch {last_model_state} to {final_epoch}')
     average_loss = 0.0
@@ -51,17 +55,15 @@ def train(model: nn.Module, last_model_state: int, conf: dict,
     for epoch in range(last_model_state, final_epoch):
         total_loss = 0.0
         t_in = time.time()
-        for i, (inputs, tags) in enumerate(train_loader):
-            # Move input and label tensors to the device
-            inputs = inputs.to(device)
-            tags = tags.to(device)
+        for i in range(0, len(train_set), batch_size):
+            batch = train_set[i:i + batch_size]
 
             # Zero out the optimizer
             optimizer.zero_grad()
 
             # Forward pass
-            outputs = model(inputs)
-            loss = criterion(outputs, tags)
+            outputs, targets, _ = ensemble(model, batch)
+            loss = criterion(outputs, targets)
 
             # Backward pass
             loss.backward()
@@ -70,8 +72,11 @@ def train(model: nn.Module, last_model_state: int, conf: dict,
             # Accumulate the loss
             total_loss += loss.item()
 
+        # Suffle the training set
+        random.shuffle(train_set)
+
         # Calculate average loss for the epoch
-        average_loss = total_loss / len(train_loader)
+        average_loss = total_loss / len(train_set)
 
         # Log the important information
         t_fin = time.time() - t_in
@@ -81,16 +86,14 @@ def train(model: nn.Module, last_model_state: int, conf: dict,
         # And also the validation loss
         val_loss = 0.0
         with torch.no_grad():
-            for idx, (inputs, tags) in enumerate(test_loader):
-                # Move input and label tensors to the device
-                inputs = inputs.to(device)
-                tags = tags.to(device)
+            for i in range(0, len(test_set), batch_size):
+                batch = test_set[i:i + batch_size]
                 # Forward pass
-                outputs = model(inputs)
-                loss = criterion(outputs, tags)
+                outputs, targets, _ = ensemble(model, batch)
+                loss = criterion(outputs, targets)
                 # sum loss
                 val_loss += loss.item()
-        val_loss = val_loss / len(test_loader)
+        val_loss = val_loss / len(test_set)
         model.val_loss.append(val_loss)
 
         # Print the average loss for every epoch
@@ -106,7 +109,7 @@ def train(model: nn.Module, last_model_state: int, conf: dict,
 
 
 def score(model: nn.Module,
-          test_loader: DataLoader,
+          test_set: list,
           device: torch.device,
           criterion: nn.Module,
           normalizer: Normalizer,
@@ -117,8 +120,8 @@ def score(model: nn.Module,
     ----------
     model : torch.nn.Module
         The model to test
-    test_loader : torch.utils.data.DataLoader
-        The testing data loader
+    test_set : list
+        The testing set
     device : torch.device
         The device to use
     criterion : torch.nn
@@ -134,7 +137,11 @@ def score(model: nn.Module,
         List of all the predicted tags of the test set
     """
     counter = 0
-    data_dir = normalizer.conf['speckle']['datadirectory']
+    conf = normalizer.conf
+    data_dir = conf['speckle']['datadirectory']
+    batch_size = conf['hyppar']['batch_size']
+    # Setup the EnsembleModel wrapper
+    ensemble = EnsembleModel(conf['preproc']['ensemble'], device)
 
     with torch.no_grad():
         # Put model in evaluation mode
@@ -144,26 +151,23 @@ def score(model: nn.Module,
         # create the directory where the images will be stored
         ensure_directory(f'{data_dir}/{model.name}_score')
 
-        for idx, (inputs, tags) in enumerate(test_loader):
-            # Move input and label tensors to the device
-            inputs = inputs.to(device)
-            tags = tags.to(device)
+        for idx in range(0, len(test_set), batch_size):
+            batch = test_set[idx:idx + batch_size]
 
             # Forward pass
-            outputs = model(inputs)
+            outputs, targets, inputs = ensemble(model, batch)
 
             # Loop each input separately
             for i in range(len(outputs)):
-                loss = criterion(outputs[i], tags[i])
+                loss = criterion(outputs[i], targets[i])
                 # Print the loss for every epoch
                 print(f'Item {counter} loss: {loss.item():.4f}')
 
                 if counter < nimg_plot:
-                    score_plot(model.name, inputs, outputs, tags, loss, i,
-                               counter, data_dir, normalizer.recover_tag)
-                    altitude_profile_plot(model.name, inputs, outputs, tags, i,
-                                          counter, data_dir,
-                                          normalizer.recover_tag)
+                    score_plot(conf, inputs, outputs, targets, loss, i,
+                               counter, normalizer.recover_tag)
+                    altitude_profile_plot(conf, inputs, outputs, targets, i,
+                                          counter, normalizer.recover_tag)
 
                 # and get all the tags for statistic analysis
                 for tag in outputs:

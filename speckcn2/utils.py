@@ -1,7 +1,8 @@
 import torch
+import pickle
+import random
 import os
 import torch.nn as nn
-from torch.utils.data import DataLoader
 import matplotlib.pyplot as plt
 
 
@@ -141,39 +142,82 @@ class PearsonCorrelationLoss(nn.Module):
 
 
 def train_test_split(
-        dataset: list[tuple[torch.tensor, float]],
-        batch_size: int = 32,
-        train_test_split: float = 0.8) -> tuple[DataLoader, DataLoader]:
+    config: dict,
+    dataset: list[tuple[torch.tensor, float]],
+) -> tuple[list, list]:
     """Splits the data into training and testing sets.
 
     Parameters
     ----------
+    config : dict
+        The configuration file
     dataset : list
-        List of tuples (image, tag)
-    batch_size : int
-        Batch size for the data loaders
-    train_test_split: float
-        Fraction of the data to use for training
+        List of tuples (image, tag, ensemble_id)
 
     Returns
     -------
-    train_loader : torch.utils.data.DataLoader
-        Training data loader
-    test_loader : torch.utils.data.DataLoader
-        Testing data loader
+    train_set : list
+        Training dataset
+    test_set : list
+        Testing dataset
     """
+    modelname = config['model']['name']
+    datadirectory = config['speckle']['datadirectory']
+    train_test_split = config['hyppar']['ttsplit']
+    ensemble_size = config['preproc']['ensemble']
 
-    train_size = int(train_test_split * len(dataset))
-    print(
-        f'*** There are {len(dataset)} images in the dataset, {train_size} for training and {len(dataset)-train_size} for testing.'
-    )
-    train_loader = torch.utils.data.DataLoader(dataset[:train_size],
-                                               batch_size=batch_size,
-                                               shuffle=True,
-                                               num_workers=2)
-    test_loader = torch.utils.data.DataLoader(dataset[train_size:],
-                                              batch_size=batch_size,
-                                              shuffle=False,
-                                              num_workers=2)
+    # Check if the training and test set are already prepared
+    if os.path.isfile(f'{datadirectory}/train_set.pickle') and os.path.isfile(
+            f'{datadirectory}/test_set.pickle'):
+        train_set = pickle.load(
+            open(f'{datadirectory}/train_set_{modelname}.pickle', 'rb'))
+        test_set = pickle.load(
+            open(f'{datadirectory}/test_set_{modelname}.pickle', 'rb'))
+        return train_set, test_set
 
-    return train_loader, test_loader
+    # If I am using ensembles, each data point is a tuple of images
+    if ensemble_size > 1:
+        ensemble_dataset = []
+
+        split_ensembles = {}  # type: dict
+        for item in dataset:
+            key = item[-1]
+            if key not in split_ensembles:
+                split_ensembles[key] = []
+            split_ensembles[key].append(item)
+
+        for ensemble in split_ensembles:
+            # In each ensemble, take n_groups groups of ensemble_size datapoints
+            this_e_size = len(split_ensembles[ensemble])
+            n_groups = this_e_size // ensemble_size + 1
+            for _ in range(n_groups):
+                ensemble_dataset.append(
+                    random.sample(split_ensembles[ensemble], ensemble_size))
+
+        # shuffle dimension 0 of the ensemble_dataset
+        random.shuffle(ensemble_dataset)
+
+        train_size = int(train_test_split * len(ensemble_dataset))
+        train_set = ensemble_dataset[:train_size]
+        test_set = ensemble_dataset[train_size:]
+
+        print(
+            f'*** There are {len(ensemble_dataset)} ensemble groups in the dataset, {len(train_set)} for training and {len(test_set)} for testing.'
+        )
+    else:
+        train_size = int(train_test_split * len(dataset))
+        print(
+            f'*** There are {len(dataset)} images in the dataset, {train_size} for training and {len(dataset)-train_size} for testing.'
+        )
+
+        random.shuffle(dataset)
+        train_set = dataset[:train_size]
+        test_set = dataset[train_size:]
+
+    # Save the training and testing set
+    pickle.dump(train_set,
+                open(f'{datadirectory}/train_set_{modelname}.pickle', 'wb'))
+    pickle.dump(test_set,
+                open(f'{datadirectory}/test_set_{modelname}.pickle', 'wb'))
+
+    return train_set, test_set
