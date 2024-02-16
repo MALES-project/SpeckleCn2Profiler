@@ -1,4 +1,6 @@
 import torch
+import numpy as np
+import itertools
 import torchvision
 from torch import nn
 from speckcn2.io import load_model_state
@@ -102,6 +104,54 @@ def get_a_resnet(nscreens: int, datadirectory: str, model_name: str,
     )
 
     return load_model_state(model, datadirectory)
+
+
+class EnsembleModel(nn.Module):
+    """Wrapper that allows any model to be used for ensembled data."""
+
+    def __init__(self, ensemble_size: int, device: torch.device):
+        super(EnsembleModel, self).__init__()
+        self.ensemble_size = ensemble_size
+        self.device = device
+
+    def forward(self, model, batch_ensemble):
+        """Forward pass through the model.
+
+        Parameters
+        ----------
+        model : torch.nn.Module
+            The model to use
+        batch_ensemble : list
+            Each element is a batch of an ensemble of samples.
+        """
+
+        if self.ensemble_size == 1:
+            batch = batch_ensemble
+            # If no ensembling, each element of the batch is a tuple (image, tag, ensemble_id)
+            images, tags, ensembles = zip(*batch)
+            images = torch.stack(images).to(self.device)
+            tags = torch.tensor(np.stack(tags)).to(self.device)
+
+            return model(images), tags, images
+        else:
+            batch = list(itertools.chain(*batch_ensemble))
+            # Like the ensemble=1 case, I can process independently each element of the batch
+            images, tags, ensembles = zip(*batch)
+            images = torch.stack(images).to(self.device)
+            tags = torch.tensor(np.stack(tags)).to(self.device)
+
+            model_output = model(images)
+
+            # average the self.ensemble_size outputs of the model
+            ensemble_output = model_output.view(
+                model_output.size(0) // self.ensemble_size, self.ensemble_size,
+                -1).mean(dim=1)
+
+            # and get the tags and ensemble_id of the first element of the ensemble
+            tags = tags[::self.ensemble_size]
+            ensembles = ensembles[::self.ensemble_size]
+
+            return ensemble_output, tags, images
 
 
 def get_scnn(nscreens: int, datadirectory: str, model_name: str,

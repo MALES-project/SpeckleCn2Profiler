@@ -57,7 +57,7 @@ def assemble_transform(conf: dict) -> transforms.Compose:
 def prepare_data(
     conf: dict,
     nimg_print: int = 5,
-) -> tuple[list, list]:
+) -> tuple[list, list, list]:
     """If not already available, preprocesses the data by loading images and
     tags from the given directory, applying a transformation to the images.
 
@@ -74,10 +74,13 @@ def prepare_data(
         List of all images
     all_tags : list
         List of all tags
+    all_ensemble_ids : list
+        List of all ensemble ids, representing images from the same Cn2 profile
     """
     datadirectory = conf['speckle']['datadirectory']
     dataname = conf['preproc']['dataname']
     tagname = dataname.replace('images', 'tags')
+    ensemblename = dataname.replace('images', 'ensemble')
 
     # First, check if the data has already been preprocessed
     if os.path.exists(os.path.join(datadirectory, dataname)):
@@ -85,26 +88,20 @@ def prepare_data(
         # If so, load it
         all_images = torch.load(os.path.join(datadirectory, dataname))
         all_tags = torch.load(os.path.join(datadirectory, tagname))
-    elif conf['preproc']['multichannel'] > 1:
-        print(
-            f'Preprocessing data as multichannel={conf["preproc"]["multichannel"]}'
-        )
-        raise NotImplementedError(
-            '*** Error in preprocessing: multichannel>1 not implemented yet.')
-    elif conf['preproc']['multichannel'] == 1:
-        # Otherwise, preprocess the raw data separating the single images
-        all_images, all_tags = imgs_as_single_datapoint(conf, nimg_print)
+        all_ensemble_ids = torch.load(os.path.join(datadirectory,
+                                                   ensemblename))
     else:
-        raise ValueError(
-            '*** Error in preprocessing: multichannel must be either 1 or >1.')
+        # Otherwise, preprocess the raw data separating the single images
+        all_images, all_tags, all_ensemble_ids = imgs_as_single_datapoint(
+            conf, nimg_print)
 
-    return all_images, all_tags
+    return all_images, all_tags, all_ensemble_ids
 
 
 def imgs_as_single_datapoint(
     conf: dict,
     nimg_print: int = 5,
-) -> tuple[list, list]:
+) -> tuple[list, list, list]:
     """Preprocesses the data by loading images and tags from the given
     directory, applying a transformation to the images. Each image is treated
     as a single data point.
@@ -122,11 +119,14 @@ def imgs_as_single_datapoint(
         List of all images
     all_tags : list
         List of all tags
+    all_ensemble_ids : list
+        List of all ensemble ids, representing images from the same Cn2 profile
     """
     datadirectory = conf['speckle']['datadirectory']
     mname = conf['model']['name']
     dataname = conf['preproc']['dataname']
     tagname = dataname.replace('images', 'tags')
+    ensemblename = dataname.replace('images', 'ensemble')
     nreps = conf['preproc']['speckreps']
 
     # Dummy transformation to get the original image
@@ -149,6 +149,7 @@ def imgs_as_single_datapoint(
     file_list = file_list * nreps
     all_images = []
     all_tags = []
+    all_ensemble_ids = []
     if nimg_print > 0:
         show_image = True
         # and create a folder to store the images
@@ -171,26 +172,41 @@ def imgs_as_single_datapoint(
         else:
             print(f'*** Warning: tag file {ftagname} not found.')
 
+    # I associate each Cn2 profile to an ensemble ID for parallel processing
+    ensembles = {}
+    ensemble_counter = 1
+    for value in tag_files.values():
+        # Check if the value is already assigned an ID
+        if value not in ensembles:
+            # Assign a new ID if it's a new value
+            ensembles[value] = ensemble_counter
+            ensemble_counter += 1
+    # Create a new dictionary to associate IDs with original values
+    ensemble_dict = {key: ensembles[value] for key, value in tag_files.items()}
+
     # Load each text file as an image
     for counter, file_name in enumerate(file_list):
-        # Construct the full path to the file
-        file_path = os.path.join(datadirectory, file_name)
-
-        # Open the text file as an image using PIL
-        pixel_values = np.loadtxt(file_path, delimiter=',', dtype=np.float32)
-
-        # Create the image
-        image_orig = Image.fromarray(pixel_values, mode='F')
-
-        # Apply the transformation
-        image = transform(image_orig)
-        image_orig = transform_orig(image_orig)
-
-        # and add it to the collection
-        all_images.append(image)
-
-        # Process tags if available
+        # Process only if tags available
         if file_name in tag_files:
+
+            # Construct the full path to the file
+            file_path = os.path.join(datadirectory, file_name)
+
+            # Open the text file as an image using PIL
+            pixel_values = np.loadtxt(file_path,
+                                      delimiter=',',
+                                      dtype=np.float32)
+
+            # Create the image
+            image_orig = Image.fromarray(pixel_values, mode='F')
+
+            # Apply the transformation
+            image = transform(image_orig)
+            image_orig = transform_orig(image_orig)
+            # and add the img to the collection
+            all_images.append(image)
+
+            # Load the tags
             tags = np.loadtxt(tag_files[file_name],
                               delimiter=',',
                               dtype=np.float32)
@@ -206,77 +222,22 @@ def imgs_as_single_datapoint(
             np.log10(tags, out=tags)
             # Add the tag to the colleciton
             all_tags.append(tags)
+
+            # Get the ensemble ID
+            ensemble_id = ensemble_dict[file_name]
+            # and add it to the collection
+            all_ensemble_ids.append(ensemble_id)
         else:
             print(f'*** Warning: tag file {ftagname} not found.')
 
     # Finally, store them before returning
     torch.save(all_images, os.path.join(datadirectory, dataname))
     torch.save(all_tags, os.path.join(datadirectory, tagname))
+    torch.save(all_ensemble_ids, os.path.join(datadirectory, ensemblename))
 
     print('*** Preprocessing complete.', flush=True)
 
-    return all_images, all_tags
-
-
-def imgs_as_channels(
-    conf: dict,
-    nimg_print: int = 5,
-    # TBD
-    #) -> Tuple[List, List]:
-) -> None:
-    """Preprocesses the data by loading images and tags from the given
-    directory, applying a transformation to the images. Then the images are
-    treated as color channels and they get grouped based on multiplicity value.
-
-    Parameters
-    ----------
-    conf : dict
-        Dictionary containing the configuration
-    nimg_print: int
-        Number of images to print
-
-    Returns
-    -------
-    all_images : list
-        List of all images
-    all_tags : list
-        List of all tags
-    """
-    datadirectory = conf['speckle']['datadirectory']
-    mname = conf['model']['name']
-    dataname = conf['preproc']['dataname']
-    tagname = dataname.replace('images', 'tags')
-    nreps = conf['preproc']['speckreps']
-    multiplicity = conf['preproc']['multichannel']
-
-    # Dummy transformation to get the original image
-    transform_orig = transforms.Compose([
-        transforms.CenterCrop(conf['preproc']['centercrop']),
-        transforms.ToTensor(),
-    ])
-
-    # and get the transformation to apply to each image
-    transform = assemble_transform(conf)
-
-    # Get the list of images:
-    file_list = [
-        file_name for file_name in os.listdir(datadirectory)
-        if '.txt' in file_name and 'tag' not in file_name
-    ]
-    # count them based on the corresponding tag
-    print(multiplicity)
-    print(mname)
-    print(dataname)
-    print(tagname)
-    print(nreps)
-    print(transform)
-    print(transform_orig)
-    print(file_list)
-    ...  # TODO
-    # optionally, randomly expand the groups in order to form groups of size multiplicity
-    ...  # TODO
-    # group them based on multiplicity
-    ...  # TODO
+    return all_images, all_tags, all_ensemble_ids
 
 
 @dataclass
@@ -291,10 +252,11 @@ class Normalizer:
     conf: dict
 
     def normalize_imgs_and_tags(
-        self, all_images: list[torch.tensor], all_tags: list[np.ndarray]
-    ) -> tuple[
-            list[tuple[torch.tensor, np.ndarray]],
-    ]:
+        self,
+        all_images: list[torch.tensor],
+        all_tags: list[np.ndarray],
+        all_ensemble_ids: list[int],
+    ) -> list[tuple[torch.tensor, np.ndarray, int]]:
         """Normalize both the input images and the tags to be between 0 and 1.
 
         Parameters
@@ -313,7 +275,6 @@ class Normalizer:
         """
         # Get a mask for the NaN values
         self._mask_img = 1 - np.isnan(all_images[0])
-
         # Then replace all the nan values with 0
         all_images = [torch.nan_to_num(image) for image in all_images]
 
@@ -345,8 +306,10 @@ class Normalizer:
                 print('*** Tag mean:', self.mean_tags)
                 self.std_tags = np.std(all_tags, axis=0)
                 print('*** Tag std:', self.std_tags)
-            # get the empirical cumulative distribution function if using ECDF
             elif self.conf['preproc']['normalization'] == 'unif':
+                raise NotImplementedError(
+                    '*** uniform normalization is not fully implemented yet. The sorting messes up the ensemble IDs.'
+                )
                 array_tags = np.array(all_tags)
 
                 # Find the indices that sort the tags
@@ -371,8 +334,8 @@ class Normalizer:
                                    dtype=np.float32)
 
         # I can now create the dataset
-        dataset = [(image, tag)
-                   for image, tag in zip(normalized_images, normalized_tags)]
+        dataset = [(image, tag, ensemble_id) for image, tag, ensemble_id in
+                   zip(normalized_images, normalized_tags, all_ensemble_ids)]
 
         return dataset
 
