@@ -56,17 +56,24 @@ def tags_distribution(
     print(f'Train std: {train_tags.std()}')
     print(f'Prediction mean: {predic_tags.mean()}')
     print(f'Prediction std: {predic_tags.std()}')
-    # plot the distribution of each tag element
+
+    # Plot the distribution of each tag element
     fig, axs = plt.subplots(2, 4, figsize=(20, 10))
-    for i in range(8):
+    for i in range(train_tags.shape[1]):
         if rescale and recover_tag is not None:
-            axs[i // 4, i % 4].hist(recover_tag[i](predic_tags[:, i]),
+            recovered_tag_model = np.asarray(
+                [recover_tag[i](predic_tags[:, i], i)]).squeeze(0)
+            print(predic_tags[:, i].shape)
+            print(recovered_tag_model.shape)
+            recovered_tag_true = np.asarray(
+                [recover_tag[i](train_tags[:, i], i)]).squeeze(0)
+            axs[i // 4, i % 4].hist(recovered_tag_model,
                                     bins=20,
                                     color='tab:red',
                                     density=True,
                                     alpha=0.5,
                                     label='Model prediction')
-            axs[i // 4, i % 4].hist(recover_tag[i](train_tags[:, i]),
+            axs[i // 4, i % 4].hist(recovered_tag_true,
                                     bins=20,
                                     color='tab:blue',
                                     density=True,
@@ -88,5 +95,9 @@ def tags_distribution(
         axs[i // 4, i % 4].set_title(f'Tag {i}')
     axs[0, 1].legend()
     plt.tight_layout()
-    plt.savefig(f'{data_directory}/result_plots/{model_name}_tags.png')
+    if rescale:
+        plt.savefig(f'{data_directory}/result_plots/{model_name}_tags.png')
+    else:
+        plt.savefig(
+            f'{data_directory}/result_plots/{model_name}_tags_unscaled.png')
     plt.close()

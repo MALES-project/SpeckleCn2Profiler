@@ -4,7 +4,7 @@ import itertools
 import torchvision
 from torch import nn
 from speckcn2.io import load_model_state
-from speckcn2.scnn import C8SteerableCNN, C16SteerableCNN, small_C16SteerableCNN
+from speckcn2.scnn import SteerableCNN
 
 
 def setup_model(config: dict) -> tuple[nn.Module, int]:
@@ -37,9 +37,8 @@ def setup_model(config: dict) -> tuple[nn.Module, int]:
     if model_type in ['resnet18', 'resnet50', 'resnet152']:
         return get_a_resnet(nscreens, data_directory, model_name, model_type,
                             pretrained, ensemble)
-    if model_type in ['scnnC8', 'scnnC16', 'small_scnnC16']:
-        return get_scnn(nscreens, data_directory, model_name, model_type,
-                        img_res, ensemble)
+    if model_type in ['scnnC8', 'scnnC16', 'scnnC4']:
+        return get_scnn(config)
     else:
         raise ValueError(f'Unknown model {model_name}')
 
@@ -192,27 +191,20 @@ class EnsembleModel(nn.Module):
             return ensemble_output, tags, images
 
 
-def get_scnn(nscreens: int,
-             datadirectory: str,
-             model_name: str,
-             model_type: str,
-             img_res: str,
-             ensemble: int = 1) -> tuple[nn.Module, int]:
+def get_scnn(config: dict) -> tuple[nn.Module, int]:
     """Returns a pretrained Spherical-CNN model, with the last layer
     corresponding to the number of screens."""
 
+    model_name = config['model']['name']
+    model_type = config['model']['type']
+    datadirectory = config['speckle']['datadirectory']
+
     if model_type == 'scnnC8':
-        scnn_model = C8SteerableCNN(nscreens=nscreens,
-                                    in_image_res=img_res,
-                                    ensemble=ensemble)
+        scnn_model = SteerableCNN(config, 'C8')
     elif model_type == 'scnnC16':
-        scnn_model = C16SteerableCNN(nscreens=nscreens,
-                                     in_image_res=img_res,
-                                     ensemble=ensemble)
-    elif model_type == 'small_scnnC16':
-        scnn_model = small_C16SteerableCNN(nscreens=nscreens,
-                                           in_image_res=img_res,
-                                           ensemble=ensemble)
+        scnn_model = SteerableCNN(config, 'C16')
+    elif model_type == 'scnnC4':
+        scnn_model = SteerableCNN(config, 'C4')
     else:
         raise ValueError(f'Unknown model {model_type}')
     scnn_model.name = model_name
