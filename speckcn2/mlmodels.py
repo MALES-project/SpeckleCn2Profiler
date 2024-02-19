@@ -30,12 +30,13 @@ def setup_model(config: dict) -> tuple[nn.Module, int]:
     nscreens = config['speckle']['nscreens']
     data_directory = config['speckle']['datadirectory']
     img_res = config['preproc']['resize']
+    ensemble = config['preproc']['ensemble']
 
     print(f'^^^ Initializing model {model_name} of type {model_type}')
 
     if model_type in ['resnet18', 'resnet50', 'resnet152']:
         return get_a_resnet(nscreens, data_directory, model_name, model_type,
-                            pretrained)
+                            pretrained, ensemble)
     if model_type in ['scnnC8', 'scnnC16', 'small_scnnC16']:
         return get_scnn(nscreens, data_directory, model_name, model_type,
                         img_res)
@@ -43,8 +44,12 @@ def setup_model(config: dict) -> tuple[nn.Module, int]:
         raise ValueError(f'Unknown model {model_name}')
 
 
-def get_a_resnet(nscreens: int, datadirectory: str, model_name: str,
-                 model_type: str, pretrained: bool) -> tuple[nn.Module, int]:
+def get_a_resnet(nscreens: int,
+                 datadirectory: str,
+                 model_name: str,
+                 model_type: str,
+                 pretrained: bool,
+                 ensemble: int = 1) -> tuple[nn.Module, int]:
     """Returns a pretrained ResNet model, with the last layer corresponding to
     the number of screens.
 
@@ -60,6 +65,8 @@ def get_a_resnet(nscreens: int, datadirectory: str, model_name: str,
         The type of the ResNet
     pretrained : bool
         Whether to use a pretrained model or not
+    ensemble : int
+        The number of input images that will be processd together as an ensemble corresponding to the same output
 
     Returns
     -------
@@ -83,6 +90,10 @@ def get_a_resnet(nscreens: int, datadirectory: str, model_name: str,
         finaloutsize = 2048
     else:
         raise ValueError(f'Unknown model {model_type}')
+
+    # If the model uses multiple images as input, I add an extra channel as confidence weight to average the final prediction
+    if ensemble > 1:
+        nscreens = nscreens + 1
 
     # Give it its name
     model.name = model_name
@@ -109,10 +120,25 @@ def get_a_resnet(nscreens: int, datadirectory: str, model_name: str,
 class EnsembleModel(nn.Module):
     """Wrapper that allows any model to be used for ensembled data."""
 
-    def __init__(self, ensemble_size: int, device: torch.device):
+    def __init__(self,
+                 ensemble_size: int,
+                 device: torch.device,
+                 uniform_ensemble: bool = False):
+        """Initializes the EnsembleModel.
+
+        Parameters
+        ----------
+        ensemble_size : int
+            The number of images that will be processed together as an ensemble
+        device : torch.device
+            The device to use
+        uniform_ensemble : bool
+            If true, all the images in the ensemble will have the same weight
+        """
         super(EnsembleModel, self).__init__()
         self.ensemble_size = ensemble_size
         self.device = device
+        self.uniform_ensemble = uniform_ensemble
 
     def forward(self, model, batch_ensemble):
         """Forward pass through the model.
@@ -142,10 +168,22 @@ class EnsembleModel(nn.Module):
 
             model_output = model(images)
 
-            # average the self.ensemble_size outputs of the model
-            ensemble_output = model_output.view(
+            # To average the self.ensemble_size outputs of the model I extract the confidence weights
+            predictions = model_output[:, :-1]
+            weights = model_output[:, -1]
+            if self.uniform_ensemble:
+                weights = torch.ones_like(weights)
+            # multiply the prediction by the weights
+            weighted_predictions = predictions * weights.unsqueeze(-1)
+            # and sum over the ensembles
+            weighted_predictions = weighted_predictions.view(
                 model_output.size(0) // self.ensemble_size, self.ensemble_size,
-                -1).mean(dim=1)
+                -1).sum(dim=1)
+            # then normalize by the sum of the weights
+            sum_weights = weights.view(
+                weights.size(0) // self.ensemble_size,
+                self.ensemble_size).sum(dim=1)
+            ensemble_output = weighted_predictions / sum_weights.unsqueeze(-1)
 
             # and get the tags and ensemble_id of the first element of the ensemble
             tags = tags[::self.ensemble_size]
