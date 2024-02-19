@@ -5,7 +5,7 @@ from escnn import nn
 
 class C8SteerableCNN(torch.nn.Module):
 
-    def __init__(self, nscreens, in_image_res):
+    def __init__(self, nscreens, in_image_res, ensemble=1):
 
         super(C8SteerableCNN, self).__init__()
 
@@ -115,6 +115,10 @@ class C8SteerableCNN(torch.nn.Module):
         # number of output channels
         c = self.gpool.out_type.size * self.nfeatures * self.nfeatures
 
+        # If the model uses multiple images as input, I add an extra channel as confidence weight to average the final prediction
+        if ensemble > 1:
+            nscreens = nscreens + 1
+
         # Fully Connected
         self.fully_net = torch.nn.Sequential(
             torch.nn.Linear(c, 64),
@@ -166,7 +170,7 @@ class C8SteerableCNN(torch.nn.Module):
 
 class C16SteerableCNN(torch.nn.Module):
 
-    def __init__(self, nscreens, in_image_res):
+    def __init__(self, nscreens, in_image_res, ensemble=1):
 
         super(C16SteerableCNN, self).__init__()
 
@@ -290,6 +294,10 @@ class C16SteerableCNN(torch.nn.Module):
         # number of output channels
         c = self.gpool.out_type.size * self.nfeatures * self.nfeatures
 
+        # If the model uses multiple images as input, I add an extra channel as confidence weight to average the final prediction
+        if ensemble > 1:
+            nscreens = nscreens + 1
+
         # Fully Connected
         self.fully_net = torch.nn.Sequential(
             torch.nn.Linear(c, 64),
@@ -341,7 +349,7 @@ class C16SteerableCNN(torch.nn.Module):
 
 class small_C16SteerableCNN(torch.nn.Module):
 
-    def __init__(self, nscreens, in_image_res):
+    def __init__(self, nscreens, in_image_res, ensemble=1):
 
         super(small_C16SteerableCNN, self).__init__()
 
@@ -443,6 +451,10 @@ class small_C16SteerableCNN(torch.nn.Module):
 
         # number of output channels
         c = self.gpool.out_type.size * self.nfeatures * self.nfeatures
+
+        # If the model uses multiple images as input, I add an extra channel as confidence weight to average the final prediction
+        if ensemble > 1:
+            nscreens = nscreens + 1
 
         # Fully Connected
         self.fully_net = torch.nn.Sequential(

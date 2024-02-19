@@ -69,7 +69,7 @@ def load(model: torch.nn.Module, datadirectory: str, epoch: int) -> None:
     model.loss = model_state['loss']
     model.val_loss = model_state['val_loss']
     model.time = model_state['time']
-    model.load_state_dict(model_state['model_state_dict'])
+    model.load_state_dict(model_state['model_state_dict'], strict=False)
 
     assert model.epoch[
         -1] == epoch, 'The epoch of the model is not the same as the one loaded'
