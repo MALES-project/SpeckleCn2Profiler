@@ -187,12 +187,23 @@ def train_test_split(
             split_ensembles[key].append(item)
 
         for ensemble in split_ensembles:
-            # In each ensemble, take n_groups groups of ensemble_size datapoints
+            # * In each ensemble, take n_groups groups of ensemble_size datapoints
             this_e_size = len(split_ensembles[ensemble])
-            n_groups = this_e_size // ensemble_size + 1
-            for _ in range(n_groups):
-                ensemble_dataset.append(
-                    random.sample(split_ensembles[ensemble], ensemble_size))
+            n_groups = this_e_size // ensemble_size
+            if n_groups < 1:
+                raise ValueError(
+                    f'Ensemble size {ensemble_size} is too large for ensemble {ensemble} with size {this_e_size}'
+                )
+            # Extact the ensembles randomly
+            sample = random.sample(split_ensembles[ensemble],
+                                   n_groups * ensemble_size)
+            # split the sample into groups of ensemble_size
+            sample = [
+                sample[i:i + ensemble_size]
+                for i in range(0, n_groups * ensemble_size, ensemble_size)
+            ]
+            # and append it to the ensemble_dataset as separate elements
+            ensemble_dataset.extend(sample)
 
         # shuffle dimension 0 of the ensemble_dataset
         random.shuffle(ensemble_dataset)
@@ -202,7 +213,7 @@ def train_test_split(
         test_set = ensemble_dataset[train_size:]
 
         print(
-            f'*** There are {len(ensemble_dataset)} ensemble groups in the dataset, {len(train_set)} for training and {len(test_set)} for testing.'
+            f'*** There are {len(ensemble_dataset)} ensemble groups in the dataset, that I split in {len(train_set)} for training and {len(test_set)} for testing. Each ensemble is composed by {ensemble_size} images. This corresponds to {len(train_set)*ensemble_size} for training and {len(test_set)*ensemble_size} for testing.'
         )
     else:
         train_size = int(train_test_split * len(dataset))

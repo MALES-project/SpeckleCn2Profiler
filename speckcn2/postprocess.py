@@ -65,7 +65,7 @@ def tags_distribution(
                                     color='tab:red',
                                     density=True,
                                     alpha=0.5,
-                                    label='Model precitions')
+                                    label='Model prediction')
             axs[i // 4, i % 4].hist(recover_tag[i](train_tags[:, i]),
                                     bins=20,
                                     color='tab:blue',
@@ -78,7 +78,7 @@ def tags_distribution(
                                     color='tab:red',
                                     density=True,
                                     alpha=0.5,
-                                    label='Model precitions')
+                                    label='Model prediction')
             axs[i // 4, i % 4].hist(train_tags[:, i],
                                     bins=20,
                                     color='tab:blue',

@@ -47,7 +47,8 @@ def train(model: nn.Module, last_model_state: int, conf: dict, train_set: list,
     batch_size = conf['hyppar']['batch_size']
 
     # Setup the EnsembleModel wrapper
-    ensemble = EnsembleModel(conf['preproc']['ensemble'], device)
+    ensemble = EnsembleModel(conf['preproc']['ensemble'], device,
+                             conf['preproc']['ensemble_unif'])
 
     print(f'Training the model from epoch {last_model_state} to {final_epoch}')
     average_loss = 0.0
@@ -141,7 +142,8 @@ def score(model: nn.Module,
     data_dir = conf['speckle']['datadirectory']
     batch_size = conf['hyppar']['batch_size']
     # Setup the EnsembleModel wrapper
-    ensemble = EnsembleModel(conf['preproc']['ensemble'], device)
+    ensemble = EnsembleModel(conf['preproc']['ensemble'], device,
+                             conf['preproc']['ensemble_unif'])
 
     with torch.no_grad():
         # Put model in evaluation mode
