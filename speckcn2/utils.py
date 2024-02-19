@@ -83,6 +83,8 @@ def setup_loss(config: dict) -> nn.Module:
         return torch.nn.BCELoss()
     elif criterion_name == 'MSELoss':
         return torch.nn.MSELoss()
+    elif criterion_name == 'MAELoss':
+        return torch.nn.L1Loss()
     elif criterion_name == 'Pearson':
         return PearsonCorrelationLoss()
     else:
