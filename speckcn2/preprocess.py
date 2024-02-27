@@ -45,8 +45,8 @@ def assemble_transform(conf: dict) -> transforms.Compose:
             transforms.Resize(
                 (conf['preproc']['resize'], conf['preproc']['resize'])))
 
-    if conf['preproc']['equivariant']:
-        # Apply the equivariant transform
+    if conf['preproc']['equivariant'] and conf['preproc']['polarize']:
+        # Apply the equivariant transform, which makes sense only in polar coordinates
         list_transforms.append(ShiftRowsTransform())
 
     list_transforms.append(ToUnboundTensor())
