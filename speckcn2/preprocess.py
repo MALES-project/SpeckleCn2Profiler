@@ -24,7 +24,7 @@ def assemble_transform(conf: dict) -> transforms.Compose:
     """
     list_transforms = []
 
-    if conf['preproc']['centercrop']:
+    if conf['preproc']['centercrop']>0:
         # Take only the center of the image
         list_transforms.append(
             transforms.CenterCrop(conf['preproc']['centercrop']))
@@ -131,7 +131,6 @@ def imgs_as_single_datapoint(
 
     # Dummy transformation to get the original image
     transform_orig = transforms.Compose([
-        transforms.CenterCrop(conf['preproc']['centercrop']),
         transforms.ToTensor(),
     ])
 
