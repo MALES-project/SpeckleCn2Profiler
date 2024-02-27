@@ -9,7 +9,7 @@ import matplotlib.pyplot as plt
 def plot_preprocessed_image(image_orig: torch.tensor, image: torch.tensor,
                             tags: torch.tensor, counter: int,
                             datadirectory: str, mname: str,
-                            file_name: str) -> None:
+                            file_name: str, polar: bool=False) -> None:
     """Plots the original and preprocessed image, and the tags.
 
     Parameters
@@ -28,6 +28,8 @@ def plot_preprocessed_image(image_orig: torch.tensor, image: torch.tensor,
         The name of the model
     file_name : str
         The name of the original image
+    polar : bool, optional
+        If the image is in polar coordinates, by default False
     """
 
     fig, axs = plt.subplots(1, 3, figsize=(15, 5))
@@ -37,8 +39,9 @@ def plot_preprocessed_image(image_orig: torch.tensor, image: torch.tensor,
     # Plot the preprocessd image
     axs[1].imshow(image.squeeze(), cmap='bone')
     axs[1].set_title('Processed as')
-    axs[1].set_xlabel(r'$r$')
-    axs[1].set_ylabel(r'$\theta$')
+    if polar:
+        axs[1].set_xlabel(r'$r$')
+        axs[1].set_ylabel(r'$\theta$')
 
     # Plot the tags
     axs[2].plot(tags, 'o')
