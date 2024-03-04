@@ -13,7 +13,8 @@ Uncomment for the correct banners when the repo is public
 ![MALES banner](https://github.com/MALES-project/SpeckleCn2Profiler/blob/main/speckcn2/assets/logo_on_white.png#gh-light-mode-only)
 ![MALES banner](https://github.com/MALES-project/SpeckleCn2Profiler/blob/main/speckcn2/assets/logo_on_black.png#gh-dark-mode-only)
 
-# SpeckleCn2Profiler: Improving Satellite Communications with SCIDAR and Machine Learning
+# SpeckleCn2Profiler: 
+###Improving Satellite Communications with SCIDAR and Machine Learning
 
 ![Graphical abstract](https://github.com/MALES-project/SpeckleCn2Profiler/blob/main/speckcn2/assets/cn2_profile.gif)
 ## Overview
@@ -57,6 +58,8 @@ To get started with the project, follow these steps:
 ## Contribution Guidelines
 
 We welcome contributions to improve and expand the capabilities of this project. If you have ideas, bug fixes, or enhancements, please submit a pull request.
+Check out our [Contributing Guidelines](CONTRIBUTING.md#Getting-started-with-development) to get started with development.
+
 
 ## License
 
