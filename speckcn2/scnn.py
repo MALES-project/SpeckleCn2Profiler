@@ -58,19 +58,22 @@ class SteerableCNN(torch.nn.Module):
         self.POOL_PADDINGS = config['scnn']['POOL_PADDINGS']
         self.final_n_features = config['scnn']['final_n_features']
 
-        # Compute the size of the feature map
+
+        # Decide the symmetry group
+        symmetry_map = {
+            'C8': 8,
+            'C16': 16,
+            'C4': 4,
+            'C6': 6,
+            'C10': 10,
+        }
+        try:
+            self.r2_act = gspaces.rot2dOnR2(N=symmetry_map[symmetry])
+        except KeyError:
+            raise ValueError('The symmetry must be one of ' + ', '.join(symmetry_map.keys()))
+
+        # Start computing the size of the feature map
         self.nfeatures = self.in_image_res
-        if symmetry == 'C8':
-            # the model is equivariant under rotations by 45 degrees, modelled by C8
-            self.r2_act = gspaces.rot2dOnR2(N=8)
-        elif symmetry == 'C16':
-            # the model is equivariant under rotations by 22.5 degrees, modelled by C16
-            self.r2_act = gspaces.rot2dOnR2(N=16)
-        elif symmetry == 'C4':
-            # the model is equivariant under rotations by 90 degrees, modelled by C4
-            self.r2_act = gspaces.rot2dOnR2(N=4)
-        else:
-            raise ValueError('The symmetry must be C8, C16 or C4')
 
         # The input image is a scalar field, corresponding to the trivial representation
         in_type = nn.FieldType(self.r2_act, [self.r2_act.trivial_repr])
