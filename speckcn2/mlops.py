@@ -55,6 +55,7 @@ def train(model: nn.Module, last_model_state: int, conf: dict, train_set: list,
     model.train()
     for epoch in range(last_model_state, final_epoch):
         total_loss = 0.0
+        model.train()
         t_in = time.time()
         for i in range(0, len(train_set), batch_size):
             batch = train_set[i:i + batch_size]
@@ -84,8 +85,10 @@ def train(model: nn.Module, last_model_state: int, conf: dict, train_set: list,
         model.loss.append(average_loss)
         model.time.append(t_fin)
         model.epoch.append(epoch + 1)
+
         # And also the validation loss
         val_loss = 0.0
+        model.eval()
         with torch.no_grad():
             for i in range(0, len(test_set), batch_size):
                 batch = test_set[i:i + batch_size]
