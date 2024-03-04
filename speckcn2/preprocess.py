@@ -1,4 +1,5 @@
 import torch
+import pickle
 from dataclasses import dataclass
 from PIL import Image
 import os
@@ -7,6 +8,7 @@ from typing import Callable
 import torchvision.transforms as transforms
 from speckcn2.utils import ensure_directory, plot_preprocessed_image
 from speckcn2.transformations import PolarCoordinateTransform, ShiftRowsTransform, ToUnboundTensor
+from speckcn2.normalizer import Normalizer
 
 
 def assemble_transform(conf: dict) -> transforms.Compose:
@@ -239,199 +241,108 @@ def imgs_as_single_datapoint(
     return all_images, all_tags, all_ensemble_ids
 
 
-@dataclass
-class Normalizer:
-    """Class to handle the normalization of images and tags.
+def train_test_split(
+    all_images: list[torch.tensor],
+    all_tags: list[np.ndarray],
+    all_ensemble_ids: list[int],
+    nz: Normalizer,
+) -> tuple[list, list]:
+    """Splits the data into training and testing sets.
 
     Parameters
     ----------
-    conf : dict
-        Dictionary containing the configuration
+    all_images : list
+        List of images
+    all_tags : list
+        List of tags
+    all_ensemble_ids : list
+        List of ensemble ids
+    nz: Normalizer
+        The normalizer object to preprocess the data
+
+    Returns
+    -------
+    train_set : list
+        Training dataset
+    test_set : list
+        Testing dataset
     """
-    conf: dict
+    # Get the config dict
+    config = nz.conf
+    # extract the model parameters
+    modelname = config['model']['name']
+    datadirectory = config['speckle']['datadirectory']
+    train_test_split = config['hyppar']['ttsplit']
+    ensemble_size = config['preproc']['ensemble']
 
-    def normalize_imgs_and_tags(
-        self,
-        all_images: list[torch.tensor],
-        all_tags: list[np.ndarray],
-        all_ensemble_ids: list[int],
-    ) -> list[tuple[torch.tensor, np.ndarray, int]]:
-        """Normalize both the input images and the tags to be between 0 and 1.
+    # Check if the training and test set are already prepared
+    if os.path.isfile(f'{datadirectory}/train_set_{modelname}.pickle') and os.path.isfile(
+            f'{datadirectory}/test_set_{modelname}.pickle'):
+        print('Loading the training and testing set...', flush=True)
+        train_set = pickle.load(
+            open(f'{datadirectory}/train_set_{modelname}.pickle', 'rb'))
+        test_set = pickle.load(
+            open(f'{datadirectory}/test_set_{modelname}.pickle', 'rb'))
+        return train_set, test_set
 
-        Parameters
-        ----------
-        all_images : list
-            List of all images
-        all_tags : list
-            List of all tags
-        conf : dict
-            Dictionary containing the configuration
+    # If the data are not already prepared, first I normalize them using the Normalizer object
+    print('Normalizing the images and tags...', flush=True)
+    dataset = nz.normalize_imgs_and_tags(all_images, all_tags, all_ensemble_ids)
 
-        Returns
-        -------
-        dataset : list
-            List of tuples (image, normalized_tag)
-        """
-        # Get a mask for the NaN values
-        self._mask_img = 1 - np.isnan(all_images[0])
-        # Then replace all the nan values with 0
-        all_images = [torch.nan_to_num(image) for image in all_images]
+    # If I am using ensembles, each data point is a tuple of images
+    if ensemble_size > 1:
+        ensemble_dataset = []
 
-        # Define the normalization functions for the images
-        if not hasattr(self, 'normalize_img'):
-            # Find the maximum between the maximum and minimum values of the images
-            max_img = max([torch.max(image) for image in all_images])
-            print('*** Image max:', max_img)
-            min_img = min([torch.min(image) for image in all_images])
-            print('*** Image min:', min_img)
-            range_img = max_img - min_img
+        split_ensembles = {}  # type: dict
+        for item in dataset:
+            key = item[-1]
+            if key not in split_ensembles:
+                split_ensembles[key] = []
+            split_ensembles[key].append(item)
 
-            self.normalize_img, self.recover_img = self._img_normalize_functions(
-                min_img, range_img)
-
-        # Normalize the images
-        normalized_images = [self.normalize_img(image) for image in all_images]
-
-        # Define the normalization functions for the tags
-        if not hasattr(self, 'normalize_tag'):
-            self.min_tags = np.min(all_tags, axis=0)
-            print('*** Tag min:', self.min_tags)
-            self.max_tags = np.max(all_tags, axis=0)
-            print('*** Tag max:', self.max_tags)
-
-            # get the std deviation if using Z-score
-            if self.conf['preproc']['normalization'] == 'zscore':
-                self.mean_tags = np.mean(all_tags, axis=0)
-                print('*** Tag mean:', self.mean_tags)
-                self.std_tags = np.std(all_tags, axis=0)
-                print('*** Tag std:', self.std_tags)
-            elif self.conf['preproc']['normalization'] == 'unif':
-                raise NotImplementedError(
-                    '*** uniform normalization is not fully implemented yet. The sorting messes up the ensemble IDs.'
+        for ensemble in split_ensembles:
+            # * In each ensemble, take n_groups groups of ensemble_size datapoints
+            this_e_size = len(split_ensembles[ensemble])
+            n_groups = this_e_size // ensemble_size
+            if n_groups < 1:
+                raise ValueError(
+                    f'Ensemble size {ensemble_size} is too large for ensemble {ensemble} with size {this_e_size}'
                 )
-                array_tags = np.array(all_tags)
-
-                # Find the indices that sort the tags
-                _sorting_indices = np.argsort(array_tags, axis=0)
-                # And the corresponding indices that unsort them
-                self._unsorting_indices = np.argsort(np.argsort(array_tags,
-                                                                axis=0),
-                                                     axis=0)
-                self._sorted_tags = np.stack([
-                    array_tags[_sorting_indices[:, i], i]
-                    for i in range(array_tags.shape[1])
-                ]).T
-                self.Ndata = array_tags.shape[0]
-
-            self.normalize_tag, self.recover_tag = self._tag_normalize_functions(
-            )
-
-        # And normalize the tags
-        normalized_tags = np.array([[
-            self.normalize_tag[j](tag, tag_id) for j, tag in enumerate(tags)
-        ] for tag_id, tags in enumerate(all_tags)],
-                                   dtype=np.float32)
-
-        # I can now create the dataset
-        dataset = [(image, tag, ensemble_id) for image, tag, ensemble_id in
-                   zip(normalized_images, normalized_tags, all_ensemble_ids)]
-
-        return dataset
-
-    def _img_normalize_functions(
-            self, min_img: np.ndarray,
-            range_img: np.ndarray) -> tuple[Callable, Callable]:
-        """Create the normalization and recovery functions for the images. The
-        images are normalized between 0 and 1 using global values.
-
-        Parameters
-        ----------
-        min_img : np.ndarray
-            Minimum value for all the images
-        range_img : np.ndarray
-            Maximum value for all the images
-
-        Returns
-        -------
-        normalize_fn : Callable
-            Function to normalize an image
-        recover_fn : Callable
-            Function to recover an image
-        """
-        normalize_fn = (
-            lambda x, min_img=min_img, range_img=range_img: self._mask_img *
-            (x - min_img) / range_img)
-
-        recover_fn = (
-            lambda y, min_img=min_img, range_img=range_img: self._mask_img *
-            (y * range_img + min_img))
-
-        return normalize_fn, recover_fn
-
-    def _tag_normalize_functions(
-            self) -> tuple[list[Callable], list[Callable]]:
-        """Create the normalization and recovery functions for the tags.
-
-        Returns
-        -------
-        normalize_functions : list
-            List of functions to normalize each tag
-        recover_functions : list
-            List of functions to recover each tag
-        """
-
-        if self.conf['preproc']['normalization'] == 'unif':
-
-            normalize_functions = [
-                (lambda x, x_id, i=i: self._unsorting_indices[x_id, i] / self.
-                 Ndata) for i in range(self.conf['speckle']['nscreens'])
+            # Extact the ensembles randomly
+            sample = random.sample(split_ensembles[ensemble],
+                                   n_groups * ensemble_size)
+            # split the sample into groups of ensemble_size
+            sample = [
+                sample[i:i + ensemble_size]
+                for i in range(0, n_groups * ensemble_size, ensemble_size)
             ]
-            recover_functions = [
-                (lambda y, i=i: self._sorted_tags[round(y * self.Ndata), i])
-                for i in range(self.conf['speckle']['nscreens'])
-            ]
-            return normalize_functions, recover_functions
-        elif self.conf['preproc']['normalization'] == 'zscore':
-            normalize_functions = [
-                (lambda x, mean=self.mean_tags[i], std=self.std_tags[i]:
-                 (x - mean) / std)
-                for i in range(self.conf['speckle']['nscreens'])
-            ]
-            recover_functions = [
-                (lambda y, mean=self.mean_tags[i], std=self.std_tags[i]: y *
-                 std + mean) for i in range(self.conf['speckle']['nscreens'])
-            ]
-            return normalize_functions, recover_functions
-        elif self.conf['preproc']['normalization'] == 'log':
-            # The log normalization follows this formula:
-            #   f(x) = (log(x - min + 1) - log(max - min + 1)) / (log(c - min + 1) - log(max - min + 1))
-            # where c=1 sets the range of 0<=f(x)<=c=1
-            normalize_functions = [
-                (lambda x, x_id, min_t=self.min_tags[i], max_t=self.max_tags[
-                    i]: np.log((x - min_t + 1) / (max_t - min_t + 1)) / np.log(
-                        (2 - min_t) / (max_t - min_t + 1)))
-                for i in range(self.conf['speckle']['nscreens'].min_tags)
-            ]
-            recover_functions = [
-                (lambda y, y_id, min_t=self.min_tags[i], max_t=self.max_tags[
-                    i]: np.exp(y) * np.log((2 - min_t) / (max_t - min_t + 1)) *
-                 (max_t - min_t + 1) + min_t - 1)
-                for i in range(self.conf['speckle']['nscreens'].min_tags)
-            ]
-            return normalize_functions, recover_functions
-        elif self.conf['preproc']['normalization'] == 'lin':
-            normalize_functions = [
-                (lambda x, x_id, min_t=self.min_tags[i], max_t=self.max_tags[
-                    i]: (x - min_t) / (max_t - min_t))
-                for i in range(self.conf['speckle']['nscreens'])
-            ]
-            recover_functions = [
-                (lambda y, y_id, min_t=self.min_tags[i], max_t=self.max_tags[
-                    i]: y * (max_t - min_t) + min_t)
-                for i in range(self.conf['speckle']['nscreens'])
-            ]
-            return normalize_functions, recover_functions
-        else:
-            raise ValueError(
-                f"*** Error in normalization: normalization {self.conf['preproc']['normalization']} unknown."
-            )
+            # and append it to the ensemble_dataset as separate elements
+            ensemble_dataset.extend(sample)
+
+        # shuffle dimension 0 of the ensemble_dataset
+        random.shuffle(ensemble_dataset)
+
+        train_size = int(train_test_split * len(ensemble_dataset))
+        train_set = ensemble_dataset[:train_size]
+        test_set = ensemble_dataset[train_size:]
+
+        print(
+            f'*** There are {len(ensemble_dataset)} ensemble groups in the dataset, that I split in {len(train_set)} for training and {len(test_set)} for testing. Each ensemble is composed by {ensemble_size} images. This corresponds to {len(train_set)*ensemble_size} for training and {len(test_set)*ensemble_size} for testing.'
+        )
+    else:
+        train_size = int(train_test_split * len(dataset))
+        print(
+            f'*** There are {len(dataset)} images in the dataset, {train_size} for training and {len(dataset)-train_size} for testing.'
+        )
+
+        random.shuffle(dataset)
+        train_set = dataset[:train_size]
+        test_set = dataset[train_size:]
+
+    # Save the training and testing set
+    pickle.dump(train_set,
+                open(f'{datadirectory}/train_set_{modelname}.pickle', 'wb'))
+    pickle.dump(test_set,
+                open(f'{datadirectory}/test_set_{modelname}.pickle', 'wb'))
+
+    return train_set, test_set
