@@ -34,10 +34,10 @@ def setup_model(config: dict) -> tuple[nn.Module, int]:
 
     print(f'^^^ Initializing model {model_name} of type {model_type}')
 
-    if model_type in ['resnet18', 'resnet50', 'resnet152']:
+    if model_type.startswith('resnet'):
         return get_a_resnet(nscreens, data_directory, model_name, model_type,
                             pretrained, ensemble)
-    if model_type in ['scnnC8', 'scnnC16', 'scnnC4']:
+    elif model_type.startswith('scnnC'):
         return get_scnn(config)
     else:
         raise ValueError(f'Unknown model {model_name}')
@@ -199,14 +199,18 @@ def get_scnn(config: dict) -> tuple[nn.Module, int]:
     model_type = config['model']['type']
     datadirectory = config['speckle']['datadirectory']
 
-    if model_type == 'scnnC8':
-        scnn_model = SteerableCNN(config, 'C8')
-    elif model_type == 'scnnC16':
-        scnn_model = SteerableCNN(config, 'C16')
-    elif model_type == 'scnnC4':
-        scnn_model = SteerableCNN(config, 'C4')
-    else:
+    model_map = {
+        'scnnC8': 'C8',
+        'scnnC16': 'C16',
+        'scnnC4': 'C4',
+        'scnnC6': 'C6',
+        'scnnC10': 'C10',
+    }
+    try:
+        scnn_model = SteerableCNN(config, model_map[model_type])
+    except KeyError:
         raise ValueError(f'Unknown model {model_type}')
+
     scnn_model.name = model_name
 
     return load_model_state(scnn_model, datadirectory)
