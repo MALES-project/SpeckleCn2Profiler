@@ -63,8 +63,6 @@ def tags_distribution(
         if rescale and recover_tag is not None:
             recovered_tag_model = np.asarray(
                 [recover_tag[i](predic_tags[:, i], i)]).squeeze(0)
-            print(predic_tags[:, i].shape)
-            print(recovered_tag_model.shape)
             recovered_tag_true = np.asarray(
                 [recover_tag[i](train_tags[:, i], i)]).squeeze(0)
             axs[i // 4, i % 4].hist(recovered_tag_model,

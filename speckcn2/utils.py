@@ -1,15 +1,17 @@
 import torch
-import pickle
-import random
 import os
 import torch.nn as nn
 import matplotlib.pyplot as plt
 
 
-def plot_preprocessed_image(image_orig: torch.tensor, image: torch.tensor,
-                            tags: torch.tensor, counter: int,
-                            datadirectory: str, mname: str,
-                            file_name: str, polar: bool=False) -> None:
+def plot_preprocessed_image(image_orig: torch.tensor,
+                            image: torch.tensor,
+                            tags: torch.tensor,
+                            counter: int,
+                            datadirectory: str,
+                            mname: str,
+                            file_name: str,
+                            polar: bool = False) -> None:
     """Plots the original and preprocessed image, and the tags.
 
     Parameters
@@ -67,33 +69,6 @@ def ensure_directory(data_directory: str) -> None:
         os.mkdir(data_directory)
 
 
-def setup_loss(config: dict) -> nn.Module:
-    """Returns the criterion specified in the configuration file.
-
-    Parameters
-    ----------
-    config : dict
-        Dictionary containing the configuration
-
-    Returns
-    -------
-    criterion : torch.nn.Module
-        The criterion with the loaded state
-    """
-
-    criterion_name = config['hyppar']['loss']
-    if criterion_name == 'BCELoss':
-        return torch.nn.BCELoss()
-    elif criterion_name == 'MSELoss':
-        return torch.nn.MSELoss()
-    elif criterion_name == 'MAELoss':
-        return torch.nn.L1Loss()
-    elif criterion_name == 'Pearson':
-        return PearsonCorrelationLoss()
-    else:
-        raise ValueError(f'Unknown criterion {criterion_name}')
-
-
 def setup_optimizer(config: dict, model: nn.Module) -> nn.Module:
     """Returns the optimizer specified in the configuration file.
 
@@ -117,30 +92,3 @@ def setup_optimizer(config: dict, model: nn.Module) -> nn.Module:
         return torch.optim.SGD(model.parameters(), lr=config['hyppar']['lr'])
     else:
         raise ValueError(f'Unknown optimizer {optimizer_name}')
-
-
-class PearsonCorrelationLoss(nn.Module):
-
-    def __init__(self):
-        super(PearsonCorrelationLoss, self).__init__()
-
-    def forward(self, x, y):
-        # Calculate mean of x and y
-        mean_x = torch.mean(x)
-        mean_y = torch.mean(y)
-
-        # Calculate covariance
-        cov_xy = torch.mean((x - mean_x) * (y - mean_y))
-
-        # Calculate standard deviations
-        std_x = torch.std(x)
-        std_y = torch.std(y)
-
-        # Calculate Pearson correlation coefficient
-        corr = cov_xy / (std_x * std_y + 1e-8
-                         )  # Add a small epsilon to avoid division by zero
-
-        # The loss is 1 - correlation to be minimized
-        loss = 1.0 - corr
-
-        return loss

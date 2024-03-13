@@ -1,11 +1,9 @@
 import torch
 import pickle
 import random
-from dataclasses import dataclass
 from PIL import Image
 import os
 import numpy as np
-from typing import Callable
 import torchvision.transforms as transforms
 from speckcn2.utils import ensure_directory, plot_preprocessed_image
 from speckcn2.transformations import PolarCoordinateTransform, ShiftRowsTransform, ToUnboundTensor
@@ -27,7 +25,7 @@ def assemble_transform(conf: dict) -> transforms.Compose:
     """
     list_transforms = []
 
-    if conf['preproc']['centercrop']>0:
+    if conf['preproc']['centercrop'] > 0:
         # Take only the center of the image
         list_transforms.append(
             transforms.CenterCrop(conf['preproc']['centercrop']))
@@ -140,8 +138,11 @@ def imgs_as_single_datapoint(
     # and get the transformation to apply to each image
     transform = assemble_transform(conf)
 
-    # Get the list of images 
-    file_list = [file_name for file_name in os.listdir(datadirectory) if '.txt' in file_name and 'tag' not in file_name]
+    # Get the list of images
+    file_list = [
+        file_name for file_name in os.listdir(datadirectory)
+        if '.txt' in file_name and 'tag' not in file_name
+    ]
     np.random.shuffle(file_list)
     # Optionally, do data augmentation by using each file multiple times
     # (It makes sense only in combination with random rotations)
@@ -210,15 +211,15 @@ def imgs_as_single_datapoint(
 
 
 def get_tag_files(file_list: list, datadirectory: str) -> dict:
-    """ Function to check the existence of tag files for each image file.
-    
+    """Function to check the existence of tag files for each image file.
+
     Parameters
     ----------
     file_list : list
         List of image files
     datadirectory : str
         The directory containing the data
-        
+
     Returns
     -------
     tag_files : dict
@@ -226,7 +227,10 @@ def get_tag_files(file_list: list, datadirectory: str) -> dict:
     """
     tag_files = {}
     for file_name in file_list:
-        ftagname = file_name.replace('.txt', '_tag.txt') if 'MALES' in file_name else file_name.rpartition('_')[0] + '_tag.txt'
+        ftagname = file_name.replace(
+            '.txt',
+            '_tag.txt') if 'MALES' in file_name else file_name.rpartition(
+                '_')[0] + '_tag.txt'
         tag_path = os.path.join(datadirectory, ftagname)
         if os.path.exists(tag_path):
             tag_files[file_name] = tag_path
@@ -236,13 +240,14 @@ def get_tag_files(file_list: list, datadirectory: str) -> dict:
 
 
 def get_ensemble_dict(tag_files: dict) -> dict:
-    """ Function to associate each Cn2 profile to an ensemble ID for parallel processing.
-    
+    """Function to associate each Cn2 profile to an ensemble ID for parallel
+    processing.
+
     Parameters
     ----------
     tag_files : dict
         Dictionary of image files and their corresponding tag files
-    
+
     Returns
     -------
     ensemble_dict : dict
@@ -296,14 +301,17 @@ def train_test_split(
     # Check if the training and test set are already prepared
     train_file = f'{datadirectory}/train_set_{modelname}.pickle'
     test_file = f'{datadirectory}/test_set_{modelname}.pickle'
-    
+
     if os.path.isfile(train_file) and os.path.isfile(test_file):
         print('Loading the training and testing set...', flush=True)
-        return pickle.load(open(train_file, 'rb')), pickle.load(open(test_file, 'rb'))
+        nz._normalizing_functions(all_images, all_tags, all_ensemble_ids)
+        return pickle.load(open(train_file,
+                                'rb')), pickle.load(open(test_file, 'rb'))
 
     # If the data are not already prepared, first I normalize them using the Normalizer object
     print('Normalizing the images and tags...', flush=True)
-    dataset = nz.normalize_imgs_and_tags(all_images, all_tags, all_ensemble_ids)
+    dataset = nz.normalize_imgs_and_tags(all_images, all_tags,
+                                         all_ensemble_ids)
 
     if ensemble_size > 1:
         dataset = create_ensemble_dataset(dataset, ensemble_size)
@@ -320,15 +328,17 @@ def train_test_split(
 
 
 def create_ensemble_dataset(dataset: list, ensemble_size: int) -> list:
-    """Creates a dataset of ensembles from a dataset of single images. The ensembles are created by grouping together ensemble_size images. These images will be used to train the model in parallel.
-    
+    """Creates a dataset of ensembles from a dataset of single images. The
+    ensembles are created by grouping together ensemble_size images. These
+    images will be used to train the model in parallel.
+
     Parameters
     ----------
     dataset : list
         List of single images
     ensemble_size : int
         The number of images that will be processed together as an ensemble
-    
+
     Returns
     -------
     ensemble_dataset : list
@@ -344,11 +354,15 @@ def create_ensemble_dataset(dataset: list, ensemble_size: int) -> list:
         # * In each ensemble, take n_groups groups of ensemble_size datapoints
         n_groups = len(ensemble) // ensemble_size
         if n_groups < 1:
-            raise ValueError(f'Ensemble size {ensemble_size} is too large for ensemble {ensemble} with size {len(ensemble)}')
+            raise ValueError(
+                f'Ensemble size {ensemble_size} is too large for ensemble {ensemble} with size {len(ensemble)}'
+            )
         # Extract the ensembles randomly
         sample = random.sample(ensemble, n_groups * ensemble_size)
         # Split the sample into groups of ensemble_size
-        ensemble_dataset.extend(sample[i:i + ensemble_size] for i in range(0, n_groups * ensemble_size, ensemble_size))
+        ensemble_dataset.extend(sample[i:i + ensemble_size]
+                                for i in range(0, n_groups *
+                                               ensemble_size, ensemble_size))
 
     random.shuffle(ensemble_dataset)
     return ensemble_dataset
@@ -366,14 +380,16 @@ def print_ensemble_info(dataset: list, ensemble_size: int, ttsplit: int):
     ttsplit : int
         The train-test split
     """
-    
+
     train_size = int(ttsplit * len(dataset))
-    print(f'*** There are {len(dataset)} ensemble groups in the dataset, that I split in {train_size} for training and {len(dataset) - train_size} for testing. Each ensemble is composed by {ensemble_size} images. This corresponds to {train_size * ensemble_size} for training and {(len(dataset) - train_size) * ensemble_size} for testing.')
+    print(
+        f'*** There are {len(dataset)} ensemble groups in the dataset, that I split in {train_size} for training and {len(dataset) - train_size} for testing. Each ensemble is composed by {ensemble_size} images. This corresponds to {train_size * ensemble_size} for training and {(len(dataset) - train_size) * ensemble_size} for testing.'
+    )
 
 
 def print_dataset_info(dataset: list, ttsplit: int):
     """Prints the information about the dataset.
-    
+
     Parameters
     ----------
     dataset : list
@@ -382,19 +398,21 @@ def print_dataset_info(dataset: list, ttsplit: int):
         The train-test split
     """
     train_size = int(ttsplit * len(dataset))
-    print(f'*** There are {len(dataset)} images in the dataset, {train_size} for training and {len(dataset) - train_size} for testing.')
+    print(
+        f'*** There are {len(dataset)} images in the dataset, {train_size} for training and {len(dataset) - train_size} for testing.'
+    )
 
 
-def split_dataset(dataset: list, ttsplit: int)-> tuple[list, list]:
-    """ Splits the dataset into training and testing sets.
-    
+def split_dataset(dataset: list, ttsplit: int) -> tuple[list, list]:
+    """Splits the dataset into training and testing sets.
+
     Parameters
     ----------
     dataset : list
         The dataset
     ttsplit : int
         The train-test split
-    
+
     Returns
     -------
     train_set : list
