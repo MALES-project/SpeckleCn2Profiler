@@ -1,12 +1,8 @@
 import torch
-from dataclasses import dataclass
-from PIL import Image
-import os
 import numpy as np
 from typing import Callable
 
 
-@dataclass
 class Normalizer:
     """Class to handle the normalization of images and tags.
 
@@ -15,7 +11,38 @@ class Normalizer:
     conf : dict
         Dictionary containing the configuration
     """
-    conf: dict
+
+    def __init__(self, conf: dict):
+        self.conf = conf
+
+    def _normalizing_functions(
+        self,
+        all_images: list[torch.tensor],
+        all_tags: list[np.ndarray],
+        all_ensemble_ids: list[int],
+    ):
+        """Precompiles the normalizing functions.
+
+        Parameters
+        ----------
+        all_images : list
+            List of all images
+        all_tags : list
+            List of all tags
+        conf : dict
+            Dictionary containing the configuration
+        """
+        # Define the normalization functions for the images
+        if not hasattr(self, 'normalize_img'):
+            # Get a mask for the NaN values
+            self._mask_img = 1 - np.isnan(all_images[0])
+            # Then replace all the nan values with 0
+            all_images = [torch.nan_to_num(image) for image in all_images]
+            self._define_img_normalize_functions(all_images)
+
+        # Define the normalization functions for the tags
+        if not hasattr(self, 'normalize_tag'):
+            self._define_tag_normalize_functions(all_tags)
 
     def normalize_imgs_and_tags(
         self,
@@ -39,21 +66,10 @@ class Normalizer:
         dataset : list
             List of tuples (image, normalized_tag)
         """
-        # Get a mask for the NaN values
-        self._mask_img = 1 - np.isnan(all_images[0])
-        # Then replace all the nan values with 0
-        all_images = [torch.nan_to_num(image) for image in all_images]
-
-        # Define the normalization functions for the images
-        if not hasattr(self, 'normalize_img'):
-            self._define_img_normalize_functions(all_images)
+        self._normalizing_functions(all_images, all_tags, all_ensemble_ids)
 
         # Normalize the images
         normalized_images = [self.normalize_img(image) for image in all_images]
-
-        # Define the normalization functions for the tags
-        if not hasattr(self, 'normalize_tag'):
-            self._define_tag_normalize_functions(all_tags)
 
         # And normalize the tags
         normalized_tags = np.array([[
@@ -102,7 +118,8 @@ class Normalizer:
         print('*** Tag std:', self.std_tags)
 
     def _define_unif_normalize_functions(self, all_tags):
-        """Define the normalization functions for the tags using uniform normalization."""
+        """Define the normalization functions for the tags using uniform
+        normalization."""
         raise NotImplementedError(
             '*** uniform normalization is not fully implemented yet. The sorting messes up the ensemble IDs.'
         )
@@ -111,8 +128,7 @@ class Normalizer:
         # Find the indices that sort the tags
         _sorting_indices = np.argsort(array_tags, axis=0)
         # And the corresponding indices that unsort them
-        self._unsorting_indices = np.argsort(np.argsort(array_tags,
-                                                        axis=0),
+        self._unsorting_indices = np.argsort(np.argsort(array_tags, axis=0),
                                              axis=0)
         self._sorted_tags = np.stack([
             array_tags[_sorting_indices[:, i], i]
@@ -150,9 +166,10 @@ class Normalizer:
 
         return normalize_fn, recover_fn
 
-
-    def _tag_normalize_functions(self) -> tuple[list[Callable], list[Callable]]:
-        """Create the normalization and recovery functions for the tags. Several alternatives are available.
+    def _tag_normalize_functions(
+            self) -> tuple[list[Callable], list[Callable]]:
+        """Create the normalization and recovery functions for the tags.
+        Several alternatives are available.
 
         Returns
         -------
@@ -173,24 +190,48 @@ class Normalizer:
         elif normalization == 'lin':
             return self._lin_normalize_functions(nscreens)
         else:
-            raise ValueError(f"*** Error in normalization: normalization {normalization} unknown.")
+            raise ValueError(
+                f'*** Error in normalization: normalization {normalization} unknown.'
+            )
 
     def _unif_normalize_functions(self, nscreens):
-        normalize_functions = [(lambda x, x_id, i=i: self._unsorting_indices[x_id, i] / self.Ndata) for i in range(nscreens)]
-        recover_functions = [(lambda y, i=i: self._sorted_tags[round(y * self.Ndata), i]) for i in range(nscreens)]
+        normalize_functions = [(
+            lambda x, x_id, i=i: self._unsorting_indices[x_id, i] / self.Ndata)
+                               for i in range(nscreens)]
+        recover_functions = [
+            (lambda y, i=i: self._sorted_tags[round(y * self.Ndata), i])
+            for i in range(nscreens)
+        ]
         return normalize_functions, recover_functions
 
     def _zscore_normalize_functions(self, nscreens):
-        normalize_functions = [(lambda x, mean=self.mean_tags[i], std=self.std_tags[i]: (x - mean) / std) for i in range(nscreens)]
-        recover_functions = [(lambda y, mean=self.mean_tags[i], std=self.std_tags[i]: y * std + mean) for i in range(nscreens)]
+        normalize_functions = [
+            (lambda x, mean=self.mean_tags[i], std=self.std_tags[i]:
+             (x - mean) / std) for i in range(nscreens)
+        ]
+        recover_functions = [(lambda y, mean=self.mean_tags[
+            i], std=self.std_tags[i]: y * std + mean) for i in range(nscreens)]
         return normalize_functions, recover_functions
 
     def _log_normalize_functions(self, nscreens):
-        normalize_functions = [(lambda x, x_id, min_t=self.min_tags[i], max_t=self.max_tags[i]: np.log((x - min_t + 1) / (max_t - min_t + 1)) / np.log((2 - min_t) / (max_t - min_t + 1))) for i in range(nscreens)]
-        recover_functions = [(lambda y, y_id, min_t=self.min_tags[i], max_t=self.max_tags[i]: np.exp(y) * np.log((2 - min_t) / (max_t - min_t + 1)) * (max_t - min_t + 1) + min_t - 1) for i in range(nscreens)]
+        normalize_functions = [(lambda x, x_id, min_t=self.min_tags[
+            i], max_t=self.max_tags[i]: np.log(
+                (x - min_t + 1) / (max_t - min_t + 1)) / np.log(
+                    (2 - min_t) / (max_t - min_t + 1)))
+                               for i in range(nscreens)]
+        recover_functions = [(lambda y, y_id, min_t=self.min_tags[
+            i], max_t=self.max_tags[i]: np.exp(y) * np.log(
+                (2 - min_t) / (max_t - min_t + 1)) *
+                              (max_t - min_t + 1) + min_t - 1)
+                             for i in range(nscreens)]
         return normalize_functions, recover_functions
 
     def _lin_normalize_functions(self, nscreens):
-        normalize_functions = [(lambda x, x_id, min_t=self.min_tags[i], max_t=self.max_tags[i]: (x - min_t) / (max_t - min_t)) for i in range(nscreens)]
-        recover_functions = [(lambda y, y_id, min_t=self.min_tags[i], max_t=self.max_tags[i]: y * (max_t - min_t) + min_t) for i in range(nscreens)]
+        normalize_functions = [
+            (lambda x, x_id, min_t=self.min_tags[i], max_t=self.max_tags[i]:
+             (x - min_t) / (max_t - min_t)) for i in range(nscreens)
+        ]
+        recover_functions = [(
+            lambda y, y_id, min_t=self.min_tags[i], max_t=self.max_tags[i]: y *
+            (max_t - min_t) + min_t) for i in range(nscreens)]
         return normalize_functions, recover_functions

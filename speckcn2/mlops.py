@@ -3,15 +3,16 @@ import random
 import torch
 from torch import nn, optim, Tensor
 from speckcn2.io import save
+from speckcn2.loss import ComposableLoss
 from speckcn2.mlmodels import EnsembleModel
 from speckcn2.preprocess import Normalizer
 from speckcn2.utils import ensure_directory
-from speckcn2.plots import score_plot, altitude_profile_plot
+from speckcn2.plots import score_plot
 
 
 def train(model: nn.Module, last_model_state: int, conf: dict, train_set: list,
           test_set: list, device: torch.device, optimizer: optim.Optimizer,
-          criterion: nn.Module) -> tuple[nn.Module, float]:
+          criterion: ComposableLoss) -> tuple[nn.Module, float]:
     """Trains the model for the given number of epochs.
 
     Parameters
@@ -30,7 +31,7 @@ def train(model: nn.Module, last_model_state: int, conf: dict, train_set: list,
         The device to use
     optimizer : torch.optim
         The optimizer to use
-    criterion : torch.nn
+    criterion : ComposableLoss
         The loss function to use
 
     Returns
@@ -94,7 +95,7 @@ def train(model: nn.Module, last_model_state: int, conf: dict, train_set: list,
                 batch = test_set[i:i + batch_size]
                 # Forward pass
                 outputs, targets, _ = ensemble(model, batch)
-                loss = criterion(outputs, targets)
+                loss, _ = criterion(outputs, targets)
                 # sum loss
                 val_loss += loss.item()
         val_loss = val_loss / len(test_set)
@@ -115,7 +116,7 @@ def train(model: nn.Module, last_model_state: int, conf: dict, train_set: list,
 def score(model: nn.Module,
           test_set: list,
           device: torch.device,
-          criterion: nn.Module,
+          criterion: ComposableLoss,
           normalizer: Normalizer,
           nimg_plot: int = 100) -> list[Tensor]:
     """Tests the model.
@@ -128,8 +129,8 @@ def score(model: nn.Module,
         The testing set
     device : torch.device
         The device to use
-    criterion : torch.nn
-        The loss function to use
+    criterion : ComposableLoss
+        The composable loss function, where I can access useful parameters
     normalizer : Normalizer
         The normalizer used to recover the tags
     nimg_plot : int
@@ -164,15 +165,13 @@ def score(model: nn.Module,
 
             # Loop each input separately
             for i in range(len(outputs)):
-                loss = criterion(outputs[i], targets[i])
+                loss, losses = criterion(outputs[i], targets[i])
                 # Print the loss for every epoch
                 print(f'Item {counter} loss: {loss.item():.4f}')
 
                 if counter < nimg_plot:
-                    score_plot(conf, inputs, outputs, targets, loss, i,
-                               counter, normalizer.recover_tag)
-                    altitude_profile_plot(conf, inputs, outputs, targets, i,
-                                          counter, normalizer.recover_tag)
+                    score_plot(conf, inputs, outputs, targets, loss, losses, i,
+                               counter, criterion)
 
                 # and get all the tags for statistic analysis
                 for tag in outputs:
