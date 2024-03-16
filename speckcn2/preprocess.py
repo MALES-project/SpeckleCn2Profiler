@@ -8,6 +8,11 @@ import torchvision.transforms as transforms
 from speckcn2.utils import ensure_directory, plot_preprocessed_image
 from speckcn2.transformations import PolarCoordinateTransform, ShiftRowsTransform, ToUnboundTensor
 from speckcn2.normalizer import Normalizer
+import torch.multiprocessing as mp
+import resource
+# Hacky way to allow torch.multiprocessing to work. See https://github.com/Project-MONAI/MONAI/issues/701#issuecomment-767330310
+rlimit = resource.getrlimit(resource.RLIMIT_NOFILE)
+resource.setrlimit(resource.RLIMIT_NOFILE, (2048, rlimit[1]))
 
 
 def assemble_transform(conf: dict) -> transforms.Compose:
@@ -99,6 +104,142 @@ def prepare_data(
     return all_images, all_tags, all_ensemble_ids
 
 
+#def _process_file(file_name: str, datadirectory: str, transform: transforms, transform_orig: transforms, tag_files:dict, ensemble_dict:dict) -> tuple[torch.tensor, torch.tensor, np.ndarray, int]:
+def _process_file(args: tuple) -> tuple[torch.tensor, torch.tensor, np.ndarray, int]:
+    """ Preprocesses a single file by loading the image and tags from the given. This function is used for parallel processing.
+    """
+    # Unpack the arguments
+    file_name, transform, transform_orig, tag_files, ensemble_dict, datadirectory = args
+    # Construct the full path to the file
+    file_path = os.path.join(datadirectory, file_name)
+    # Open the text file as an image using numpy
+    pixel_values = np.loadtxt(file_path, delimiter=',', dtype=np.float32)
+    # Create the image
+    image_orig = Image.fromarray(pixel_values, mode='F')
+    # Apply the transformation
+    image = transform(image_orig)
+    image_orig = transform_orig(image_orig)
+    # Load the tags
+    tags = np.loadtxt(tag_files[file_name], delimiter=',', dtype=np.float32)
+    # Preprocess the tags
+    np.log10(tags, out=tags)
+    # Get the ensemble ID
+    ensemble_id = ensemble_dict[file_name]
+    return image, image_orig, tags, ensemble_id
+
+
+#def imgs_as_single_datapoint(
+#    conf: dict,
+#    nimg_print: int = 5,
+#) -> tuple[list, list, list]:
+#    """Preprocesses the data by loading images and tags from the given
+#    directory, applying a transformation to the images. Each image is treated
+#    as a single data point.
+#
+#    Parameters
+#    ----------
+#    conf : dict
+#        Dictionary containing the configuration
+#    nimg_print: int
+#        Number of images to print
+#
+#    Returns
+#    -------
+#    all_images : list
+#        List of all images
+#    all_tags : list
+#        List of all tags
+#    all_ensemble_ids : list
+#        List of all ensemble ids, representing images from the same Cn2 profile
+#    """
+#    datadirectory = conf['speckle']['datadirectory']
+#    mname = conf['model']['name']
+#    dataname = conf['preproc']['dataname']
+#    tagname = dataname.replace('images', 'tags')
+#    ensemblename = dataname.replace('images', 'ensemble')
+#    nreps = conf['preproc']['speckreps']
+#
+#    # Dummy transformation to get the original image
+#    transform_orig = transforms.Compose([
+#        transforms.ToTensor(),
+#    ])
+#
+#    # and get the transformation to apply to each image
+#    transform = assemble_transform(conf)
+#
+#    # Get the list of images
+#    file_list = [
+#        file_name for file_name in os.listdir(datadirectory)
+#        if '.txt' in file_name and 'tag' not in file_name
+#    ]
+#    np.random.shuffle(file_list)
+#    # Optionally, do data augmentation by using each file multiple times
+#    # (It makes sense only in combination with random rotations)
+#    file_list = file_list * nreps
+#
+#    all_images, all_tags, all_ensemble_ids = [], [], []
+#    show_image = nimg_print > 0
+#    if show_image:
+#        ensure_directory(f'{datadirectory}/imgs_to_{mname}')
+#
+#    tag_files = get_tag_files(file_list, datadirectory)
+#    # Exclude from file_list the files that do not have tags
+#    file_list = list(tag_files.keys())
+#    # Get the ensemble IDs
+#    ensemble_dict = get_ensemble_dict(tag_files)
+#
+#    # Load each text file as an image
+#    for counter, file_name in enumerate(file_list):
+#        # Process only if tags available
+#        if file_name in tag_files:
+#
+#            # Construct the full path to the file
+#            file_path = os.path.join(datadirectory, file_name)
+#
+#            ## Open the text file as an image using PIL
+#            pixel_values = np.loadtxt(file_path,
+#                                      delimiter=',',
+#                                      dtype=np.float32)
+#
+#            # Create the image
+#            image_orig = Image.fromarray(pixel_values, mode='F')
+#
+#            # Apply the transformation
+#            image = transform(image_orig)
+#            image_orig = transform_orig(image_orig)
+#            # and add the img to the collection
+#            all_images.append(image)
+#
+#            # Load the tags
+#            tags = np.loadtxt(tag_files[file_name],
+#                              delimiter=',',
+#                              dtype=np.float32)
+#            # Plot the image using maplotlib
+#            if counter > nimg_print:
+#                show_image = False
+#            if show_image:
+#                plot_preprocessed_image(image_orig, image, tags, counter,
+#                                        datadirectory, mname, file_name)
+#
+#            # Preprocess the tags
+#            np.log10(tags, out=tags)
+#            # Add the tag to the colleciton
+#            all_tags.append(tags)
+#
+#            # Get the ensemble ID
+#            ensemble_id = ensemble_dict[file_name]
+#            # and add it to the collection
+#            all_ensemble_ids.append(ensemble_id)
+#
+#    # Finally, store them before returning
+#    torch.save(all_images, os.path.join(datadirectory, dataname))
+#    torch.save(all_tags, os.path.join(datadirectory, tagname))
+#    torch.save(all_ensemble_ids, os.path.join(datadirectory, ensemblename))
+#
+#    print('*** Preprocessing (linear) complete.', flush=True)
+#
+#    return all_images, all_tags, all_ensemble_ids
+
 def imgs_as_single_datapoint(
     conf: dict,
     nimg_print: int = 5,
@@ -154,51 +295,32 @@ def imgs_as_single_datapoint(
         ensure_directory(f'{datadirectory}/imgs_to_{mname}')
 
     tag_files = get_tag_files(file_list, datadirectory)
+    # Exclude from file_list the files that do not have tags
+    file_list = list(tag_files.keys())
+    # Get the ensemble IDs
     ensemble_dict = get_ensemble_dict(tag_files)
 
-    # Load each text file as an image
-    for counter, file_name in enumerate(file_list):
-        # Process only if tags available
-        if file_name in tag_files:
 
-            # Construct the full path to the file
-            file_path = os.path.join(datadirectory, file_name)
+    # The first few files are processed in sequence and plotted
+    for counter, file_name in enumerate(file_list[:nimg_print]):
+        args = (file_name, transform, transform_orig, tag_files, ensemble_dict, datadirectory)
+        image, image_orig, tags, ensemble_id = _process_file(args)
+        plot_preprocessed_image(image_orig, image, tags, counter, datadirectory, mname, file_name)
+        all_images.append(image)
+        all_tags.append(tags)
+        all_ensemble_ids.append(ensemble_id)
 
-            # Open the text file as an image using PIL
-            pixel_values = np.loadtxt(file_path,
-                                      delimiter=',',
-                                      dtype=np.float32)
+    # Then we process the remaining files in parallel
+    with mp.Pool() as p:
+        args_list = [(file_name, transform, transform_orig, tag_files, ensemble_dict, datadirectory ) for file_name in file_list[nimg_print:]]
+        results = p.map(_process_file, args_list)
 
-            # Create the image
-            image_orig = Image.fromarray(pixel_values, mode='F')
-
-            # Apply the transformation
-            image = transform(image_orig)
-            image_orig = transform_orig(image_orig)
-            # and add the img to the collection
-            all_images.append(image)
-
-            # Load the tags
-            tags = np.loadtxt(tag_files[file_name],
-                              delimiter=',',
-                              dtype=np.float32)
-
-            # Plot the image using maplotlib
-            if counter > nimg_print:
-                show_image = False
-            if show_image:
-                plot_preprocessed_image(image_orig, image, tags, counter,
-                                        datadirectory, mname, file_name)
-
-            # Preprocess the tags
-            np.log10(tags, out=tags)
-            # Add the tag to the colleciton
-            all_tags.append(tags)
-
-            # Get the ensemble ID
-            ensemble_id = ensemble_dict[file_name]
-            # and add it to the collection
-            all_ensemble_ids.append(ensemble_id)
+    # Unpack the results
+    new_all_images, _, new_all_tags, new_all_ensemble_ids = zip(*results)
+    all_images.extend(new_all_images)
+    all_tags.extend(new_all_tags)
+    all_ensemble_ids.extend(new_all_ensemble_ids)
+    
 
     # Finally, store them before returning
     torch.save(all_images, os.path.join(datadirectory, dataname))
