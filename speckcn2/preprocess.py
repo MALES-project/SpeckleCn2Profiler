@@ -1,4 +1,5 @@
 import torch
+import h5py
 import time
 import pickle
 import random
@@ -143,7 +144,7 @@ def imgs_as_single_datapoint(
     # Get the list of images
     file_list = [
         file_name for file_name in os.listdir(datadirectory)
-        if '.txt' in file_name and 'tag' not in file_name
+        if '.h5' in file_name and 'tag' not in file_name
     ]
     np.random.shuffle(file_list)
     # Optionally, do data augmentation by using each file multiple times
@@ -166,10 +167,14 @@ def imgs_as_single_datapoint(
             # Construct the full path to the file
             file_path = os.path.join(datadirectory, file_name)
 
-            # Open the text file as an image using PIL
-            pixel_values = np.loadtxt(file_path,
-                                      delimiter=',',
-                                      dtype=np.float32)
+            ## Open the text file as an image using PIL
+            #pixel_values = np.loadtxt(file_path,
+            #                          delimiter=',',
+            #                          dtype=np.float32)
+            # Open the HDF5 file
+            with h5py.File(file_path, 'r') as f:
+                # Load the data from the 'data' dataset
+                pixel_values = f['data'][:]
 
             # Create the image
             image_orig = Image.fromarray(pixel_values, mode='F')
@@ -182,9 +187,8 @@ def imgs_as_single_datapoint(
             all_images.append(image)
 
             # Load the tags
-            tags = np.loadtxt(tag_files[file_name],
-                              delimiter=',',
-                              dtype=np.float32)
+            with h5py.File(tag_files[file_name], 'r') as f:
+                tags = f['data'][:]
 
             # Plot the image using maplotlib
             if counter > nimg_print:
@@ -210,7 +214,6 @@ def imgs_as_single_datapoint(
 
     print('*** Preprocessing complete.', flush=True)
     print('It took', time.time() - time_start, 'seconds to preprocess the data.')
-    sys.exit()
 
     return all_images, all_tags, all_ensemble_ids
 
@@ -233,9 +236,9 @@ def get_tag_files(file_list: list, datadirectory: str) -> dict:
     tag_files = {}
     for file_name in file_list:
         ftagname = file_name.replace(
-            '.txt',
-            '_tag.txt') if 'MALES' in file_name else file_name.rpartition(
-                '_')[0] + '_tag.txt'
+            '.h5',
+            '_tag.h5') if 'MALES' in file_name else file_name.rpartition(
+                '_')[0] + '_tag.h5'
         tag_path = os.path.join(datadirectory, ftagname)
         if os.path.exists(tag_path):
             tag_files[file_name] = tag_path
