@@ -66,7 +66,7 @@ def train(model: nn.Module, last_model_state: int, conf: dict, train_set: list,
 
             # Forward pass
             outputs, targets, _ = ensemble(model, batch)
-            loss = criterion(outputs, targets)
+            loss, _ = criterion(outputs, targets)
 
             # Backward pass
             loss.backward()

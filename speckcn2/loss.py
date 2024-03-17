@@ -113,10 +113,21 @@ class ComposableLoss(nn.Module):
         if Jnorm.ndim == 1:
             Jnorm = Jnorm[None, :]
 
-        return np.asarray([
-            10**self.recover_tag[j](Jnorm[i][j].detach().cpu().numpy(), i)
-            for i in range(len(Jnorm)) for j in range(len(Jnorm[i]))
-        ])
+        J = []
+        for i in range(Jnorm.shape[0]):
+            J.append(
+                torch.tensor([
+                    10**self.recover_tag[j](Jnorm[i][j], i)
+                    for j in range(len(Jnorm[i]))
+                ], requires_grad=True).to(Jnorm.device)
+            )
+        J = torch.stack(J)
+        return J
+
+#        return np.asarray([
+#            10**self.recover_tag[j](Jnorm[i][j].detach().cpu().numpy(), i)
+#            for i in range(len(Jnorm)) for j in range(len(Jnorm[i]))
+#        ])
 
     def reconstruct_cn2(self, Jnorm: torch.Tensor) -> torch.Tensor:
         """ Reconstruct Cn2 from screen tags
