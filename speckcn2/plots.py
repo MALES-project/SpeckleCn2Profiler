@@ -64,9 +64,9 @@ def score_plot(
 
     # (2) Plot J vs nscreens
     recovered_tag_true = criterion.get_J(tags[i])
-    axs[-3].plot(recovered_tag_true, 'o', label='True')
+    axs[-3].plot(recovered_tag_true.squeeze(0), 'o', label='True')
     recovered_tag_model = criterion.get_J(outputs[i])
-    axs[-3].plot(recovered_tag_model, '.', color='tab:red', label='Predicted')
+    axs[-3].plot(recovered_tag_model.squeeze(0), '.', color='tab:red', label='Predicted')
     axs[-3].set_yscale('log')
     axs[-3].set_ylabel('J')
     axs[-3].set_xlabel('# screen')
@@ -75,8 +75,8 @@ def score_plot(
     # (3) Plot Cn2 vs altitude
     Cn2_true = criterion.reconstruct_cn2(tags[i])
     Cn2_pred = criterion.reconstruct_cn2(outputs[i])
-    axs[-2].plot(Cn2_true, hs, 'o', label='True')
-    axs[-2].plot(Cn2_pred, hs, '.', color='tab:red', label='Predicted')
+    axs[-2].plot(Cn2_true.squeeze(0), hs, 'o', label='True')
+    axs[-2].plot(Cn2_pred.squeeze(0), hs, '.', color='tab:red', label='Predicted')
     axs[-2].set_xscale('log')
     axs[-2].set_yscale('log')
     axs[-2].set_xlabel(r'$Cn^2$')
