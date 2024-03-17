@@ -1,4 +1,5 @@
 import torch
+import time
 import pickle
 import random
 from PIL import Image
@@ -266,6 +267,7 @@ def imgs_as_single_datapoint(
     all_ensemble_ids : list
         List of all ensemble ids, representing images from the same Cn2 profile
     """
+    time_start = time.time()
     datadirectory = conf['speckle']['datadirectory']
     mname = conf['model']['name']
     dataname = conf['preproc']['dataname']
@@ -330,6 +332,8 @@ def imgs_as_single_datapoint(
     torch.save(all_ensemble_ids, os.path.join(datadirectory, ensemblename))
 
     print('*** Parallel preprocessing complete.', flush=True)
+    print('It took', time.time() - time_start, 'seconds to preprocess the data.')
+    sys.exit()
 
     return all_images, all_tags, all_ensemble_ids
 
