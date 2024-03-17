@@ -104,7 +104,6 @@ def prepare_data(
     return all_images, all_tags, all_ensemble_ids
 
 
-#def _process_file(file_name: str, datadirectory: str, transform: transforms, transform_orig: transforms, tag_files:dict, ensemble_dict:dict) -> tuple[torch.tensor, torch.tensor, np.ndarray, int]:
 def _process_file(args: tuple) -> tuple[torch.tensor, torch.tensor, np.ndarray, int]:
     """ Preprocesses a single file by loading the image and tags from the given. This function is used for parallel processing.
     """
@@ -118,7 +117,10 @@ def _process_file(args: tuple) -> tuple[torch.tensor, torch.tensor, np.ndarray, 
     image_orig = Image.fromarray(pixel_values, mode='F')
     # Apply the transformation
     image = transform(image_orig)
-    image_orig = transform_orig(image_orig)
+    if transform_orig is not None:
+        image_orig = transform_orig(image_orig)
+    else :
+        image_orig = None
     # Load the tags
     tags = np.loadtxt(tag_files[file_name], delimiter=',', dtype=np.float32)
     # Preprocess the tags
@@ -312,7 +314,7 @@ def imgs_as_single_datapoint(
 
     # Then we process the remaining files in parallel
     with mp.Pool() as p:
-        args_list = [(file_name, transform, transform_orig, tag_files, ensemble_dict, datadirectory ) for file_name in file_list[nimg_print:]]
+        args_list = [(file_name, transform, None, tag_files, ensemble_dict, datadirectory ) for file_name in file_list[nimg_print:]]
         results = p.map(_process_file, args_list)
 
     # Unpack the results
@@ -327,7 +329,7 @@ def imgs_as_single_datapoint(
     torch.save(all_tags, os.path.join(datadirectory, tagname))
     torch.save(all_ensemble_ids, os.path.join(datadirectory, ensemblename))
 
-    print('*** Preprocessing complete.', flush=True)
+    print('*** Parallel preprocessing complete.', flush=True)
 
     return all_images, all_tags, all_ensemble_ids
 
