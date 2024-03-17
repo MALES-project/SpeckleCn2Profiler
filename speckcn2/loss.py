@@ -28,8 +28,9 @@ class ComposableLoss(nn.Module):
         Normalizer object to be used to extract J in its original scale
     """
 
-    def __init__(self, config: dict, nz: Normalizer):
+    def __init__(self, config: dict, nz: Normalizer, device: torch.device):
         super(ComposableLoss, self).__init__()
+        self.device = device
         self.loss_functions = {
             'JMSE': self._MSELoss,
             'JMAE': self._L1Loss,
@@ -58,6 +59,15 @@ class ComposableLoss(nn.Module):
         self.p_scw = 2.25 * self.k**(7. / 6.) * self.secz**(11. / 6.)
         # We need to ba able to recover the tags
         self.recover_tag = nz.recover_tag
+        # Move tensors to the device
+        self.h = self.h.to(self.device)
+        self.k = self.k.to(self.device)
+        self.cosz = torch.tensor(self.cosz, device=self.device)
+        self.secz = torch.tensor(self.secz, device=self.device)
+        self.L = torch.tensor(self.L, device=self.device)
+        self.p_fr = torch.tensor(self.p_fr, device=self.device)
+        self.p_iso = torch.tensor(self.p_iso, device=self.device)
+        self.p_scw = torch.tensor(self.p_scw, device=self.device)
 
     def forward(self, pred: torch.Tensor,
                 target: torch.Tensor) -> tuple[torch.Tensor, dict]:
