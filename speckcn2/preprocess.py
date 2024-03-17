@@ -176,7 +176,8 @@ def imgs_as_single_datapoint(
 
             # Apply the transformation
             image = transform(image_orig)
-            image_orig = transform_orig(image_orig)
+            if show_image:
+                image_orig = transform_orig(image_orig)
             # and add the img to the collection
             all_images.append(image)
 
