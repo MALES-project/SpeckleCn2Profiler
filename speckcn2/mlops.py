@@ -1,7 +1,7 @@
 import time
 import random
 import torch
-from torch import nn, optim, Tensor
+from torch import nn, optim
 from speckcn2.io import save
 from speckcn2.loss import ComposableLoss
 from speckcn2.mlmodels import EnsembleModel
@@ -113,12 +113,14 @@ def train(model: nn.Module, last_model_state: int, conf: dict, train_set: list,
     return model, average_loss
 
 
-def score(model: nn.Module,
-          test_set: list,
-          device: torch.device,
-          criterion: ComposableLoss,
-          normalizer: Normalizer,
-          nimg_plot: int = 100) -> tuple[list[Tensor], list[dict]]:
+def score(
+        model: nn.Module,
+        test_set: list,
+        device: torch.device,
+        criterion: ComposableLoss,
+        normalizer: Normalizer,
+        nimg_plot: int = 100
+) -> tuple[list, list, list, list, list, list, list]:
     """Tests the model.
 
     Parameters
@@ -142,6 +144,16 @@ def score(model: nn.Module,
         List of all the predicted tags of the test set
     test_losses : list
         List of all the losses of the test set
+    test_measures : list
+        List of all the measures of the test set
+    test_cn2_pred : list
+        List of all the predicted Cn2 profiles of the test set
+    test_cn2_true : list
+        List of all the true Cn2 profiles of the test set
+    test_recovered_tag_pred : list
+        List of all the recovered tags from the model prediction
+    test_recovered_tag_true : list
+        List of all the recovered tags
     """
     counter = 0
     conf = normalizer.conf
@@ -157,6 +169,11 @@ def score(model: nn.Module,
 
         test_tags = []
         test_losses = []
+        test_measures = []
+        test_cn2_pred = []
+        test_cn2_true = []
+        test_recovered_tag_pred = []
+        test_recovered_tag_true = []
         # create the directory where the images will be stored
         ensure_directory(f'{data_dir}/{model.name}_score')
 
@@ -172,17 +189,32 @@ def score(model: nn.Module,
                 # Print the loss for every epoch
                 print(f'Item {counter} loss: {loss.item():.4f}')
 
+                # Get the Cn2 profile and the recovered tags
+                Cn2_pred = criterion.reconstruct_cn2(outputs[i])
+                Cn2_true = criterion.reconstruct_cn2(targets[i])
+                recovered_tag_pred = criterion.get_J(outputs[i])
+                recovered_tag_true = criterion.get_J(targets[i])
+                # and get all the measures
+                all_measures = criterion._get_all_measures(
+                    outputs[i], targets[i], Cn2_pred, Cn2_true)
+
                 if counter < nimg_plot:
-                    score_plot(conf, inputs, outputs, targets, loss, losses, i,
-                               counter, criterion)
+                    score_plot(conf, inputs, targets, loss, losses, i, counter,
+                               all_measures, Cn2_pred, Cn2_true,
+                               recovered_tag_pred, recovered_tag_true)
 
                 # and get all the tags for statistic analysis
                 for tag in outputs:
                     test_tags.append(tag)
 
-                # and get the losses
+                # and get the other information
                 test_losses.append(losses)
+                test_measures.append(all_measures)
+                test_cn2_pred.append(Cn2_pred)
+                test_cn2_true.append(Cn2_true)
+                test_recovered_tag_pred.append(recovered_tag_pred)
+                test_recovered_tag_true.append(recovered_tag_true)
 
                 counter += 1
 
-    return test_tags, test_losses
+    return test_tags, test_losses, test_measures, test_cn2_pred, test_cn2_true, test_recovered_tag_pred, test_recovered_tag_true

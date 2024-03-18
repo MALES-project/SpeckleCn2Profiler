@@ -13,8 +13,8 @@ Uncomment for the correct banners when the repo is public
 ![MALES banner](https://github.com/MALES-project/SpeckleCn2Profiler/blob/main/speckcn2/assets/logo_on_white.png#gh-light-mode-only)
 ![MALES banner](https://github.com/MALES-project/SpeckleCn2Profiler/blob/main/speckcn2/assets/logo_on_black.png#gh-dark-mode-only)
 
-# SpeckleCn2Profiler: 
-###Improving Satellite Communications with SCIDAR and Machine Learning
+# SpeckleCn2Profiler:
+### Improving Satellite Communications with SCIDAR and Machine Learning
 
 ![Graphical abstract](https://github.com/MALES-project/SpeckleCn2Profiler/blob/main/speckcn2/assets/cn2_profile.gif)
 ## Overview

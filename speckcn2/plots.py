@@ -1,19 +1,21 @@
 import torch
 import matplotlib.pyplot as plt
-from speckcn2.loss import ComposableLoss
 from speckcn2.utils import ensure_directory
 
 
 def score_plot(
     conf: dict,
     inputs: torch.Tensor,
-    outputs: torch.Tensor,
     tags: list,
     loss: torch.Tensor,
     losses: dict,
     i: int,
     counter: int,
-    criterion: ComposableLoss,
+    measures: dict,
+    Cn2_pred: torch.Tensor,
+    Cn2_true: torch.Tensor,
+    recovered_tag_pred: torch.Tensor,
+    recovered_tag_true: torch.Tensor,
 ) -> None:
     """Plots side by side:
     - [0:Nensemble] the input images (single or ensemble)
@@ -28,8 +30,6 @@ def score_plot(
         Dictionary containing the configuration
     inputs : torch.Tensor
         The input speckle patterns
-    outputs : torch.Tensor
-        The predicted screen tags
     tags : list
         The exact tags of the data
     loss : torch.Tensor
@@ -40,8 +40,16 @@ def score_plot(
         The batch index of the image
     counter : int
         The global index of the image
-    criterion : ComposableLoss
-        The composable loss function, where I can access useful parameters
+    measures : dict
+        The different measures of the model
+    Cn2_pred : torch.Tensor
+        The predicted Cn2 profile
+    Cn2_true : torch.Tensor
+        The true Cn2 profile
+    recovered_tag_pred : torch.Tensor
+        The predicted tags
+    recovered_tag_true : torch.Tensor
+        The true tags
     """
     model_name = conf['model']['name']
     data_dir = conf['speckle']['datadirectory']
@@ -63,12 +71,10 @@ def score_plot(
     axs[1].set_title(f'Input {ensemble} images')
 
     # (2) Plot J vs nscreens
-    recovered_tag_true = criterion.get_J(tags[i])
     axs[-3].plot(recovered_tag_true.squeeze(0).detach().cpu(),
                  'o',
                  label='True')
-    recovered_tag_model = criterion.get_J(outputs[i])
-    axs[-3].plot(recovered_tag_model.squeeze(0).detach().cpu(),
+    axs[-3].plot(recovered_tag_pred.squeeze(0).detach().cpu(),
                  '.',
                  color='tab:red',
                  label='Predicted')
@@ -78,8 +84,6 @@ def score_plot(
     axs[-3].legend()
 
     # (3) Plot Cn2 vs altitude
-    Cn2_true = criterion.reconstruct_cn2(tags[i])
-    Cn2_pred = criterion.reconstruct_cn2(outputs[i])
     axs[-2].plot(Cn2_true.squeeze(0).detach().cpu(), hs, 'o', label='True')
     axs[-2].plot(Cn2_pred.squeeze(0).detach().cpu(),
                  hs,
@@ -98,8 +102,6 @@ def score_plot(
     for key, value in losses.items():
         recap_info += f'{key}: {value.item():.4g}\n'
     recap_info += '-------------------\nPARAMETERS:\n'
-    measures = criterion._get_all_measures(tags[i], outputs[i], Cn2_pred,
-                                           Cn2_true)
     # then the single parameters
     for key, value in measures.items():
         recap_info += f'{key}: {value:.4g}\n'
@@ -208,8 +210,9 @@ def plot_histo_losses(conf: dict, test_losses: list[dict],
     plt.close()
 
 
+    #this is receiveing the loss but it would like the _measures for this
 def plot_param_vs_loss(conf: dict, test_losses: list[dict], data_dir: str,
-                       param: str) -> None:
+                       measures: list) -> None:
     """Plots the parameter vs the loss.
 
     Parameters
@@ -227,25 +230,28 @@ def plot_param_vs_loss(conf: dict, test_losses: list[dict], data_dir: str,
 
     ensure_directory(f'{data_dir}/result_plots')
 
-    fig, axs = plt.subplots(1, 1, figsize=(5, 5))
+    for param, name in zip(
+        ['Fried_true', 'Isoplanatic_true', 'Scintillation_w_true'],
+        ['Fried parameter', 'Isoplanatic angle', '(weak) Scintillation index'
+         ]):
+        fig, axs = plt.subplots(1, 1, figsize=(5, 5))
 
-    # Extract the param and the sum of all values from each dictionary
-    params = [d[param].detach().cpu() for d in test_losses]
-    sums = [sum(d.values()).detach().cpu() for d in test_losses]
+        # Extract the param and the sum of all values from each dictionary
+        params = [d[param].detach().cpu() for d in measures]
+        sums = [sum(d.values()).detach().cpu() for d in test_losses]
 
-    # Pair these values together and sort them based on the value of param
-    pairs = sorted(zip(params, sums))
+        # Pair these values together and sort them based on the value of param
+        pairs = sorted(zip(params, sums))
 
-    # Unzip the pairs back into two lists
-    params, sums = zip(*pairs)
+        # Unzip the pairs back into two lists
+        params, sums = zip(*pairs)
 
-    # Plot the data
-    axs.plot(params, sums, 'o')
-    axs.set_xlabel(param)
-    axs.set_ylabel('Sum of losses')
-    plt.title(f'Model: {model_name}')
-    plt.tight_layout()
-    plt.savefig(f'{data_dir}/result_plots/{param}_vs_sum_{model_name}.png')
-    plt.close()
-
-    #this is receiveing the loss but it would like the _measures for this
+        # Plot the data
+        axs.plot(params, sums, 'o')
+        axs.set_xlabel(name)
+        axs.set_xscale('log')
+        axs.set_ylabel('Total loss')
+        plt.title(f'Model: {model_name}')
+        plt.tight_layout()
+        plt.savefig(f'{data_dir}/result_plots/{param}_vs_sum_{model_name}.png')
+        plt.close()
