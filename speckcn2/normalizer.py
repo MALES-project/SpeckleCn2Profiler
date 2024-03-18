@@ -157,11 +157,11 @@ class Normalizer:
             Function to recover an image
         """
         normalize_fn = (
-            lambda x, min_img=min_img, range_img=range_img: self._mask_img *
+            lambda x, x_id, min_img=min_img, range_img=range_img: self._mask_img *
             (x - min_img) / range_img)
 
         recover_fn = (
-            lambda y, min_img=min_img, range_img=range_img: self._mask_img *
+            lambda y, y_id, min_img=min_img, range_img=range_img: self._mask_img *
             (y * range_img + min_img))
 
         return normalize_fn, recover_fn
@@ -199,17 +199,17 @@ class Normalizer:
             lambda x, x_id, i=i: self._unsorting_indices[x_id, i] / self.Ndata)
                                for i in range(nscreens)]
         recover_functions = [
-            (lambda y, i=i: self._sorted_tags[round(y * self.Ndata), i])
+            (lambda y, y_id, i=i: self._sorted_tags[round(y * self.Ndata), i])
             for i in range(nscreens)
         ]
         return normalize_functions, recover_functions
 
     def _zscore_normalize_functions(self, nscreens):
         normalize_functions = [
-            (lambda x, mean=self.mean_tags[i], std=self.std_tags[i]:
+            (lambda x, x_id, mean=self.mean_tags[i], std=self.std_tags[i]:
              (x - mean) / std) for i in range(nscreens)
         ]
-        recover_functions = [(lambda y, mean=self.mean_tags[
+        recover_functions = [(lambda y, y_id, mean=self.mean_tags[
             i], std=self.std_tags[i]: y * std + mean) for i in range(nscreens)]
         return normalize_functions, recover_functions
 
