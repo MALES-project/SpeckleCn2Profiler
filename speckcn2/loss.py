@@ -166,10 +166,12 @@ class ComposableLoss(nn.Module):
         loss : torch.Tensor
             The mean squared error loss
         """
-        loss = self.loss_weights['JMSE'] * torch.mean((pred - target)**2)
+        loss = self.loss_weights['JMSE'] * torch.mean(
+            (pred - target)**2 / (target**2 + 1e-5))
         # Optionally add the Cn2MSE loss
         if self.loss_weights['Cn2MSE'] > 0:
-            loss += self.loss_weights['Cn2MSE'] * torch.mean((Cn2p - Cn2t)**2)
+            loss += self.loss_weights['Cn2MSE'] * torch.mean(
+                (Cn2p - Cn2t)**2 / (Cn2t**2 + 1e-5))
         return loss
 
     def _L1Loss(self, pred: torch.Tensor, target: torch.Tensor,
@@ -192,11 +194,12 @@ class ComposableLoss(nn.Module):
         loss : torch.Tensor
             The mean absolute error loss
         """
-        loss = self.loss_weights['JMAE'] * torch.mean(torch.abs(pred - target))
+        loss = self.loss_weights['JMAE'] * torch.mean(
+            torch.abs(pred - target) / (target + 1e-5))
         # Optionally add the Cn2MAE loss
         if self.loss_weights['Cn2MAE'] > 0:
             loss += self.loss_weights['Cn2MAE'] * torch.mean(
-                torch.abs(Cn2p - Cn2t))
+                torch.abs(Cn2p - Cn2t) / (Cn2t + 1e-5))
         return loss
 
     def _PearsonCorrelationLoss(self, pred: torch.Tensor, target: torch.Tensor,
@@ -230,8 +233,7 @@ class ComposableLoss(nn.Module):
         std_x = torch.std(pred)
         std_y = torch.std(target)
         # Calculate Pearson correlation coefficient
-        corr = cov_xy / (std_x * std_y + 1e-8
-                         )  # Add a small epsilon to avoid division by zero
+        corr = cov_xy / (std_x * std_y + 1e-5)
         # The loss is 1 - correlation to be minimized
         loss = 1.0 - corr
 
@@ -264,9 +266,7 @@ class ComposableLoss(nn.Module):
         """
         r0p = self.get_FriedParameter(pred)
         r0t = self.get_FriedParameter(target)
-        loss = torch.mean(
-            torch.abs(r0p - r0t) /
-            (r0t + 1e-8))  # Add a small epsilon to avoid division by zero
+        loss = torch.mean(torch.abs(r0p - r0t) / (r0t + 1e-5))
 
         return loss
 
@@ -301,9 +301,7 @@ class ComposableLoss(nn.Module):
         """
         isp = self.get_IsoplanaticAngle(Cn2p)
         ist = self.get_IsoplanaticAngle(Cn2t)
-        loss = torch.mean(
-            torch.abs(isp - ist) /
-            (ist + 1e-8))  # Add a small epsilon to avoid division by zero
+        loss = torch.mean(torch.abs(isp - ist) / (ist + 1e-5))
 
         return loss
 
@@ -347,9 +345,7 @@ class ComposableLoss(nn.Module):
         """
         swp = self.get_ScintillationWeak(Cn2p)
         swt = self.get_ScintillationWeak(Cn2t)
-        loss = torch.mean(
-            torch.abs(swp - swt) /
-            (swt + 1e-8))  # Add a small epsilon to avoid division by zero
+        loss = torch.mean(torch.abs(swp - swt) / (swt + 1e-5))
 
         return loss
 
@@ -384,7 +380,7 @@ class ComposableLoss(nn.Module):
         """
         smp = self.get_ScintillationModerateStrong(Cn2p)
         smt = self.get_ScintillationModerateStrong(Cn2t)
-        loss = torch.mean(torch.abs(smp - smt) / (smt + 1e-8))
+        loss = torch.mean(torch.abs(smp - smt) / (smt + 1e-5))
 
         return loss
 
