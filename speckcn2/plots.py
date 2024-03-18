@@ -200,8 +200,52 @@ def plot_histo_losses(conf: dict, test_losses: list[dict],
     axs.set_xlabel('Loss')
     axs.set_ylabel('Frequency')
     axs.set_yscale('log')
+    axs.set_xscale('log')
     axs.legend()
     plt.title(f'Model: {model_name}')
     plt.tight_layout()
     plt.savefig(f'{data_dir}/result_plots/histo_losses_{model_name}.png')
     plt.close()
+
+
+def plot_param_vs_loss(conf: dict, test_losses: list[dict], data_dir: str,
+                       param: str) -> None:
+    """Plots the parameter vs the loss.
+
+    Parameters
+    ----------
+    conf : dict
+        Dictionary containing the configuration
+    test_losses : list[dict]
+        List of all the losses of the test set
+    data_dir : str
+        The directory where the data is stored
+    param : str
+        The parameter to plot
+    """
+    model_name = conf['model']['name']
+
+    ensure_directory(f'{data_dir}/result_plots')
+
+    fig, axs = plt.subplots(1, 1, figsize=(5, 5))
+
+    # Extract the param and the sum of all values from each dictionary
+    params = [d[param].detach().cpu() for d in test_losses]
+    sums = [sum(d.values()).detach().cpu() for d in test_losses]
+
+    # Pair these values together and sort them based on the value of param
+    pairs = sorted(zip(params, sums))
+
+    # Unzip the pairs back into two lists
+    params, sums = zip(*pairs)
+
+    # Plot the data
+    axs.plot(params, sums, 'o')
+    axs.set_xlabel(param)
+    axs.set_ylabel('Sum of losses')
+    plt.title(f'Model: {model_name}')
+    plt.tight_layout()
+    plt.savefig(f'{data_dir}/result_plots/{param}_vs_sum_{model_name}.png')
+    plt.close()
+
+    #this is receiveing the loss but it would like the _measures for this

@@ -167,11 +167,11 @@ class ComposableLoss(nn.Module):
             The mean squared error loss
         """
         loss = self.loss_weights['JMSE'] * torch.mean(
-            (pred - target)**2 / (target**2 + 1e-5))
+            (pred - target)**2 / ((target**2).sum(-1).unsqueeze(-1) + 1e-5))
         # Optionally add the Cn2MSE loss
         if self.loss_weights['Cn2MSE'] > 0:
             loss += self.loss_weights['Cn2MSE'] * torch.mean(
-                (Cn2p - Cn2t)**2 / (Cn2t**2 + 1e-5))
+                (Cn2p - Cn2t)**2 / ((Cn2t**2).sum(-1).unsqueeze(-1) + 1e-5))
         return loss
 
     def _L1Loss(self, pred: torch.Tensor, target: torch.Tensor,
@@ -195,11 +195,11 @@ class ComposableLoss(nn.Module):
             The mean absolute error loss
         """
         loss = self.loss_weights['JMAE'] * torch.mean(
-            torch.abs(pred - target) / (target + 1e-5))
+            torch.abs(pred - target) / (target.sum(-1).unsqueeze(-1) + 1e-5))
         # Optionally add the Cn2MAE loss
         if self.loss_weights['Cn2MAE'] > 0:
             loss += self.loss_weights['Cn2MAE'] * torch.mean(
-                torch.abs(Cn2p - Cn2t) / (Cn2t + 1e-5))
+                torch.abs(Cn2p - Cn2t) / (Cn2t.sum(-1).unsqueeze(-1) + 1e-5))
         return loss
 
     def _PearsonCorrelationLoss(self, pred: torch.Tensor, target: torch.Tensor,
