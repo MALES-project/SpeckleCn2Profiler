@@ -1,6 +1,7 @@
 import torch
 import numpy as np
 import torch.nn as nn
+from typing import Callable
 
 from .normalizer import Normalizer
 
@@ -31,7 +32,7 @@ class ComposableLoss(nn.Module):
     def __init__(self, config: dict, nz: Normalizer, device: torch.device):
         super(ComposableLoss, self).__init__()
         self.device = device
-        self.loss_functions = {
+        self.loss_functions: dict[str, Callable] = {
             'JMSE': self._MSELoss,
             'JMAE': self._L1Loss,
             'Cn2MSE': self._do_nothing,
@@ -122,15 +123,10 @@ class ComposableLoss(nn.Module):
                 torch.tensor([
                     10**self.recover_tag[j](Jnorm[i][j], i)
                     for j in range(len(Jnorm[i]))
-                ], requires_grad=True).to(Jnorm.device)
-            )
+                ],
+                             requires_grad=True).to(Jnorm.device))
         J = torch.stack(J)
         return J
-
-#        return np.asarray([
-#            10**self.recover_tag[j](Jnorm[i][j].detach().cpu().numpy(), i)
-#            for i in range(len(Jnorm)) for j in range(len(Jnorm[i]))
-#        ])
 
     def reconstruct_cn2(self, Jnorm: torch.Tensor) -> torch.Tensor:
         """ Reconstruct Cn2 from screen tags
@@ -170,11 +166,10 @@ class ComposableLoss(nn.Module):
         loss : torch.Tensor
             The mean squared error loss
         """
-        loss = torch.mean((pred - target)**2)
+        loss = self.loss_weights['JMSE'] * torch.mean((pred - target)**2)
         # Optionally add the Cn2MSE loss
         if self.loss_weights['Cn2MSE'] > 0:
-            loss += self.loss_weights['Cn2MSE'] * self.torch.mean(
-                (Cn2p - Cn2t)**2)
+            loss += self.loss_weights['Cn2MSE'] * torch.mean((Cn2p - Cn2t)**2)
         return loss
 
     def _L1Loss(self, pred: torch.Tensor, target: torch.Tensor,
@@ -197,10 +192,10 @@ class ComposableLoss(nn.Module):
         loss : torch.Tensor
             The mean absolute error loss
         """
-        loss = torch.mean(torch.abs(pred - target))
+        loss = self.loss_weights['JMAE'] * torch.mean(torch.abs(pred - target))
         # Optionally add the Cn2MAE loss
         if self.loss_weights['Cn2MAE'] > 0:
-            loss += self.loss_weights['Cn2MAE'] * self.torch.mean(
+            loss += self.loss_weights['Cn2MAE'] * torch.mean(
                 torch.abs(Cn2p - Cn2t))
         return loss
 
@@ -267,10 +262,11 @@ class ComposableLoss(nn.Module):
         loss : torch.Tensor
             The Fried parameter r0 loss
         """
+        r0p = self.get_FriedParameter(pred)
+        r0t = self.get_FriedParameter(target)
         loss = torch.mean(
-            torch.abs(
-                self.get_FriedParameter(pred) -
-                self.get_FriedParameter(target)))
+            torch.abs(r0p - r0t) /
+            (r0t + 1e-8))  # Add a small epsilon to avoid division by zero
 
         return loss
 
@@ -303,10 +299,11 @@ class ComposableLoss(nn.Module):
         loss : torch.Tensor
             The isoplanatic angle theta0 loss
         """
+        isp = self.get_IsoplanaticAngle(Cn2p)
+        ist = self.get_IsoplanaticAngle(Cn2t)
         loss = torch.mean(
-            torch.abs(
-                self.get_IsoplanaticAngle(Cn2p) -
-                self.get_IsoplanaticAngle(Cn2t)))
+            torch.abs(isp - ist) /
+            (ist + 1e-8))  # Add a small epsilon to avoid division by zero
 
         return loss
 
@@ -348,10 +345,11 @@ class ComposableLoss(nn.Module):
         loss : torch.Tensor
             The scintillation index for weak turbulence loss
         """
+        swp = self.get_ScintillationWeak(Cn2p)
+        swt = self.get_ScintillationWeak(Cn2t)
         loss = torch.mean(
-            torch.abs(
-                self.get_ScintillationWeak(Cn2p) -
-                self.get_ScintillationWeak(Cn2t)))
+            torch.abs(swp - swt) /
+            (swt + 1e-8))  # Add a small epsilon to avoid division by zero
 
         return loss
 
@@ -384,10 +382,9 @@ class ComposableLoss(nn.Module):
         loss : torch.Tensor
             The scintillation index for moderate-strong turbulence loss
         """
-        loss = torch.mean(
-            torch.abs(
-                self.get_ScintillationModerateStrong(Cn2p) -
-                self.get_ScintillationModerateStrong(Cn2t)))
+        smp = self.get_ScintillationModerateStrong(Cn2p)
+        smt = self.get_ScintillationModerateStrong(Cn2t)
+        loss = torch.mean(torch.abs(smp - smt) / (smt + 1e-8))
 
         return loss
 

@@ -213,7 +213,8 @@ def imgs_as_single_datapoint(
     torch.save(all_ensemble_ids, os.path.join(datadirectory, ensemblename))
 
     print('*** Preprocessing complete.', flush=True)
-    print('It took', time.time() - time_start, 'seconds to preprocess the data.')
+    print('It took',
+          time.time() - time_start, 'seconds to preprocess the data.')
 
     return all_images, all_tags, all_ensemble_ids
 
@@ -236,9 +237,8 @@ def get_tag_files(file_list: list, datadirectory: str) -> dict:
     tag_files = {}
     for file_name in file_list:
         ftagname = file_name.replace(
-            '.h5',
-            '_tag.h5') if 'MALES' in file_name else file_name.rpartition(
-                '_')[0] + '_tag.h5'
+            '.h5', '_tag.h5'
+        ) if 'MALES' in file_name else file_name.rpartition('_')[0] + '_tag.h5'
         tag_path = os.path.join(datadirectory, ftagname)
         if os.path.exists(tag_path):
             tag_files[file_name] = tag_path
@@ -352,12 +352,12 @@ def create_ensemble_dataset(dataset: list, ensemble_size: int) -> list:
     ensemble_dataset : list
         List of ensembles
     """
-    split_ensembles = {}
+    split_ensembles: dict = {}
     for item in dataset:
         key = item[-1]
         split_ensembles.setdefault(key, []).append(item)
 
-    ensemble_dataset = []
+    ensemble_dataset: list = []
     for ensemble in split_ensembles.values():
         # * In each ensemble, take n_groups groups of ensemble_size datapoints
         n_groups = len(ensemble) // ensemble_size

@@ -118,7 +118,7 @@ def score(model: nn.Module,
           device: torch.device,
           criterion: ComposableLoss,
           normalizer: Normalizer,
-          nimg_plot: int = 100) -> list[Tensor]:
+          nimg_plot: int = 100) -> tuple[list[Tensor], list[dict]]:
     """Tests the model.
 
     Parameters
@@ -140,6 +140,8 @@ def score(model: nn.Module,
     -------
     test_tags : list
         List of all the predicted tags of the test set
+    test_losses : list
+        List of all the losses of the test set
     """
     counter = 0
     conf = normalizer.conf
@@ -154,6 +156,7 @@ def score(model: nn.Module,
         model.eval()
 
         test_tags = []
+        test_losses = []
         # create the directory where the images will be stored
         ensure_directory(f'{data_dir}/{model.name}_score')
 
@@ -177,6 +180,9 @@ def score(model: nn.Module,
                 for tag in outputs:
                     test_tags.append(tag)
 
+                # and get the losses
+                test_losses.append(losses)
+
                 counter += 1
 
-    return test_tags
+    return test_tags, test_losses
