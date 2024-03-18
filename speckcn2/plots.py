@@ -195,7 +195,7 @@ def plot_histo_losses(conf: dict, test_losses: list[dict],
     # plot the loss
     fig, axs = plt.subplots(1, 1, figsize=(5, 5))
     for key in test_losses[0].keys():
-        loss = [d[key] for d in test_losses]
+        loss = [d[key].detach().cpu() for d in test_losses]
         axs.hist(loss, bins=20, alpha=0.5, label=key)
     axs.set_xlabel('Loss')
     axs.set_ylabel('Frequency')
