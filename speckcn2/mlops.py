@@ -163,6 +163,25 @@ def score(
     ensemble = EnsembleModel(conf['preproc']['ensemble'], device,
                              conf['preproc']['ensemble_unif'])
 
+    # For scoring the model, I enforce to use with the same weights:
+    # 1. MAE on J
+    # 2. Fried MAE
+    # 3. Isoplanatic angle MAE
+    # 4. Scintillation (weak) index MAE
+    # TODO: this should be controllable in the configuration file
+    criterion.loss_weights = {
+        'JMSE': 0,
+        'JMAE': 1,
+        'Cn2MSE': 0,
+        'Cn2MAE': 0,
+        'Pearson': 0,
+        'Fried': 1,
+        'Isoplanatic': 1,
+        'Rytov': 0,
+        'Scintillation_w': 1,
+        'Scintillation_ms': 0,
+    }
+
     with torch.no_grad():
         # Put model in evaluation mode
         model.eval()
