@@ -142,6 +142,7 @@ def plot_loss(conf: dict, model, data_dir: str) -> None:
     axs.plot(model.epoch, model.val_loss, label='Validation loss')
     axs.set_xlabel('Epoch')
     axs.set_ylabel('Loss')
+    axs.set_yscale('log')
     axs.legend()
     plt.title(f'Model: {model_name}')
     plt.tight_layout()
