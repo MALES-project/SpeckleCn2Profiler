@@ -1,4 +1,5 @@
 import torch
+import numpy as np
 import matplotlib.pyplot as plt
 from speckcn2.utils import ensure_directory
 
@@ -196,9 +197,11 @@ def plot_histo_losses(conf: dict, test_losses: list[dict],
 
     # plot the loss
     fig, axs = plt.subplots(1, 1, figsize=(5, 5))
-    for key in test_losses[0].keys():
+    for key in ['JMAE', 'Fried', 'Isoplanatic', 'Scintillation_w']:
         loss = [d[key].detach().cpu() for d in test_losses]
-        axs.hist(loss, bins=20, alpha=0.5, label=key)
+        # Generate bin edges on a log scale
+        bins = np.logspace(np.log10(min(loss)), np.log10(max(loss)), num=30)
+        axs.hist(loss, bins=bins, alpha=0.5, label=key)
     axs.set_xlabel('Loss')
     axs.set_ylabel('Frequency')
     axs.set_yscale('log')
@@ -250,6 +253,7 @@ def plot_param_vs_loss(conf: dict, test_losses: list[dict], data_dir: str,
         axs.plot(params, sums, 'o')
         axs.set_xlabel(name)
         axs.set_xscale('log')
+        axs.set_yscale('log')
         axs.set_ylabel('Total loss')
         plt.title(f'Model: {model_name}')
         plt.tight_layout()
