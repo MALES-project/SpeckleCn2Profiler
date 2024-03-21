@@ -8,7 +8,7 @@ import os
 import numpy as np
 import torchvision.transforms as transforms
 from speckcn2.utils import ensure_directory, plot_preprocessed_image
-from speckcn2.transformations import PolarCoordinateTransform, ShiftRowsTransform, ToUnboundTensor
+from speckcn2.transformations import PolarCoordinateTransform, ShiftRowsTransform, SpiderMask, ToUnboundTensor
 from speckcn2.normalizer import Normalizer
 
 
@@ -52,6 +52,7 @@ def assemble_transform(conf: dict) -> transforms.Compose:
         # Apply the equivariant transform, which makes sense only in polar coordinates
         list_transforms.append(ShiftRowsTransform())
 
+    list_transforms.append(SpiderMask())
     list_transforms.append(ToUnboundTensor())
 
     return transforms.Compose(list_transforms)
@@ -167,10 +168,6 @@ def imgs_as_single_datapoint(
             # Construct the full path to the file
             file_path = os.path.join(datadirectory, file_name)
 
-            ## Open the text file as an image using PIL
-            #pixel_values = np.loadtxt(file_path,
-            #                          delimiter=',',
-            #                          dtype=np.float32)
             # Open the HDF5 file
             with h5py.File(file_path, 'r') as f:
                 # Load the data from the 'data' dataset
