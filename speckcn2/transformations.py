@@ -111,3 +111,36 @@ class ToUnboundTensor(torch.nn.Module):
         img = np.array(img)
         # add a color chanel in dim 0
         return torch.from_numpy(img).unsqueeze(0)
+
+
+class SpiderMask(torch.nn.Module):
+    """Apply a circular mask to the image, representing the effect of the
+    spider.
+
+    The pixels outside the spider are set to -0.01, such that their
+    value is lower than no light in the detector (0).
+    """
+
+    def __init__(self):
+        super(SpiderMask, self).__init__()
+
+    def forward(self, img):
+        # Convert the image to a numpy array
+        img = np.array(img)
+
+        # Create a circular mask
+        h, w = img.shape[:2]
+        center = (int(w / 2), int(h / 2))
+        radius = min(center)
+        Y, X = np.ogrid[:h, :w]
+        mask = (X - center[0])**2 + (Y - center[1])**2 > radius**2
+
+        # Apply the mask to the image
+        img = img.astype(float)
+        # set the mask to x<0 such that it will automatically be normalized to a value of 0
+        img[mask] = -0.01
+
+        # Convert the image back to a tensor
+        #        return torch.from_numpy(img).unsqueeze(0)
+        # reconvert to PIL image before returning
+        return Image.fromarray(img)
