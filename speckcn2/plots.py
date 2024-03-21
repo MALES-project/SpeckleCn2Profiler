@@ -202,7 +202,7 @@ def plot_histo_losses(conf: dict, test_losses: list[dict],
         loss = [d[key].detach().cpu() for d in test_losses]
         # Generate bin edges on a log scale
         bins = np.logspace(np.log10(min(loss)), np.log10(max(loss)), num=30)
-        axs.hist(loss, bins=bins, alpha=0.5, label=key)
+        axs.hist(loss, bins=bins, alpha=0.5, label=key, density=True)
     axs.set_xlabel('Loss')
     axs.set_ylabel('Frequency')
     axs.set_yscale('log')
@@ -214,7 +214,6 @@ def plot_histo_losses(conf: dict, test_losses: list[dict],
     plt.close()
 
 
-    #this is receiveing the loss but it would like the _measures for this
 def plot_param_vs_loss(conf: dict, test_losses: list[dict], data_dir: str,
                        measures: list) -> None:
     """Plots the parameter vs the loss.
@@ -251,7 +250,10 @@ def plot_param_vs_loss(conf: dict, test_losses: list[dict], data_dir: str,
         params, sums = zip(*pairs)
 
         # Plot the data
-        axs.plot(params, sums, 'o')
+        bins = np.logspace(np.log10(min(params)),
+                           np.log10(max(params)),
+                           num=20)
+        axs.hist(params, bins=bins, weights=sums, alpha=0.5)
         axs.set_xlabel(name)
         axs.set_xscale('log')
         axs.set_yscale('log')
