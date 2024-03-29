@@ -12,6 +12,8 @@ class ComposableLoss(nn.Module):
     weight will be added to the loss function.
 
     The loss term available are:
+    - MSE: mean squared error between predicted and target normalized screen tags
+    - MAE: mean absolute error between predicted and target normalized screen tags
     - JMSE: mean squared error between predicted and target J
     - JMAE: mean absolute error between predicted and target J
     - Pearson: Pearson correlation coefficient between predicted and target J
@@ -33,6 +35,8 @@ class ComposableLoss(nn.Module):
         super(ComposableLoss, self).__init__()
         self.device = device
         self.loss_functions: dict[str, Callable] = {
+            'MSE': torch.nn.MSELoss(),
+            'MAE': torch.nn.L1Loss(),
             'JMSE': self._MSELoss,
             'JMAE': self._L1Loss,
             'Cn2MSE': self._do_nothing,
@@ -49,7 +53,20 @@ class ComposableLoss(nn.Module):
             for loss_name in self.loss_functions.keys()
         }
         self.total_weight = sum(self.loss_weights.values())
+        self.loss_needed = {
+            loss_name: loss_fn
+            for loss_name, loss_fn in self.loss_functions.items()
+            if self.loss_weights[loss_name] > 0
+        }
+        self.Cn2required = any([
+            loss_name in [
+                'Cn2MSE', 'Cn2MAE', 'Fried', 'Isoplanatic', 'Rytov',
+                'Scintillation_w', 'Scintillations_ms'
+            ] for loss_name in self.loss_needed.keys()
+        ])
+
         # And get some useful parameters for the loss functions
+        # the parameters are explained in ...
         self.h = torch.Tensor([float(x) for x in config['speckle']['hArray']])
         self.k = 2 * torch.pi / (config['speckle']['lambda'] * 1e-9)
         self.cosz = np.cos(np.deg2rad(config['speckle']['z']))
@@ -58,6 +75,7 @@ class ComposableLoss(nn.Module):
         self.p_fr = 0.423 * self.k**2 * self.secz
         self.p_iso = self.cosz**(8. / 5.) / ((2.91 * self.k**2)**(3. / 5.))
         self.p_scw = 2.25 * self.k**(7. / 6.) * self.secz**(11. / 6.)
+
         # We need to ba able to recover the tags
         self.recover_tag = nz.recover_tag
         # Move tensors to the device
@@ -84,15 +102,18 @@ class ComposableLoss(nn.Module):
         total_loss = 0
         losses = {}
 
-        Cn2_pred = self.reconstruct_cn2(pred)
-        Cn2_target = self.reconstruct_cn2(target)
+        if self.Cn2required:
+            Cn2_pred = self.reconstruct_cn2(pred)
+            Cn2_target = self.reconstruct_cn2(target)
 
-        for loss_name, loss_fn in self.loss_functions.items():
+        for loss_name, loss_fn in self.loss_needed.items():
             weight = self.loss_weights[loss_name]
-            if weight > 0:
+            if loss_name in ['MAE', 'MSE']:
+                this_loss = loss_fn(pred, target)
+            else:
                 this_loss = loss_fn(pred, target, Cn2_pred, Cn2_target)
-                total_loss += weight * this_loss
-                losses[loss_name] = this_loss
+            total_loss += weight * this_loss
+            losses[loss_name] = this_loss
 
         return total_loss / self.total_weight, losses
 
@@ -146,8 +167,11 @@ class ComposableLoss(nn.Module):
         Cn2 = J / (self.h[1:] - self.h[:-1])
         return Cn2
 
-    def _MSELoss(self, pred: torch.Tensor, target: torch.Tensor,
-                 Cn2p: torch.Tensor, Cn2t: torch.Tensor) -> torch.Tensor:
+    def _MSELoss(self,
+                 pred: torch.Tensor,
+                 target: torch.Tensor,
+                 Cn2p: torch.Tensor = None,
+                 Cn2t: torch.Tensor = None) -> torch.Tensor:
         """Mean squared error loss function.
 
         Parameters
@@ -174,8 +198,11 @@ class ComposableLoss(nn.Module):
                 (Cn2p - Cn2t)**2 / ((Cn2t**2).sum(-1).unsqueeze(-1) + 1e-5))
         return loss
 
-    def _L1Loss(self, pred: torch.Tensor, target: torch.Tensor,
-                Cn2p: torch.Tensor, Cn2t: torch.Tensor) -> torch.Tensor:
+    def _L1Loss(self,
+                pred: torch.Tensor,
+                target: torch.Tensor,
+                Cn2p: torch.Tensor = None,
+                Cn2t: torch.Tensor = None) -> torch.Tensor:
         """Mean absolute error loss function.
 
         Parameters

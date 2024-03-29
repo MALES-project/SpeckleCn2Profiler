@@ -196,7 +196,7 @@ def imgs_as_single_datapoint(
 
             # Preprocess the tags
             np.log10(tags, out=tags)
-            # Add the tag to the colleciton
+            # Add the tag to the collection
             all_tags.append(tags)
 
             # Get the ensemble ID

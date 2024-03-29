@@ -198,7 +198,7 @@ def plot_histo_losses(conf: dict, test_losses: list[dict],
 
     # plot the loss
     fig, axs = plt.subplots(1, 1, figsize=(5, 5))
-    for key in ['JMAE', 'Fried', 'Isoplanatic', 'Scintillation_w']:
+    for key in ['MAE', 'Fried', 'Isoplanatic', 'Scintillation_w']:
         loss = [d[key].detach().cpu() for d in test_losses]
         # Generate bin edges on a log scale
         bins = np.logspace(np.log10(min(loss)), np.log10(max(loss)), num=30)

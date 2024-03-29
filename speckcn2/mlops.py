@@ -170,8 +170,10 @@ def score(
     # 4. Scintillation (weak) index MAE
     # TODO: this should be controllable in the configuration file
     criterion.loss_weights = {
+        'MSE': 0,
+        'MAE': 1,
         'JMSE': 0,
-        'JMAE': 1,
+        'JMAE': 0,
         'Cn2MSE': 0,
         'Cn2MAE': 0,
         'Pearson': 0,
