@@ -1,7 +1,10 @@
-import torch
-import numpy as np
-import torch.nn as nn
+from __future__ import annotations
+
 from typing import Callable
+
+import numpy as np
+import torch
+import torch.nn as nn
 
 from .normalizer import Normalizer
 
@@ -53,17 +56,7 @@ class ComposableLoss(nn.Module):
             for loss_name in self.loss_functions.keys()
         }
         self.total_weight = sum(self.loss_weights.values())
-        self.loss_needed = {
-            loss_name: loss_fn
-            for loss_name, loss_fn in self.loss_functions.items()
-            if self.loss_weights[loss_name] > 0
-        }
-        self.Cn2required = any([
-            loss_name in [
-                'Cn2MSE', 'Cn2MAE', 'Fried', 'Isoplanatic', 'Rytov',
-                'Scintillation_w', 'Scintillations_ms'
-            ] for loss_name in self.loss_needed.keys()
-        ])
+        self._select_loss_needed()
 
         # And get some useful parameters for the loss functions
         # the parameters are explained in ...
@@ -80,6 +73,24 @@ class ComposableLoss(nn.Module):
         self.recover_tag = nz.recover_tag
         # Move tensors to the device
         self.h = self.h.to(self.device)
+
+    def _select_loss_needed(self):
+        """Select the loss functions that will be used in the loss calculation.
+
+        This allows to skip the computation of optional elements like
+        Cn2.
+        """
+        self.loss_needed = {
+            loss_name: loss_fn
+            for loss_name, loss_fn in self.loss_functions.items()
+            if self.loss_weights[loss_name] > 0
+        }
+        self.Cn2required = any([
+            loss_name in [
+                'Cn2MSE', 'Cn2MAE', 'Fried', 'Isoplanatic', 'Rytov',
+                'Scintillation_w', 'Scintillations_ms'
+            ] for loss_name in self.loss_needed.keys()
+        ])
 
     def forward(self, pred: torch.Tensor,
                 target: torch.Tensor) -> tuple[torch.Tensor, dict]:
@@ -250,7 +261,9 @@ class ComposableLoss(nn.Module):
         loss : torch.Tensor
             The Pearson correlation coefficient loss
         """
-        # //TODO: discuss about this. Since it is a variance measure, it would have to be compared not to a single target, but to the average of the dataset
+        # //TODO: discuss about this. Since it is a variance measure,
+        # it would have to be compared not to a single target,
+        # but to the average of the dataset
 
         mean_pred = torch.mean(pred)
         mean_target = torch.mean(target)
@@ -335,7 +348,10 @@ class ComposableLoss(nn.Module):
     def _RytovLoss(self, pred: torch.Tensor, target: torch.Tensor,
                    Cn2p: torch.Tensor, Cn2t: torch.Tensor) -> torch.Tensor:
         """Rytov variance sigma_r^2 loss function."""
-        # //TODO: discuss about this. Since it is a variance measure, it would have to be compared not to a single target, but to the average of the dataset. And what is L?
+        # //TODO: discuss about this. Since it is a variance measure,
+        # it would have to be compared not to a single target,
+        # but to the average of the dataset
+
         # throw a not implemented yet warning
         print('RytovLoss not implemented yet')
         return 0

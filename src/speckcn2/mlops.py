@@ -1,13 +1,17 @@
-import time
+from __future__ import annotations
+
 import random
+import time
+
 import torch
 from torch import nn, optim
+
 from speckcn2.io import save
 from speckcn2.loss import ComposableLoss
 from speckcn2.mlmodels import EnsembleModel
+from speckcn2.plots import score_plot
 from speckcn2.preprocess import Normalizer
 from speckcn2.utils import ensure_directory
-from speckcn2.plots import score_plot
 
 
 def train(model: nn.Module, last_model_state: int, conf: dict, train_set: list,
@@ -102,9 +106,10 @@ def train(model: nn.Module, last_model_state: int, conf: dict, train_set: list,
         model.val_loss.append(val_loss)
 
         # Print the average loss for every epoch
-        print(
-            f'Epoch {epoch+1}/{final_epoch} (in {t_fin:.3g}s),\tTrain-Loss: {average_loss:.5f},\tTest-Loss: {val_loss:.5f}',
-            flush=True)
+        message = (f'Epoch {epoch+1}/{final_epoch} '
+                   f'(in {t_fin:.3g}s),\tTrain-Loss: {average_loss:.5f},\t'
+                   f'Test-Loss: {val_loss:.5f}')
+        print(message, flush=True)
 
         if (epoch + 1) % save_every == 0 or epoch == final_epoch - 1:
             # Save the model state
@@ -164,7 +169,7 @@ def score(
                              conf['preproc']['ensemble_unif'])
 
     # For scoring the model, I enforce to use with the same weights:
-    # 1. MAE on J
+    # 1. MAE on screen tags
     # 2. Fried MAE
     # 3. Isoplanatic angle MAE
     # 4. Scintillation (weak) index MAE
@@ -183,6 +188,7 @@ def score(
         'Scintillation_w': 1,
         'Scintillation_ms': 0,
     }
+    criterion._select_loss_needed()
 
     with torch.no_grad():
         # Put model in evaluation mode
@@ -238,4 +244,5 @@ def score(
 
                 counter += 1
 
-    return test_tags, test_losses, test_measures, test_cn2_pred, test_cn2_true, test_recovered_tag_pred, test_recovered_tag_true
+    return (test_tags, test_losses, test_measures, test_cn2_pred,
+            test_cn2_true, test_recovered_tag_pred, test_recovered_tag_true)

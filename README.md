@@ -4,14 +4,13 @@
 [![PyPI](https://img.shields.io/pypi/v/speckcn2)](https://pypi.org/project/speckcn2/)
 [![FAIR checklist badge](https://fairsoftwarechecklist.net/badge.svg)](https://fairsoftwarechecklist.net/v0.2?f=31&a=30110&i=21202&r=132)
 
-<!---
-Uncomment for the correct banners when the repo is public
-![MALES banner](https://raw.githubusercontent.com/MALES-project/SpeckleCn2Profiler/main/speckcn2/assets/logo_on_white.png#gh-light-mode-only)
-![MALES banner](https://raw.githubusercontent.com/MALES-project/SpeckleCn2Profiler/main/speckcn2/assets/logo_on_black.png#gh-dark-mode-only)
--->
+![MALES banner](https://raw.githubusercontent.com/MALES-project/SpeckleCn2Profiler/main/src/speckcn2/assets/logo_on_white.png#gh-light-mode-only)
+![MALES banner](https://raw.githubusercontent.com/MALES-project/SpeckleCn2Profiler/main/src/speckcn2/assets/logo_on_black.png#gh-dark-mode-only)
 
+<!---
 ![MALES banner](https://github.com/MALES-project/SpeckleCn2Profiler/blob/main/speckcn2/assets/logo_on_white.png#gh-light-mode-only)
 ![MALES banner](https://github.com/MALES-project/SpeckleCn2Profiler/blob/main/speckcn2/assets/logo_on_black.png#gh-dark-mode-only)
+-->
 
 # SpeckleCn2Profiler:
 ### Improving Satellite Communications with SCIDAR and Machine Learning

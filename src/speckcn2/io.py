@@ -1,6 +1,10 @@
+from __future__ import annotations
+
 import os
-import yaml
+
 import torch
+import yaml
+
 from speckcn2.utils import ensure_directory
 
 

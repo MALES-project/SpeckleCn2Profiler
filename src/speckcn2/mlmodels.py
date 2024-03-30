@@ -1,10 +1,15 @@
-import torch
-import numpy as np
+from __future__ import annotations
+
 import itertools
+
+import numpy as np
+import torch
 import torchvision
 from torch import nn
+
 from speckcn2.io import load_model_state
 from speckcn2.scnn import SteerableCNN
+
 
 class EnsembleModel(nn.Module):
     """Wrapper that allows any model to be used for ensembled data."""
@@ -103,7 +108,6 @@ def setup_model(config: dict) -> tuple[nn.Module, int]:
     pretrained = config['model']['pretrained']
     nscreens = config['speckle']['nscreens']
     data_directory = config['speckle']['datadirectory']
-    img_res = config['preproc']['resize']
     ensemble = config['preproc']['ensemble']
 
     print(f'^^^ Initializing model {model_name} of type {model_type}')
@@ -139,7 +143,8 @@ def get_a_resnet(nscreens: int,
     pretrained : bool
         Whether to use a pretrained model or not
     ensemble : int
-        The number of input images that will be processd together as an ensemble corresponding to the same output
+        The number of input images that will be processd
+        together as an ensemble corresponding to the same output
 
     Returns
     -------
@@ -164,7 +169,9 @@ def get_a_resnet(nscreens: int,
     else:
         raise ValueError(f'Unknown model {model_type}')
 
-    # If the model uses multiple images as input, I add an extra channel as confidence weight to average the final prediction
+    # If the model uses multiple images as input,
+    # add an extra channel as confidence weight
+    # to average the final prediction
     if ensemble > 1:
         nscreens = nscreens + 1
 
@@ -188,7 +195,6 @@ def get_a_resnet(nscreens: int,
     )
 
     return load_model_state(model, datadirectory)
-
 
 
 def get_scnn(config: dict) -> tuple[nn.Module, int]:

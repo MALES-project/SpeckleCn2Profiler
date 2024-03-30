@@ -1,13 +1,13 @@
-# This is the __init__.py file for the rkm package
-
 # Import any modules or subpackages here
-from .io import save, load, load_config
+from __future__ import annotations
+
+from .io import load, load_config, save
 from .loss import ComposableLoss
-from .mlmodels import setup_model, get_a_resnet, EnsembleModel
-from .mlops import train, score
+from .mlmodels import EnsembleModel, get_a_resnet, setup_model
+from .mlops import score, train
 from .normalizer import Normalizer
+from .plots import plot_histo_losses, plot_loss, plot_param_vs_loss, plot_time
 from .postprocess import tags_distribution
-from .plots import plot_loss, plot_time, plot_histo_losses, plot_param_vs_loss
 from .preprocess import prepare_data, train_test_split
 from .utils import setup_optimizer
 

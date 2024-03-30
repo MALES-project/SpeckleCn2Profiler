@@ -1,7 +1,10 @@
-import torch
+from __future__ import annotations
+
 import os
-import torch.nn as nn
+
 import matplotlib.pyplot as plt
+import torch
+import torch.nn as nn
 
 
 def plot_preprocessed_image(image_orig: torch.tensor,

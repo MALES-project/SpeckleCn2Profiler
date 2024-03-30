@@ -1,0 +1,130 @@
+[build-system]
+requires = ["setuptools>=61.2"]
+build-backend = "setuptools.build_meta"
+
+# https://packaging.python.org/en/latest/specifications/declaring-project-metadata/
+[project]
+name = "speckcn2"
+version = "0.1.0"
+description = "Estimate Cn2 from Speckle patterns using machine learning"
+readme = "README.md"
+requires-python = ">=3.9"
+authors = [
+	{name = "Simone Ciarella", email = "s.ciarella@esciencecenter.nl"},
+]
+keywords = [
+    'python',
+    'machine learning',
+    'equivariant cnn',
+    'optical satelites',
+    'turbolence',
+    'laser communication'
+]
+license = {text = "Apache 2.0 License"}
+classifiers = [
+    "Development Status :: 2 - Pre-Alpha",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: Apache Software License",
+    "Natural Language :: English",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.9",
+    "Topic :: Scientific/Engineering",
+]
+dependencies = [
+  'matplotlib >= 3.6.0',
+  'numpy',
+  'scipy>=1.9.3',
+  'torch',
+  'torchvision',
+  'PyYAML',
+  'cython',
+  'escnn',
+  'h5py',
+]
+
+[project.urls]
+homepage="https://github.com/MALES-project/SpeckleCn2Profiler"
+issues = "https://github.com/MALES-project/SpeckleCn2Profiler/issues"
+documentation = "https://speckcn2.readthedocs.io"
+changelog = "https://github.com/MALES-project/SpeckleCn2Profiler/releases"
+
+[project.optional-dependencies]
+develop = [
+    "bump-my-version",
+    "coverage[toml]",
+    "mypy",
+    "pre-commit",
+    "pytest",
+]
+
+docs = [
+    "markdown-include",
+    "mkdocs",
+    "mkdocs-jupyter",
+    "mkdocs-material",
+    "mkdocstrings[python]",
+]
+
+publishing = [
+    "twine",
+    "wheel",
+    "build",
+]
+
+[tool.setuptools]
+package-dir = {"speckcn2" = "src/speckcn2" }
+include-package-data = true
+
+[tool.coverage.run]
+branch = true
+source = ["speckcn2"]
+
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.ruff]
+# Enable Pyflakes `E` and `F` codes by default.
+select = [
+	"F",  # Pyflakes
+	"E",  # pycodestyle (error)
+	"W",  # pycodestyle (warning)
+    "I",  # isort
+]
+
+line-length = 110
+
+[tool.ruff.isort]
+known-first-party=["speckcn2"]
+known-third-party = ["torch"]
+required-imports = ["from __future__ import annotations"]
+
+[tool.mypy]
+files = ["src", "tests"]
+allow_redefinition = true
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = "yaml"
+ignore_missing_imports = true
+
+
+[tool.bumpversion]
+current_version = "0.1.0"
+
+[[tool.bumpversion.files]]
+filename = "src/speckcn2/__init__.py"
+search = "__version__ = '{current_version}'"
+replace = "__version__ = '{new_version}'"
+
+[[tool.bumpversion.files]]
+filename = "pyproject.toml"
+search = "version = \"{current_version}\""
+replace = "version = \"{new_version}\""
+
+[[tool.bumpversion.files]]
+filename = "CITATION.cff"
+search = "version: {current_version}"
+replace = "version: {new_version}"

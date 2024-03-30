@@ -1,15 +1,19 @@
-import torch
-import h5py
-import time
+from __future__ import annotations
+
+import os
 import pickle
 import random
-from PIL import Image
-import os
+import time
+
+import h5py
 import numpy as np
+import torch
 import torchvision.transforms as transforms
-from speckcn2.utils import ensure_directory, plot_preprocessed_image
-from speckcn2.transformations import PolarCoordinateTransform, ShiftRowsTransform, SpiderMask, ToUnboundTensor
+from PIL import Image
+
 from speckcn2.normalizer import Normalizer
+from speckcn2.transformations import PolarCoordinateTransform, ShiftRowsTransform, SpiderMask, ToUnboundTensor
+from speckcn2.utils import ensure_directory, plot_preprocessed_image
 
 
 def assemble_transform(conf: dict) -> transforms.Compose:
@@ -360,8 +364,8 @@ def create_ensemble_dataset(dataset: list, ensemble_size: int) -> list:
         n_groups = len(ensemble) // ensemble_size
         if n_groups < 1:
             raise ValueError(
-                f'Ensemble size {ensemble_size} is too large for ensemble {ensemble} with size {len(ensemble)}'
-            )
+                f'Ensemble size {ensemble_size} is too large '
+                f'for ensemble {ensemble} with size {len(ensemble)}')
         # Extract the ensembles randomly
         sample = random.sample(ensemble, n_groups * ensemble_size)
         # Split the sample into groups of ensemble_size
@@ -388,7 +392,11 @@ def print_ensemble_info(dataset: list, ensemble_size: int, ttsplit: int):
 
     train_size = int(ttsplit * len(dataset))
     print(
-        f'*** There are {len(dataset)} ensemble groups in the dataset, that I split in {train_size} for training and {len(dataset) - train_size} for testing. Each ensemble is composed by {ensemble_size} images. This corresponds to {train_size * ensemble_size} for training and {(len(dataset) - train_size) * ensemble_size} for testing.'
+        f'*** There are {len(dataset)} ensemble groups in the dataset, '
+        f'that I split in {train_size} for training and '
+        f'{len(dataset) - train_size} for testing. Each ensemble is composed by '
+        f'{ensemble_size} images. This corresponds to {train_size * ensemble_size} '
+        f'for training and {(len(dataset) - train_size) * ensemble_size} for testing.'
     )
 
 
@@ -403,9 +411,9 @@ def print_dataset_info(dataset: list, ttsplit: int):
         The train-test split
     """
     train_size = int(ttsplit * len(dataset))
-    print(
-        f'*** There are {len(dataset)} images in the dataset, {train_size} for training and {len(dataset) - train_size} for testing.'
-    )
+    print(f'*** There are {len(dataset)} images in the dataset, '
+          f'{train_size} for training and '
+          f'{len(dataset) - train_size} for testing.')
 
 
 def split_dataset(dataset: list, ttsplit: int) -> tuple[list, list]:

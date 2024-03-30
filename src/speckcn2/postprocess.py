@@ -1,20 +1,22 @@
-import matplotlib.pyplot as plt
+from __future__ import annotations
+
 import itertools
-import numpy as np
 from typing import Callable, Optional
+
+import matplotlib.pyplot as plt
+import numpy as np
 from torch import Tensor
 from torch import device as Device
+
 from speckcn2.utils import ensure_directory
 
 
-def tags_distribution(
-        conf: dict,
-        train_set: list,
-        test_tags: Tensor,
-        device: Device,
-        rescale: bool = False,
-        recover_tag: Optional[list[Callable[[Tensor],
-                                            Tensor]]] = None) -> None:
+def tags_distribution(conf: dict,
+                      train_set: list,
+                      test_tags: Tensor,
+                      device: Device,
+                      rescale: bool = False,
+                      recover_tag: Optional[list[Callable]] = None) -> None:
     """Plots the distribution of the tags.
 
     Parameters
