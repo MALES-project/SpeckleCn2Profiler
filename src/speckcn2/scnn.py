@@ -1,6 +1,7 @@
+from __future__ import annotations
+
 import torch
-from escnn import gspaces
-from escnn import nn
+from escnn import gspaces, nn
 
 
 def create_block(in_type, out_type, kernel_size, padding, stride):
@@ -58,7 +59,6 @@ class SteerableCNN(torch.nn.Module):
         self.POOL_PADDINGS = config['scnn']['POOL_PADDINGS']
         self.final_n_features = config['scnn']['final_n_features']
 
-
         # Decide the symmetry group
         symmetry_map = {
             'C8': 8,
@@ -70,7 +70,8 @@ class SteerableCNN(torch.nn.Module):
         try:
             self.r2_act = gspaces.rot2dOnR2(N=symmetry_map[symmetry])
         except KeyError:
-            raise ValueError('The symmetry must be one of ' + ', '.join(symmetry_map.keys()))
+            raise ValueError('The symmetry must be one of ' +
+                             ', '.join(symmetry_map.keys()))
 
         # Start computing the size of the feature map
         self.nfeatures = self.in_image_res
@@ -79,7 +80,8 @@ class SteerableCNN(torch.nn.Module):
         in_type = nn.FieldType(self.r2_act, [self.r2_act.trivial_repr])
         # we store the input type for wrapping the images into a geometric tensor during the forward pass
         self.input_type = in_type
-        # This mask is to remove the 'corner' pixels in the input image, that would get outside of the square while rotating
+        # This mask is to remove the 'corner' pixels in the input image,
+        # that would get outside of the square while rotating
         self.mask = nn.MaskModule(in_type, self.in_image_res, margin=0),
 
         self.blocks = torch.nn.ModuleList()
@@ -120,7 +122,9 @@ class SteerableCNN(torch.nn.Module):
         # number of output channels
         c = self.gpool.out_type.size * self.nfeatures * self.nfeatures
 
-        # If the model uses multiple images as input, I add an extra channel as confidence weight to average the final prediction
+        # If the model uses multiple images as input,
+        # I add an extra channel as confidence weight
+        # to average the final prediction
         if self.ensemble > 1:
             out_size = self.nscreens + 1
         else:

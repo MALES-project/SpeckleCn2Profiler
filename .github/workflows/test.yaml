@@ -1,10 +1,18 @@
-name: Test
+name: Tests for SpeckCn2
 
 on:
   push:
-    branches: [ main ]
+    branches:
+      - main
   pull_request:
-    branches: [ main ]
+    branches:
+      - main
+    types:
+      - opened
+      - reopened
+      - synchronize
+      - ready_for_review
+  workflow_dispatch:
 
 jobs:
   Build-n-test:
@@ -13,47 +21,33 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: ['3.9', '3.10', '3.11']
+        python-version: ['3.9', '3.10']
         toolchain:
           - {compiler: gcc, version: 13}
 
     steps:
-    - uses: actions/checkout@v2
-
-    - uses: fortran-lang/setup-fortran@v1
-      id: setup-fortran
+    - uses: actions/checkout@v3
       with:
-        compiler: ${{ matrix.toolchain.compiler }}
-        version: ${{ matrix.toolchain.version }}
+        submodules: 'true'
 
     - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v2
+      uses: actions/setup-python@v4
       with:
         python-version: ${{ matrix.python-version }}
 
-    - name: Automatic requirements.txt for Python Project
-      uses: ryan-rozario/pipreqs-action@master
+    - uses: actions/cache@v3
+      id: cache-virtualenv
       with:
-        PROJECT_PATH: speckcn2
-        REQUIREMENT_PATH: requirements.txt
-
-    - name: Cache dependencies
-      uses: actions/cache@v2
-      with:
-        path: ~/.cache/pip
-        key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
-        restore-keys: |
-          ${{ runner.os }}-pip-
+        path: ${{ env.pythonLocation }}
+        key: ${{ env.pythonLocation }}-${{ hashFiles('pyproject.toml') }}
 
     - name: Install dependencies
+      if: steps.cache-virtualenv.outputs.cache-hit != 'true'
       run: |
-        python -m pip install git+https://github.com/AMLab-Amsterdam/lie_learn
-        sed -i '/^scipy/d' requirements.txt && echo "scipy>1.9.2" >> requirements.txt
-        pip install -r requirements.txt
+        python -m pip install -e .[develop]
 
     - name: Test with pytest
       run: |
-          pip install pytest coverage
           coverage run -p -m pytest
 
     - name: Combine

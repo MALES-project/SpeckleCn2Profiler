@@ -1,6 +1,9 @@
-import torch
-import numpy as np
+from __future__ import annotations
+
 import matplotlib.pyplot as plt
+import numpy as np
+import torch
+
 from speckcn2.utils import ensure_directory
 
 

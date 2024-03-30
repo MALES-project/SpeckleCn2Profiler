@@ -1,6 +1,9 @@
-import torch
-import numpy as np
+from __future__ import annotations
+
 from typing import Callable
+
+import numpy as np
+import torch
 
 
 class Normalizer:
@@ -156,11 +159,12 @@ class Normalizer:
         recover_fn : Callable
             Function to recover an image
         """
-        normalize_fn = (lambda x, min_img=min_img, range_img=range_img:
-                        self._mask_img * (x - min_img) / range_img)
 
-        recover_fn = (lambda y, y_id, min_img=min_img, range_img=range_img:
-                      self._mask_img * (y * range_img + min_img))
+        def normalize_fn(x, min_img=min_img, range_img=range_img):
+            return self._mask_img * (x - min_img) / range_img
+
+        def recover_fn(y, y_id, min_img=min_img, range_img=range_img):
+            return self._mask_img * (y * range_img + min_img)
 
         return normalize_fn, recover_fn
 
@@ -193,16 +197,28 @@ class Normalizer:
             )
 
     def _unif_normalize_functions(self, nscreens):
-        normalize_functions = [(
-            lambda x, x_id, i=i: self._unsorting_indices[x_id, i] / self.Ndata)
-                               for i in range(nscreens)]
-        recover_functions = [
-            (lambda y, y_id, i=i: self._sorted_tags[round(y * self.Ndata), i])
-            for i in range(nscreens)
-        ]
+
+        def create_normalize_functions(nscreens):
+
+            def normalize_fn(x, x_id, i):
+                return self._unsorting_indices[x_id, i] / self.Ndata
+
+            return [normalize_fn for _ in range(nscreens)]
+
+        def create_recover_functions(nscreens):
+
+            def recover_fn(y, y_id, i):
+                return self._sorted_tags[round(y * self.Ndata), i]
+
+            return [recover_fn for _ in range(nscreens)]
+
+        normalize_functions = create_normalize_functions(nscreens)
+        recover_functions = create_recover_functions(nscreens)
         return normalize_functions, recover_functions
 
     def _zscore_normalize_functions(self, nscreens):
+        # TODO if you still decide to support this,
+        # return def functions and not lambdas
         normalize_functions = [
             (lambda x, x_id, mean=self.mean_tags[i], std=self.std_tags[i]:
              (x - mean) / std) for i in range(nscreens)
@@ -212,6 +228,8 @@ class Normalizer:
         return normalize_functions, recover_functions
 
     def _log_normalize_functions(self, nscreens):
+        # TODO if you still decide to support this,
+        # return def functions and not lambdas
         normalize_functions = [(lambda x, x_id, min_t=self.min_tags[
             i], max_t=self.max_tags[i]: np.log(
                 (x - min_t + 1) / (max_t - min_t + 1)) / np.log(
@@ -225,6 +243,8 @@ class Normalizer:
         return normalize_functions, recover_functions
 
     def _lin_normalize_functions(self, nscreens):
+        # TODO if you still decide to support this,
+        # return def functions and not lambdas
         normalize_functions = [
             (lambda x, x_id, min_t=self.min_tags[i], max_t=self.max_tags[i]:
              (x - min_t) / (max_t - min_t)) for i in range(nscreens)
