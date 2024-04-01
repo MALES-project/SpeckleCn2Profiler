@@ -1,4 +1,7 @@
+from __future__ import annotations
+
 import yaml
+
 from speckcn2.io import load_config
 
 
