@@ -114,7 +114,7 @@ ignore_missing_imports = true
 
 
 [tool.bumpversion]
-current_version = "0.0.1"
+current_version = "0.1.0"
 
 [[tool.bumpversion.files]]
 filename = "src/speckcn2/__init__.py"

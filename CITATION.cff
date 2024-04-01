@@ -14,4 +14,15 @@ authors:
     affiliation: Netherlands eScience Center
     orcid: 'https://orcid.org/0000-0002-9247-139X'
 repository-code: 'https://github.com/MALES-project/SpeckleCn2Profiler'
+url: 'https://speckcn2.readthedocs.io'
+abstract: >-
+  Estimate Cn2 from Speckle patterns using machine learning
+keywords:
+	- machine learning
+	- equivariant cnn
+	- optical satelites
+	- turbolence
+	- laser communication
+license: Apache-2.0
+version: 0.0.1
 license: MIT
