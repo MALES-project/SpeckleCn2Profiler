@@ -44,7 +44,6 @@ jobs:
     - name: Install dependencies
       if: steps.cache-virtualenv.outputs.cache-hit != 'true'
       run: |
-        apt-get update && apt-get install python3-dev -y
         python -m pip install --upgrade pip
         python -m pip install -e .[develop]
 
