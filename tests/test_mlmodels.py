@@ -1,7 +1,11 @@
+from __future__ import annotations
+
 import os
-import torch
+
 import pytest
-from speckcn2.io import save, load_model_state
+import torch
+
+from speckcn2.io import load_model_state, save
 
 
 @pytest.fixture
