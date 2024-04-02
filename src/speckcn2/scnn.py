@@ -29,11 +29,13 @@ def create_pool(out_type, sigma, padding, stride):
                                        padding=padding))
 
 
-def create_fully_connected(c, nscreens, final_n_features=64):
+def create_fully_connected(c, nscreens, final_n_features=64, dropout_p=0):
     return torch.nn.Sequential(
+        torch.nn.Dropout(dropout_p) if dropout_p > 0 else torch.nn.Identity(),
         torch.nn.Linear(c, final_n_features),
         torch.nn.BatchNorm1d(final_n_features),
         torch.nn.ELU(inplace=True),
+        torch.nn.Dropout(dropout_p) if dropout_p > 0 else torch.nn.Identity(),
         torch.nn.Linear(final_n_features, nscreens),
         torch.nn.Sigmoid(),
     )
@@ -58,6 +60,7 @@ class SteerableCNN(torch.nn.Module):
         self.POOL_STRIDES = config['scnn']['POOL_STRIDES']
         self.POOL_PADDINGS = config['scnn']['POOL_PADDINGS']
         self.final_n_features = config['scnn']['final_n_features']
+        self.dropout_p = config['scnn']['dropout_p']
 
         # Decide the symmetry group
         symmetry_map = {
@@ -131,7 +134,8 @@ class SteerableCNN(torch.nn.Module):
             out_size = self.nscreens
 
         self.fully_net = create_fully_connected(c, out_size,
-                                                self.final_n_features)
+                                                self.final_n_features,
+                                                self.dropout_p)
 
     def forward(self, input: torch.Tensor):
         # wrap the input tensor in a GeometricTensor
