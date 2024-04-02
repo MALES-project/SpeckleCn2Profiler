@@ -14,7 +14,7 @@ jobs:
     - uses: actions/checkout@v3
     - uses: actions/setup-python@v4
       with:
-        python-version: '3.11'
+        python-version: '3.11.1'
     - uses: fortran-lang/setup-fortran@v1
       # Needed for py3nj-->lie_learn-->escnn
       id: setup-fortran
@@ -67,7 +67,7 @@ jobs:
 
     - uses: actions/setup-python@v4
       with:
-        python-version: '3.11'
+        python-version: '3.11.1'
 
     - name: Install dependencies
       run: |
