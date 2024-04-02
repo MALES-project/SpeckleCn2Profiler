@@ -33,7 +33,6 @@ classifiers = [
     "Topic :: Scientific/Engineering",
 ]
 dependencies = [
-  'py3nj @ git+git://github.com/fujiisoup/py3nj.git',
   'lie_learn @ git+https://github.com/AMLab-Amsterdam/lie_learn',
   'matplotlib >= 3.6.0',
   'numpy',
