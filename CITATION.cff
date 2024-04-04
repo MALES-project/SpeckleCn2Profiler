@@ -18,11 +18,11 @@ url: 'https://speckcn2.readthedocs.io'
 abstract: >-
   Estimate Cn2 from Speckle patterns using machine learning
 keywords:
-	- machine learning
-	- equivariant cnn
-	- optical satelites
-	- turbolence
-	- laser communication
+  - machine learning
+  - equivariant cnn
+  - optical satelites
+  - turbolence
+  - laser communication
 license: Apache-2.0
 version: 0.1.0
 license: MIT

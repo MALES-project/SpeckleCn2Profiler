@@ -17,7 +17,7 @@ keywords = [
     'machine learning',
     'equivariant cnn',
     'optical satelites',
-    'turbolence',
+    'turbulence',
     'laser communication'
 ]
 license = {text = "Apache 2.0 License"}
