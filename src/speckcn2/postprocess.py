@@ -60,7 +60,7 @@ def tags_distribution(conf: dict,
     print(f'Prediction std: {predic_tags.std()}')
 
     # Keep track of J=sum(tags) for each sample
-    J_pred = np.zeros(train_tags.shape[0])
+    J_pred = np.zeros(predic_tags.shape[0])
     J_true = np.zeros(train_tags.shape[0])
 
     # Plot the distribution of each tag element
@@ -83,12 +83,8 @@ def tags_distribution(conf: dict,
                                     density=True,
                                     alpha=0.5,
                                     label='Training data')
-            print(recovered_tag_model.shape)
-            print(recovered_tag_true.shape)
-            print(J_pred.shape)
-            print(J_true.shape)
-            J_pred += recovered_tag_model
-            J_true += recovered_tag_true
+            J_pred += 10**recovered_tag_model
+            J_true += 10**recovered_tag_true
         else:
             axs[i // 4, i % 4].hist(predic_tags[:, i],
                                     bins=20,
@@ -115,19 +111,19 @@ def tags_distribution(conf: dict,
     if rescale and recover_tag is not None:
         # Also plot the distribution of the sum of the tags
         fig, axs = plt.subplots(1, 1, figsize=(6, 6))
-        axs.hist(J_pred,
+        axs.hist(np.log10(J_pred),
                  bins=20,
                  color='tab:red',
                  density=True,
                  alpha=0.5,
                  label='Model prediction')
-        axs.hist(J_true,
+        axs.hist(np.log10(J_true),
                  bins=20,
                  color='tab:blue',
                  density=True,
                  alpha=0.5,
                  label='Training data')
-        axs.set_title('Sum of tags')
+        axs.set_title(r'\sum_i J_i')
         axs.legend()
         plt.tight_layout()
         plt.savefig(f'{data_directory}/result_plots/{model_name}_sumJ.png')
