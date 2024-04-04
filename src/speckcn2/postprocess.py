@@ -123,7 +123,7 @@ def tags_distribution(conf: dict,
                  density=True,
                  alpha=0.5,
                  label='Training data')
-        axs.set_title(r'\sum_i J_i')
+        axs.set_title('Sum of J')
         axs.legend()
         plt.tight_layout()
         plt.savefig(f'{data_directory}/result_plots/{model_name}_sumJ.png')
