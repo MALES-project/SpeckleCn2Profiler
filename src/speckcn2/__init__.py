@@ -11,7 +11,7 @@ from .postprocess import tags_distribution
 from .preprocess import prepare_data, train_test_split
 from .utils import setup_optimizer
 
-__version__ = '0.0.1'
+__version__ = '0.1.0'
 __all__ = [
     'load_config',
     'prepare_data',

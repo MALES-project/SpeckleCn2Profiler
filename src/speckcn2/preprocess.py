@@ -98,6 +98,8 @@ def prepare_data(
         all_tags = torch.load(os.path.join(datadirectory, tagname))
         all_ensemble_ids = torch.load(os.path.join(datadirectory,
                                                    ensemblename))
+        # print the info about the dataset
+        print(f'*** There are {len(all_images)} images in the dataset.')
     else:
         # Otherwise, preprocess the raw data separating the single images
         all_images, all_tags, all_ensemble_ids = imgs_as_single_datapoint(
@@ -314,8 +316,11 @@ def train_test_split(
     if os.path.isfile(train_file) and os.path.isfile(test_file):
         print('Loading the training and testing set...', flush=True)
         nz._normalizing_functions(all_images, all_tags, all_ensemble_ids)
-        return pickle.load(open(train_file,
-                                'rb')), pickle.load(open(test_file, 'rb'))
+        train_data = pickle.load(open(train_file, 'rb'))
+        test_data = pickle.load(open(test_file, 'rb'))
+        print(f'*** There are {len(train_data)} images in the training set, ')
+        print(f'*** and {len(test_data)} images in the testing set.')
+        return train_data, test_data
 
     # If the data are not already prepared, first I normalize them using the Normalizer object
     print('Normalizing the images and tags...', flush=True)
