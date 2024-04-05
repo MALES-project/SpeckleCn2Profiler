@@ -306,9 +306,9 @@ def train_test_split(
     # extract the model parameters
     modelname = config['model']['name']
     datadirectory = config['speckle']['datadirectory']
-    ttsplit = config['hyppar']['ttsplit']
-    ensemble_size = config['preproc']['ensemble']
-    average_size = config['preproc']['average']
+    ttsplit = config['hyppar'].get('ttsplit', 0.8)
+    ensemble_size = config['preproc'].get('ensemble', 1)
+    average_size = config['preproc'].get('average', 0)
 
     # Check if the training and test set are already prepared
     train_file = f'{datadirectory}/train_set_{modelname}.pickle'
