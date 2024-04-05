@@ -308,6 +308,7 @@ def train_test_split(
     datadirectory = config['speckle']['datadirectory']
     ttsplit = config['hyppar']['ttsplit']
     ensemble_size = config['preproc']['ensemble']
+    average_size = config['preproc']['average']
 
     # Check if the training and test set are already prepared
     train_file = f'{datadirectory}/train_set_{modelname}.pickle'
@@ -327,7 +328,14 @@ def train_test_split(
     dataset = nz.normalize_imgs_and_tags(all_images, all_tags,
                                          all_ensemble_ids)
 
-    if ensemble_size > 1:
+    if average_size > 1 and ensemble_size > 1:
+        raise ValueError(
+            'The average_size and ensemble_size cannot be set at the same time.'
+        )
+    elif average_size > 1:
+        dataset = create_average_dataset(dataset, average_size)
+        print_average_info(dataset, average_size, ttsplit)
+    elif ensemble_size > 1:
         dataset = create_ensemble_dataset(dataset, ensemble_size)
         print_ensemble_info(dataset, ensemble_size, ttsplit)
     else:
@@ -339,6 +347,74 @@ def train_test_split(
     pickle.dump(test_set, open(test_file, 'wb'))
 
     return train_set, test_set
+
+
+def create_average_dataset(dataset: list, average_size: int) -> list:
+    """Creates a dataset of averages from a dataset of single images. The
+    averages are created by grouping together average_size images.
+
+    Parameters
+    ----------
+    dataset : list
+        List of single images
+    average_size : int
+        The number of images that will be averaged together
+
+    Returns
+    -------
+    average_dataset : list
+        List of averages
+    """
+    split_averages: dict = {}
+    for item in dataset:
+        key = item[-1]
+        split_averages.setdefault(key, []).append(item)
+
+    average_dataset: list = []
+    for average in split_averages.values():
+        # * In each average, take n_groups groups of average_size datapoints
+        n_groups = len(average) // average_size
+        if n_groups < 1:
+            raise ValueError(f'Average size {average_size} is too large '
+                             f'for groups with size {len(average)}')
+        # Extract the averages randomly
+        sample = random.sample(average, n_groups * average_size)
+        # Split the sample into groups of average_size
+        list_to_avg = [
+            sample[i:i + average_size]
+            for i in range(0, n_groups * average_size, average_size)
+        ]
+        # Average the groups
+        averages = [
+            tuple(sum(element) / average_size for element in zip(*group))
+            for group in list_to_avg
+        ]
+        average_dataset.extend(averages)
+
+    random.shuffle(average_dataset)
+    return average_dataset
+
+
+def print_average_info(dataset: list, average_size: int, ttsplit: int):
+    """Prints the information about the average dataset.
+
+    Parameters
+    ----------
+    dataset : list
+        The average dataset
+    average_size : int
+        The number of images in each average
+    ttsplit : int
+        The train-test split
+    """
+    train_size = int(ttsplit * len(dataset))
+    print(
+        f'*** There are {len(dataset)} average groups in the dataset, '
+        f'that I split in {train_size} for training and '
+        f'{len(dataset) - train_size} for testing. Each average is composed by '
+        f'{average_size} images. This corresponds to {train_size * average_size} '
+        f'for training and {(len(dataset) - train_size) * average_size} for testing.'
+    )
 
 
 def create_ensemble_dataset(dataset: list, ensemble_size: int) -> list:
@@ -368,9 +444,8 @@ def create_ensemble_dataset(dataset: list, ensemble_size: int) -> list:
         # * In each ensemble, take n_groups groups of ensemble_size datapoints
         n_groups = len(ensemble) // ensemble_size
         if n_groups < 1:
-            raise ValueError(
-                f'Ensemble size {ensemble_size} is too large '
-                f'for ensemble {ensemble} with size {len(ensemble)}')
+            raise ValueError(f'Ensemble size {ensemble_size} is too large '
+                             f'for ensembles with size {len(ensemble)}')
         # Extract the ensembles randomly
         sample = random.sample(ensemble, n_groups * ensemble_size)
         # Split the sample into groups of ensemble_size
