@@ -165,8 +165,8 @@ def score(
     data_dir = conf['speckle']['datadirectory']
     batch_size = conf['hyppar']['batch_size']
     # Setup the EnsembleModel wrapper
-    ensemble = EnsembleModel(conf['preproc']['ensemble'], device,
-                             conf['preproc']['ensemble_unif'])
+    ensemble = EnsembleModel(conf['preproc'].get('ensemble', 1), device,
+                             conf['preproc'].get('ensemble_unif', False))
 
     # For scoring the model, I enforce to use with the same weights:
     # 1. MAE on screen tags
