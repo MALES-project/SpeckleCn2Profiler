@@ -52,7 +52,7 @@ def train(model: nn.Module, last_model_state: int, conf: dict, train_set: list,
     batch_size = conf['hyppar']['batch_size']
 
     # Setup the EnsembleModel wrapper
-    ensemble = EnsembleModel(conf['preproc'].get('ensemble', 0), device,
+    ensemble = EnsembleModel(conf['preproc'].get('ensemble', 1), device,
                              conf['preproc'].get('ensemble_unif', False))
 
     print(f'Training the model from epoch {last_model_state} to {final_epoch}')
