@@ -386,10 +386,13 @@ def create_average_dataset(dataset: list, average_size: int) -> list:
         ]
         # Average the groups
         averages = [
-            tuple(sum(element) / average_size for element in zip(*group))
+            tuple(
+                int(sum(element) / average_size) if i == 2 else sum(element) /
+                average_size for i, element in enumerate(zip(*group)))
             for group in list_to_avg
         ]
         average_dataset.extend(averages)
+        print(averages)
 
     random.shuffle(average_dataset)
     return average_dataset

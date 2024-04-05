@@ -57,7 +57,7 @@ def score_plot(
     """
     model_name = conf['model']['name']
     data_dir = conf['speckle']['datadirectory']
-    ensemble = conf['preproc'].get('ensemble', 0)
+    ensemble = conf['preproc'].get('ensemble', 1)
     hs = conf['speckle']['splits']
     nscreens = conf['speckle']['nscreens']
     if len(hs) != nscreens:
