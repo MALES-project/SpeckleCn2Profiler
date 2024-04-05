@@ -39,7 +39,7 @@ def tags_distribution(conf: dict,
 
     data_directory = conf['speckle']['datadirectory']
     model_name = conf['model']['name']
-    ensemble = conf['preproc']['ensemble']
+    ensemble = conf['preproc'].get('ensemble', 1)
 
     ensure_directory(f'{data_directory}/result_plots')
 
