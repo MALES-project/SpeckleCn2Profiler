@@ -49,7 +49,7 @@ class SteerableCNN(torch.nn.Module):
 
         self.nscreens = config['speckle']['nscreens']
         self.in_image_res = config['preproc']['resize']
-        self.ensemble = config['preproc']['ensemble']
+        self.ensemble = config['preproc'].get('ensemble', 1)
 
         self.KERNEL_SIZES = config['scnn']['KERNEL_SIZES']
         self.PADDINGS = config['scnn']['PADDINGS']
@@ -60,7 +60,7 @@ class SteerableCNN(torch.nn.Module):
         self.POOL_STRIDES = config['scnn']['POOL_STRIDES']
         self.POOL_PADDINGS = config['scnn']['POOL_PADDINGS']
         self.final_n_features = config['scnn']['final_n_features']
-        self.dropout_p = config['scnn']['dropout_p']
+        self.dropout_p = config['scnn'].get('dropout_p', 0)
 
         # Decide the symmetry group
         symmetry_map = {

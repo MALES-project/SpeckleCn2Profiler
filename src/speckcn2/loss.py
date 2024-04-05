@@ -61,8 +61,8 @@ class ComposableLoss(nn.Module):
         # And get some useful parameters for the loss functions
         # the parameters are explained in ...
         self.h = torch.Tensor([float(x) for x in config['speckle']['hArray']])
-        self.k = 2 * torch.pi / (config['speckle']['lambda'] * 1e-9)
-        self.cosz = np.cos(np.deg2rad(config['speckle']['z']))
+        self.k = 2 * torch.pi / (config['speckle'].get('lambda', 550) * 1e-9)
+        self.cosz = np.cos(np.deg2rad(config['speckle'].get('z', 0)))
         self.secz = 1 / self.cosz
         self.L = config['speckle']['L']
         self.p_fr = 0.423 * self.k**2 * self.secz

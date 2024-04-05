@@ -108,7 +108,7 @@ def setup_model(config: dict) -> tuple[nn.Module, int]:
     pretrained = config['model']['pretrained']
     nscreens = config['speckle']['nscreens']
     data_directory = config['speckle']['datadirectory']
-    ensemble = config['preproc']['ensemble']
+    ensemble = config['preproc'].get('ensemble', 1)
 
     print(f'^^^ Initializing model {model_name} of type {model_type}')
 
