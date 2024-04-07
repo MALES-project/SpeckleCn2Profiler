@@ -286,7 +286,7 @@ class ComposableLoss(nn.Module):
 
     def _FriedLoss(self, pred: torch.Tensor, target: torch.Tensor,
                    Cn2p: torch.Tensor, Cn2t: torch.Tensor) -> torch.Tensor:
-        """Fried parameter r0 loss function. The loss is measured in [cm].
+        """Fried parameter r0 loss function. The loss is measured in [m].
 
         Parameters
         ----------
@@ -306,7 +306,7 @@ class ComposableLoss(nn.Module):
         """
         r0p = self.get_FriedParameter(pred)
         r0t = self.get_FriedParameter(target)
-        loss = torch.abs(r0p - r0t) * 100
+        loss = torch.abs(r0p - r0t)
 
         return loss
 
