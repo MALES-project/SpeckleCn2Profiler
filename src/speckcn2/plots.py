@@ -254,9 +254,10 @@ def plot_param_vs_loss(conf: dict, test_losses: list[dict], data_dir: str,
                            num=50)
 
         axs.hist(params, bins=bins, weights=loss, alpha=0.5)
-        # Plot the line y = 0.1x for reference
-        axs.plot(bins, 0.1 * bins, color='tab:red', label='10% reference')
-        axs.set_xlabel(name)
+        # Plot error reference lines
+        axs.plot(bins, 50 * bins, color='tab:red', label='50% error')
+        axs.plot(bins, 10 * bins, color='tab:green', label='10% error')
+        axs.set_xlabel(f'{name} {units}')
         axs.set_xscale('log')
         axs.set_yscale('log')
         axs.set_ylabel(f'Error {units}')
