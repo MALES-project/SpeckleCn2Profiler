@@ -306,7 +306,7 @@ class ComposableLoss(nn.Module):
         """
         r0p = self.get_FriedParameter(pred)
         r0t = self.get_FriedParameter(target)
-        loss = torch.abs(r0p - r0t) * 0.01
+        loss = torch.abs(r0p - r0t) * 100
 
         return loss
 
