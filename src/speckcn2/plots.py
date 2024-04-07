@@ -228,8 +228,8 @@ def plot_param_vs_loss(conf: dict, test_losses: list[dict], data_dir: str,
         List of all the losses of the test set
     data_dir : str
         The directory where the data is stored
-    param : str
-        The parameter to plot
+    measures : list
+        The measures of the model
     """
     model_name = conf['model']['name']
 
@@ -255,8 +255,9 @@ def plot_param_vs_loss(conf: dict, test_losses: list[dict], data_dir: str,
 
         axs.hist(params, bins=bins, weights=loss, alpha=0.5)
         # Plot error reference lines
-        axs.plot(bins, 50 * bins, color='tab:red', label='50% error')
-        axs.plot(bins, 10 * bins, color='tab:green', label='10% error')
+        axs.plot(bins, 1.0 * bins, color='tab:red', label='100% error')
+        axs.plot(bins, 0.5 * bins, color='tab:orange', label='50% error')
+        axs.plot(bins, 0.1 * bins, color='tab:green', label='10% error')
         axs.set_xlabel(f'{name} {units}')
         axs.set_xscale('log')
         axs.set_yscale('log')
