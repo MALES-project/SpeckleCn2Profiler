@@ -286,7 +286,7 @@ class ComposableLoss(nn.Module):
 
     def _FriedLoss(self, pred: torch.Tensor, target: torch.Tensor,
                    Cn2p: torch.Tensor, Cn2t: torch.Tensor) -> torch.Tensor:
-        """Fried parameter r0 loss function.
+        """Fried parameter r0 loss function. The loss is measured in [cm].
 
         Parameters
         ----------
@@ -306,7 +306,7 @@ class ComposableLoss(nn.Module):
         """
         r0p = self.get_FriedParameter(pred)
         r0t = self.get_FriedParameter(target)
-        loss = torch.mean(torch.abs(r0p - r0t) / (r0t + 1e-5))
+        loss = torch.abs(r0p - r0t) * 0.01
 
         return loss
 
@@ -321,7 +321,8 @@ class ComposableLoss(nn.Module):
     def _IsoplanaticLoss(self, pred: torch.Tensor, target: torch.Tensor,
                          Cn2p: torch.Tensor,
                          Cn2t: torch.Tensor) -> torch.Tensor:
-        """Isoplanatic angle theta0 loss function.
+        """Isoplanatic angle theta0 loss function. The loss is measured in
+        [rad].
 
         Parameters
         ----------
@@ -341,7 +342,7 @@ class ComposableLoss(nn.Module):
         """
         isp = self.get_IsoplanaticAngle(Cn2p)
         ist = self.get_IsoplanaticAngle(Cn2t)
-        loss = torch.mean(torch.abs(isp - ist) / (ist + 1e-5))
+        loss = torch.abs(isp - ist)
 
         return loss
 
@@ -368,7 +369,8 @@ class ComposableLoss(nn.Module):
     def _ScintillationWeakLoss(self, pred: torch.Tensor, target: torch.Tensor,
                                Cn2p: torch.Tensor,
                                Cn2t: torch.Tensor) -> torch.Tensor:
-        """Scintillation index for weak turbulence loss function.
+        """Scintillation index for weak turbulence loss function. The loss is
+        measured in [?].
 
         Parameters
         ----------
@@ -388,7 +390,7 @@ class ComposableLoss(nn.Module):
         """
         swp = self.get_ScintillationWeak(Cn2p)
         swt = self.get_ScintillationWeak(Cn2t)
-        loss = torch.mean(torch.abs(swp - swt) / (swt + 1e-5))
+        loss = torch.abs(swp - swt)
 
         return loss
 

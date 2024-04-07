@@ -203,8 +203,7 @@ def plot_histo_losses(conf: dict, test_losses: list[dict],
     fig, axs = plt.subplots(1, 1, figsize=(5, 5))
     for key in ['MAE', 'Fried', 'Isoplanatic', 'Scintillation_w']:
         loss = [d[key].detach().cpu() for d in test_losses]
-        # Generate bin edges on a log scale
-        bins = np.logspace(np.log10(min(loss)), np.log10(max(loss)), num=30)
+        bins = np.logspace(np.log10(min(loss)), np.log10(max(loss)), num=50)
         axs.hist(loss, bins=bins, alpha=0.5, label=key, density=True)
     axs.set_xlabel('Loss')
     axs.set_ylabel('Frequency')
@@ -236,31 +235,32 @@ def plot_param_vs_loss(conf: dict, test_losses: list[dict], data_dir: str,
 
     ensure_directory(f'{data_dir}/result_plots')
 
-    for param, name in zip(
+    for param, lname, name, units in zip(
         ['Fried_true', 'Isoplanatic_true', 'Scintillation_w_true'],
-        ['Fried parameter', 'Isoplanatic angle', '(weak) Scintillation index'
-         ]):
+        ['Fried', 'Isoplanatic', 'Scintillation_w'],
+        ['Fried parameter', 'Isoplanatic angle', '(weak) Scintillation index'],
+        ['[m]', '[rad]', ''],
+    ):
         fig, axs = plt.subplots(1, 1, figsize=(5, 5))
 
-        # Extract the param and the sum of all values from each dictionary
         params = [d[param].detach().cpu() for d in measures]
-        sums = [sum(d.values()).detach().cpu() for d in test_losses]
+        loss = [d[lname].detach().cpu() for d in test_losses]
 
-        # Pair these values together and sort them based on the value of param
-        pairs = sorted(zip(params, sums))
+        pairs = sorted(zip(params, loss))
+        params, loss = zip(*pairs)
 
-        # Unzip the pairs back into two lists
-        params, sums = zip(*pairs)
-
-        # Plot the data
         bins = np.logspace(np.log10(min(params)),
                            np.log10(max(params)),
-                           num=20)
-        axs.hist(params, bins=bins, weights=sums, alpha=0.5)
+                           num=50)
+
+        axs.hist(params, bins=bins, weights=loss, alpha=0.5)
+        # Plot the line y = 0.1x for reference
+        axs.plot(bins, 0.1 * bins, color='tab:red', label='10% reference')
         axs.set_xlabel(name)
         axs.set_xscale('log')
         axs.set_yscale('log')
-        axs.set_ylabel('Total loss')
+        axs.set_ylabel(f'Error {units}')
+        axs.legend()
         plt.title(f'Model: {model_name}')
         plt.tight_layout()
         plt.savefig(f'{data_dir}/result_plots/{param}_vs_sum_{model_name}.png')

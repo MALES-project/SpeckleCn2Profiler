@@ -48,8 +48,9 @@ To get started with the project, follow these steps:
 
 1. **Install the package:**
    ```bash
-   pip install speckcn2
+   python -m pip install git+https://github.com/MALES-project/SpeckleCn2Profiler
    ```
+while the above command works, `speckcn2` will be available on pypi as soon as its dependencies get updated.
 
 2. **Explore the Code:**
     Dive into the codebase to understand the implementation details and customize it according to your needs.
