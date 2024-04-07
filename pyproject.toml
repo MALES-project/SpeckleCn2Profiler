@@ -33,7 +33,6 @@ classifiers = [
     "Topic :: Scientific/Engineering",
 ]
 dependencies = [
-  'lie_learn @ git+https://github.com/AMLab-Amsterdam/lie_learn',
   'matplotlib >= 3.6.0',
   'numpy',
   'scipy>=1.9.3',
@@ -41,6 +40,7 @@ dependencies = [
   'torchvision',
   'PyYAML',
   'cython',
+  'lie_learn @ git+https://github.com/AMLab-Amsterdam/lie_learn',
   'escnn',
   'h5py',
 ]
