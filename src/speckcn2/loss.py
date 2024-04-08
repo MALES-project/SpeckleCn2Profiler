@@ -286,7 +286,9 @@ class ComposableLoss(nn.Module):
 
     def _FriedLoss(self, pred: torch.Tensor, target: torch.Tensor,
                    Cn2p: torch.Tensor, Cn2t: torch.Tensor) -> torch.Tensor:
-        """Fried parameter r0 loss function. The loss is measured in [m].
+        """Fried parameter r0 loss function. The difference between real value
+        and prediction is normalized by the real value, since small values are
+        more important to get correctly.
 
         Parameters
         ----------
@@ -306,7 +308,7 @@ class ComposableLoss(nn.Module):
         """
         r0p = self.get_FriedParameter(pred)
         r0t = self.get_FriedParameter(target)
-        loss = torch.abs(r0p - r0t)
+        loss = torch.abs(r0p - r0t) / r0t
 
         return loss
 
@@ -321,8 +323,8 @@ class ComposableLoss(nn.Module):
     def _IsoplanaticLoss(self, pred: torch.Tensor, target: torch.Tensor,
                          Cn2p: torch.Tensor,
                          Cn2t: torch.Tensor) -> torch.Tensor:
-        """Isoplanatic angle theta0 loss function. The loss is measured in
-        [rad].
+        """Isoplanatic angle theta0 loss function. The loss is normalized by
+        the real value, since small values are more important to get correctly.
 
         Parameters
         ----------
@@ -342,7 +344,7 @@ class ComposableLoss(nn.Module):
         """
         isp = self.get_IsoplanaticAngle(Cn2p)
         ist = self.get_IsoplanaticAngle(Cn2t)
-        loss = torch.abs(isp - ist)
+        loss = torch.abs(isp - ist) / ist
 
         return loss
 
@@ -370,7 +372,8 @@ class ComposableLoss(nn.Module):
                                Cn2p: torch.Tensor,
                                Cn2t: torch.Tensor) -> torch.Tensor:
         """Scintillation index for weak turbulence loss function. The loss is
-        measured in [?].
+        normalized by the real value, since small values are more important to
+        get correctly.
 
         Parameters
         ----------
@@ -390,7 +393,7 @@ class ComposableLoss(nn.Module):
         """
         swp = self.get_ScintillationWeak(Cn2p)
         swt = self.get_ScintillationWeak(Cn2t)
-        loss = torch.abs(swp - swt)
+        loss = torch.abs(swp - swt) / swt
 
         return loss
 
