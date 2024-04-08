@@ -239,7 +239,7 @@ def plot_param_vs_loss(conf: dict, test_losses: list[dict], data_dir: str,
         ['Fried_true', 'Isoplanatic_true', 'Scintillation_w_true'],
         ['Fried', 'Isoplanatic', 'Scintillation_w'],
         ['Fried parameter', 'Isoplanatic angle', '(weak) Scintillation index'],
-        ['[m]', '[rad]', ''],
+        ['[m]', '[rad]', '[1]'],
     ):
         fig, axs = plt.subplots(1, 1, figsize=(5, 5))
 
@@ -255,13 +255,19 @@ def plot_param_vs_loss(conf: dict, test_losses: list[dict], data_dir: str,
 
         axs.hist(params, bins=bins, weights=loss, alpha=0.5)
         # Plot error reference lines
-        axs.plot(bins, 1.0 * bins, color='tab:red', label='100% error')
-        axs.plot(bins, 0.5 * bins, color='tab:orange', label='50% error')
-        axs.plot(bins, 0.1 * bins, color='tab:green', label='10% error')
+        axs.axhline(y=1.0, linestyle='--', color='tab:red', label='100% error')
+        axs.axhline(y=0.5,
+                    linestyle='--',
+                    color='tab:orange',
+                    label='50% error')
+        axs.axhline(y=0.1,
+                    linestyle='--',
+                    color='tab:green',
+                    label='10% error')
         axs.set_xlabel(f'{name} {units}')
         axs.set_xscale('log')
         axs.set_yscale('log')
-        axs.set_ylabel(f'Error {units}')
+        axs.set_ylabel('Relative error')
         axs.legend()
         plt.title(f'Model: {model_name}')
         plt.tight_layout()
