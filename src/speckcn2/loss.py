@@ -120,9 +120,6 @@ class ComposableLoss(nn.Module):
         for loss_name, loss_fn in self.loss_needed.items():
             weight = self.loss_weights[loss_name]
             if loss_name in ['MAE', 'MSE']:
-                print('\n----')
-                print(pred.shape)
-                print(target.shape)
                 this_loss = loss_fn(pred, target)
             else:
                 this_loss = loss_fn(pred, target, Cn2_pred, Cn2_target)
