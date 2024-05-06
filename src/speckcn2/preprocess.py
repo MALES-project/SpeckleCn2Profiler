@@ -186,6 +186,8 @@ def imgs_as_single_datapoint(
             image = transform(image_orig)
             if show_image:
                 image_orig = transform_orig(image_orig)
+            # convert the image to float32 format
+            image = image.float()
             # and add the img to the collection
             all_images.append(image)
 
