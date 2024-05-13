@@ -177,7 +177,9 @@ def imgs_as_single_datapoint(
             # Open the HDF5 file
             with h5py.File(file_path, 'r') as f:
                 # Load the data from the 'data' dataset
-                pixel_values = f['data'][:]
+                pixel_values = np.float32(f['data'][:])
+                # and replace nans with 0
+                np.nan_to_num(pixel_values, copy=False)
 
             # Create the image
             image_orig = Image.fromarray(pixel_values, mode='F')
@@ -186,8 +188,7 @@ def imgs_as_single_datapoint(
             image = transform(image_orig)
             if show_image:
                 image_orig = transform_orig(image_orig)
-            # convert the image to float32 format
-            image = image.float()
+
             # and add the img to the collection
             all_images.append(image)
 
