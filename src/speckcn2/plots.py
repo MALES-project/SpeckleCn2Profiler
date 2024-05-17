@@ -248,12 +248,22 @@ def plot_param_vs_loss(conf: dict, test_losses: list[dict], data_dir: str,
 
         pairs = sorted(zip(params, loss))
         params, loss = zip(*pairs)
+        params = np.array(params)
+        loss = np.array(loss)
 
         bins = np.logspace(np.log10(min(params)),
                            np.log10(max(params)),
                            num=50)
+        bin_indices = np.digitize(params, bins)
+        bin_means = [
+            loss[bin_indices == i].mean() if np.any(bin_indices == i) else 0
+            for i in range(1, len(bins))
+        ]
+        bin_centers = 0.5 * (bins[:-1] + bins[1:])
 
-        axs.hist(params, bins=bins, weights=loss, alpha=0.5)
+        # Plotting the results
+        axs.plot(bin_centers, bin_means, marker='o', linestyle='-', alpha=0.75)
+
         # Plot error reference lines
         axs.axhline(y=1.0, linestyle='--', color='tab:red', label='100% error')
         axs.axhline(y=0.5,
