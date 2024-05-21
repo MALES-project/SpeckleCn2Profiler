@@ -38,8 +38,10 @@ class ComposableLoss(nn.Module):
         super(ComposableLoss, self).__init__()
         self.device = device
         self.loss_functions: dict[str, Callable] = {
-            'MSE': torch.nn.MSELoss(),
-            'MAE': torch.nn.L1Loss(),
+            'MSE': torch.nn.MSELoss(reduction='none'),
+            'MAE': torch.nn.L1Loss(reduction='none'),
+            #'MSE': torch.nn.MSELoss(),
+            #'MAE': torch.nn.L1Loss(),
             'JMSE': self._MSELoss,
             'JMAE': self._L1Loss,
             'Cn2MSE': self._do_nothing,
@@ -120,11 +122,12 @@ class ComposableLoss(nn.Module):
         for loss_name, loss_fn in self.loss_needed.items():
             weight = self.loss_weights[loss_name]
             if loss_name in ['MAE', 'MSE']:
-                #                print('@@@@@@@@')
-                #                print(pred)
-                #                print('--------')
-                #                print(target)
+                if loss_name == 'MAE':
+                    normalizing_factor = torch.abs(target) + 1e-7
+                else:
+                    normalizing_factor = target * target + 1e-7
                 this_loss = loss_fn(pred, target)
+                this_loss = (this_loss / normalizing_factor).mean()
             else:
                 this_loss = loss_fn(pred, target, Cn2_pred, Cn2_target)
             total_loss += weight * this_loss
@@ -432,7 +435,7 @@ class ComposableLoss(nn.Module):
         """
         smp = self.get_ScintillationModerateStrong(Cn2p)
         smt = self.get_ScintillationModerateStrong(Cn2t)
-        loss = torch.mean(torch.abs(smp - smt) / (smt + 1e-5))
+        loss = torch.mean(torch.abs(smp - smt) / smt)
 
         return loss
 
@@ -457,6 +460,12 @@ class ComposableLoss(nn.Module):
             Dictionary containing the measures
         """
         measures = {}
+        #mse_loss = nn.MSELoss(reduction='none')
+        #l1_loss = nn.L1Loss(reduction='none')
+        #measures['MSE'] = (mse_loss(pred, target)/(target*target+1e-7)).mean()
+        #measures['MAE'] = (l1_loss(pred, target)/torch.abs(target+1e-7)).mean()
+        #mse_loss = nn.MSELoss()
+        #measures['MSE'] = mse_loss(pred, target)
         measures['Fried_true'] = self.get_FriedParameter(target)
         measures['Fried_pred'] = self.get_FriedParameter(pred)
         measures['Isoplanatic_true'] = self.get_IsoplanaticAngle(Cn2t)
