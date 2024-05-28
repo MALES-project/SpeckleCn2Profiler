@@ -17,7 +17,8 @@ class EnsembleModel(nn.Module):
     def __init__(self,
                  ensemble_size: int,
                  device: torch.device,
-                 uniform_ensemble: bool = False):
+                 uniform_ensemble: bool = False,
+                 add_noise: bool = False):
         """Initializes the EnsembleModel.
 
         Parameters
@@ -28,11 +29,14 @@ class EnsembleModel(nn.Module):
             The device to use
         uniform_ensemble : bool
             If true, all the images in the ensemble will have the same weight
+        add_noise : bool
+            If true, add noise to the input images. The noise is a Normal Gaussian.
         """
         super(EnsembleModel, self).__init__()
         self.ensemble_size = ensemble_size
         self.device = device
         self.uniform_ensemble = uniform_ensemble
+        self.add_noise = add_noise
 
     def forward(self, model, batch_ensemble):
         """Forward pass through the model.
@@ -50,6 +54,8 @@ class EnsembleModel(nn.Module):
             # If no ensembling, each element of the batch is a tuple (image, tag, ensemble_id)
             images, tags, ensembles = zip(*batch)
             images = torch.stack(images).to(self.device)
+            if self.add_noise:
+                images += torch.randn_like(images)
             tags = torch.tensor(np.stack(tags)).to(self.device)
 
             return model(images), tags, images
@@ -58,6 +64,8 @@ class EnsembleModel(nn.Module):
             # Like the ensemble=1 case, I can process independently each element of the batch
             images, tags, ensembles = zip(*batch)
             images = torch.stack(images).to(self.device)
+            if self.add_noise:
+                images += torch.randn_like(images)
             tags = torch.tensor(np.stack(tags)).to(self.device)
 
             model_output = model(images)

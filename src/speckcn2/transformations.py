@@ -141,6 +141,7 @@ class SpiderMask(torch.nn.Module):
         img = img.astype(float)
         # set the mask to x<0 such that it will automatically be normalized to a value of 0
         img[mask] = -0.01
+        img[mask] = 0
 
         # Convert the image back to a tensor
         #        return torch.from_numpy(img).unsqueeze(0)
