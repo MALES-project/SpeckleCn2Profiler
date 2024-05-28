@@ -88,15 +88,21 @@ class Normalizer:
 
     def _define_img_normalize_functions(self, all_images):
         """Define the normalization functions for the images."""
-        # Find the maximum between the maximum and minimum values of the images
-        max_img = max([torch.max(image) for image in all_images])
-        print('*** Image max:', max_img)
-        min_img = min([torch.min(image) for image in all_images])
-        print('*** Image min:', min_img)
-        range_img = max_img - min_img
+        if self.conf['preproc']['img_normalization']:
+            # Find the maximum between the maximum and minimum values of the images
+            max_img = max([torch.max(image) for image in all_images])
+            print('*** Image max:', max_img)
+            min_img = min([torch.min(image) for image in all_images])
+            print('*** Image min:', min_img)
+            range_img = max_img - min_img
 
-        self.normalize_img, self.recover_img = self._img_normalize_functions(
-            min_img, range_img)
+            self.normalize_img, self.recover_img = self._img_normalize_functions(
+                min_img, range_img)
+        else:
+            # The images do not need to be normalized
+            print('-> [!] No img normalization.')
+            self.normalize_img = lambda x: x
+            self.recover_img = lambda x, y: x
 
     def _define_tag_normalize_functions(self, all_tags):
         """Define the normalization functions for the tags."""
