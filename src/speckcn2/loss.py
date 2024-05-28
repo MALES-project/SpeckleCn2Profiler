@@ -38,10 +38,10 @@ class ComposableLoss(nn.Module):
         super(ComposableLoss, self).__init__()
         self.device = device
         self.loss_functions: dict[str, Callable] = {
-            'MSE': torch.nn.MSELoss(reduction='none'),
-            'MAE': torch.nn.L1Loss(reduction='none'),
-            #'MSE': torch.nn.MSELoss(),
-            #'MAE': torch.nn.L1Loss(),
+            #'MSE': torch.nn.MSELoss(reduction='none'),
+            #'MAE': torch.nn.L1Loss(reduction='none'),
+            'MSE': torch.nn.MSELoss(),
+            'MAE': torch.nn.L1Loss(),
             'JMSE': self._MSELoss,
             'JMAE': self._L1Loss,
             'Cn2MSE': self._do_nothing,
@@ -122,12 +122,12 @@ class ComposableLoss(nn.Module):
         for loss_name, loss_fn in self.loss_needed.items():
             weight = self.loss_weights[loss_name]
             if loss_name in ['MAE', 'MSE']:
-                if loss_name == 'MAE':
-                    normalizing_factor = torch.abs(target) + 1e-7
-                else:
-                    normalizing_factor = target * target + 1e-7
+                #if loss_name == 'MAE':
+                #    normalizing_factor = torch.abs(target) + 1e-7
+                #else:
+                #    normalizing_factor = target * target + 1e-7
                 this_loss = loss_fn(pred, target)
-                this_loss = (this_loss / normalizing_factor).mean()
+                #this_loss = (this_loss / normalizing_factor).mean()
             else:
                 this_loss = loss_fn(pred, target, Cn2_pred, Cn2_target)
             total_loss += weight * this_loss
