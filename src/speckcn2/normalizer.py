@@ -103,6 +103,14 @@ class Normalizer:
             print('-> [!] No img normalization.')
             self.normalize_img = lambda x: x
             self.recover_img = lambda x, y: x
+        # Print the average value of the pixels, excluding the 0 values
+        non_zero_pixels = 0
+        sum_pixels = 0
+        for image in all_images:
+            non_zero_pixels_in_image = image[image != 0]
+            non_zero_pixels += non_zero_pixels_in_image.numel()
+            sum_pixels += torch.sum(non_zero_pixels_in_image)
+        print('*** Image average:', sum_pixels / non_zero_pixels)
 
     def _define_tag_normalize_functions(self, all_tags):
         """Define the normalization functions for the tags."""

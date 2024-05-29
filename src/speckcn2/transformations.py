@@ -137,13 +137,23 @@ class SpiderMask(torch.nn.Module):
         Y, X = np.ogrid[:h, :w]
         mask = (X - center[0])**2 + (Y - center[1])**2 > radius**2
 
+        # Then the inner circle (called spider) is also removed
+        # its default diameter, defined by the experimental setup, is 44% of the image width
+        spider_radius = int(0.22 * w)
+        spider_mask = (X - center[0])**2 + (Y -
+                                            center[1])**2 < spider_radius**2
+
         # Apply the mask to the image
         img = img.astype(float)
-        # set the mask to x<0 such that it will automatically be normalized to a value of 0
-        img[mask] = -0.01
-        img[mask] = 0
+        non_zero_pixels = img[img != 0]
+        print(non_zero_pixels.mean())
+        # If you are normalizing the images, you can set the mask to x<0 such that
+        # it will automatically be normalized to a value of 0
+        bkg_value = -0.01
+        # but if you are not normalizing the images, you can set the mask to 0
+        bkg_value = 0
 
-        # Convert the image back to a tensor
-        #        return torch.from_numpy(img).unsqueeze(0)
-        # reconvert to PIL image before returning
+        img[mask] = bkg_value
+        img[spider_mask] = bkg_value
+
         return Image.fromarray(img)

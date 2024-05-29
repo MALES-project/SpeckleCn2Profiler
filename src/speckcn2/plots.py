@@ -283,3 +283,68 @@ def plot_param_vs_loss(conf: dict, test_losses: list[dict], data_dir: str,
         plt.tight_layout()
         plt.savefig(f'{data_dir}/result_plots/{param}_vs_sum_{model_name}.png')
         plt.close()
+
+
+def plot_param_histo(conf: dict, test_losses: list[dict], data_dir: str,
+                     measures: list) -> None:
+    """Plots the histograms of different parameters.
+
+    Parameters
+    ----------
+    conf : dict
+        Dictionary containing the configuration
+    test_losses : list[dict]
+        List of all the losses of the test set
+    data_dir : str
+        The directory where the data is stored
+    measures : list
+        The measures of the model
+    """
+    model_name = conf['model']['name']
+
+    ensure_directory(f'{data_dir}/result_plots')
+
+    for param_model, param_true, name, units in zip(
+        ['Fried_pred', 'Isoplanatic_pred', 'Scintillation_w_pred'],
+        ['Fried_true', 'Isoplanatic_true', 'Scintillation_w_true'],
+        ['Fried parameter', 'Isoplanatic angle', '(weak) Scintillation index'],
+        ['[m]', '[rad]', '[1]'],
+    ):
+        fig, axs = plt.subplots(1, 1, figsize=(5, 5))
+
+        params_model = [d[param_model].detach().cpu() for d in measures]
+        params_true = [d[param_true].detach().cpu() for d in measures]
+
+        pairs = sorted(zip(params_true, params_model))
+        params_true, params_model = zip(*pairs)
+        params_true = np.array(params_true)
+        params_model = np.array(params_model)
+
+        bins = np.logspace(np.log10(min(params_true)),
+                           np.log10(max(params_true)),
+                           num=50)
+        axs.hist(params_true,
+                 bins=bins,
+                 alpha=0.5,
+                 label=param_true,
+                 density=True)
+
+        bins = np.logspace(np.log10(min(params_model)),
+                           np.log10(max(params_model)),
+                           num=50)
+        axs.hist(params_model,
+                 bins=bins,
+                 alpha=0.5,
+                 label=param_model,
+                 density=True)
+
+        axs.set_xlabel(f'{name} {units}')
+        axs.set_xscale('log')
+        axs.set_yscale('log')
+        axs.set_ylabel('Frequency')
+        axs.legend()
+        plt.title(f'Model: {model_name}')
+        plt.tight_layout()
+        plt.savefig(
+            f'{data_dir}/result_plots/histo_{param_true}_{model_name}.png')
+        plt.close()

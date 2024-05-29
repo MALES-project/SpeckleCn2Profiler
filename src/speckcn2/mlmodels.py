@@ -18,7 +18,8 @@ class EnsembleModel(nn.Module):
                  ensemble_size: int,
                  device: torch.device,
                  uniform_ensemble: bool = False,
-                 add_noise: bool = False):
+                 noise: float = 0.0,
+                 resolution: int = 128):
         """Initializes the EnsembleModel.
 
         Parameters
@@ -29,14 +30,33 @@ class EnsembleModel(nn.Module):
             The device to use
         uniform_ensemble : bool
             If true, all the images in the ensemble will have the same weight
-        add_noise : bool
-            If true, add noise to the input images. The noise is a Normal Gaussian.
+        noise : float
+            If >0 add noise to the input images. The noise is a Gaussian with mean=0 and std=noise
+        resolution : int
+            The resolution of the input images (assumed to be square)
         """
         super(EnsembleModel, self).__init__()
         self.ensemble_size = ensemble_size
         self.device = device
         self.uniform_ensemble = uniform_ensemble
-        self.add_noise = add_noise
+        if noise > 0:
+            self.noise = noise
+
+        # Create a mask to ignore the spider
+        self.mask = torch.ones(resolution, resolution)
+        # Create a circular mask
+        center = (int(resolution / 2), int(resolution / 2))
+        radius = min(center)
+        Y, X = np.ogrid[:resolution, :resolution]
+        mask = (X - center[0])**2 + (Y - center[1])**2 > radius**2
+        # Then the inner circle (called spider) is also removed
+        # its default diameter, defined by the experimental setup, is 44% of the image width
+        spider_radius = int(0.22 * resolution)
+        spider_mask = (X - center[0])**2 + (Y -
+                                            center[1])**2 < spider_radius**2
+        bkg_value = 0
+        self.mask[mask] = bkg_value
+        self.mask[spider_mask] = bkg_value
 
     def forward(self, model, batch_ensemble):
         """Forward pass through the model.
@@ -54,8 +74,8 @@ class EnsembleModel(nn.Module):
             # If no ensembling, each element of the batch is a tuple (image, tag, ensemble_id)
             images, tags, ensembles = zip(*batch)
             images = torch.stack(images).to(self.device)
-            if self.add_noise:
-                images += torch.randn_like(images)
+            if self.noise:
+                images += torch.randn_like(images) * self.noise * self.mask
             tags = torch.tensor(np.stack(tags)).to(self.device)
 
             return model(images), tags, images
@@ -64,8 +84,8 @@ class EnsembleModel(nn.Module):
             # Like the ensemble=1 case, I can process independently each element of the batch
             images, tags, ensembles = zip(*batch)
             images = torch.stack(images).to(self.device)
-            if self.add_noise:
-                images += torch.randn_like(images)
+            if self.noise:
+                images += torch.randn_like(images) * self.noise * self.mask
             tags = torch.tensor(np.stack(tags)).to(self.device)
 
             model_output = model(images)
