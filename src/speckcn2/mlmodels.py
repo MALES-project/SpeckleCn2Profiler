@@ -18,7 +18,8 @@ class EnsembleModel(nn.Module):
                  ensemble_size: int,
                  device: torch.device,
                  uniform_ensemble: bool = False,
-                 noise: float = 0.0,
+                 snr: str | None = None,
+                 pixel_average: float = 1.,
                  resolution: int = 128):
         """Initializes the EnsembleModel.
 
@@ -30,8 +31,11 @@ class EnsembleModel(nn.Module):
             The device to use
         uniform_ensemble : bool
             If true, all the images in the ensemble will have the same weight
-        noise : float
-            If >0 add noise to the input images. The noise is a Gaussian with mean=0 and std=noise
+        snr : str
+            Signal to noise ratio. If >0 add noise to the input images.
+            The noise is a Gaussian with mean=0 and std=1/snr
+        pixel_average : float
+            The average pixel value of the input images. It is used to calculate the noise
         resolution : int
             The resolution of the input images (assumed to be square)
         """
@@ -39,8 +43,10 @@ class EnsembleModel(nn.Module):
         self.ensemble_size = ensemble_size
         self.device = device
         self.uniform_ensemble = uniform_ensemble
-        if noise > 0:
-            self.noise = noise
+        if snr:
+            # For the noise, you have to get the average pixel value
+            self.noise = 1. / eval(snr) * pixel_average
+            print(f'Adding noise with std={self.noise}')
 
         # Create a mask to ignore the spider
         self.mask = torch.ones(resolution, resolution)

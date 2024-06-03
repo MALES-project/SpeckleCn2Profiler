@@ -37,10 +37,15 @@ class Normalizer:
         """
         # Define the normalization functions for the images
         if not hasattr(self, 'normalize_img'):
-            # Get a mask for the NaN values
-            self._mask_img = 1 - np.isnan(all_images[0])
-            # Then replace all the nan values with 0
+            # First we replace all NaN values by 0
             all_images = [torch.nan_to_num(image) for image in all_images]
+            self._mask_img = 1 - np.isnan(all_images[0])
+            # Then we create a mask corresponding to all the 0s of image 0
+            self._mask_img = self._mask_img * (all_images[0] != 0)
+            # as a sanity check, we check if the mask would the same using the last image
+            assert np.array_equal(
+                self._mask_img, self._mask_img *
+                (all_images[-1] != 0)), 'Error: mask is not consistent'
             self._define_img_normalize_functions(all_images)
 
         # Define the normalization functions for the tags
@@ -103,14 +108,6 @@ class Normalizer:
             print('-> [!] No img normalization.')
             self.normalize_img = lambda x: x
             self.recover_img = lambda x, y: x
-        # Print the average value of the pixels, excluding the 0 values
-        non_zero_pixels = 0
-        sum_pixels = 0
-        for image in all_images:
-            non_zero_pixels_in_image = image[image != 0]
-            non_zero_pixels += non_zero_pixels_in_image.numel()
-            sum_pixels += torch.sum(non_zero_pixels_in_image)
-        print('*** Image average:', sum_pixels / non_zero_pixels)
 
     def _define_tag_normalize_functions(self, all_tags):
         """Define the normalization functions for the tags."""

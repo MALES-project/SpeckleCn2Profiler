@@ -145,8 +145,6 @@ class SpiderMask(torch.nn.Module):
 
         # Apply the mask to the image
         img = img.astype(float)
-        non_zero_pixels = img[img != 0]
-        print(non_zero_pixels.mean())
         # If you are normalizing the images, you can set the mask to x<0 such that
         # it will automatically be normalized to a value of 0
         bkg_value = -0.01

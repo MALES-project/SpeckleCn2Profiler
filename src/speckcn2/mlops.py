@@ -54,8 +54,9 @@ def train(model: nn.Module, last_model_state: int, conf: dict, train_set: list,
     # Setup the EnsembleModel wrapper
     ensemble = EnsembleModel(conf['preproc'].get('ensemble', 1), device,
                              conf['preproc'].get('ensemble_unif', False),
-                             conf['model'].get('noise',
-                                               0), conf['preproc']['resize'])
+                             conf['model'].get('signal_noise_r', None),
+                             conf['preproc']['pixel_average'],
+                             conf['preproc']['resize'])
 
     print(f'Training the model from epoch {last_model_state} to {final_epoch}')
     average_loss = 0.0
@@ -169,8 +170,9 @@ def score(
     # Setup the EnsembleModel wrapper
     ensemble = EnsembleModel(conf['preproc'].get('ensemble', 1), device,
                              conf['preproc'].get('ensemble_unif', False),
-                             conf['model'].get('noise',
-                                               0), conf['preproc']['resize'])
+                             conf['model'].get('signal_noise_r', None),
+                             conf['preproc']['pixel_average'],
+                             conf['preproc']['resize'])
 
     # For scoring the model, I enforce to use with the same weights:
     # 1. MAE on screen tags
