@@ -105,6 +105,18 @@ def prepare_data(
         all_images, all_tags, all_ensemble_ids = imgs_as_single_datapoint(
             conf, nimg_print)
 
+    # Get the average value of the pixels, excluding the 0 values
+    non_zero_pixels = 0
+    sum_pixels = 0
+    for image in all_images:
+        non_zero_pixels_in_image = image[image != 0]
+        non_zero_pixels += non_zero_pixels_in_image.numel()
+        sum_pixels += torch.sum(non_zero_pixels_in_image)
+    pixel_average = sum_pixels / non_zero_pixels
+    print('*** Pixel average:', pixel_average)
+    # and store it in the config
+    conf['preproc']['pixel_average'] = pixel_average
+
     return all_images, all_tags, all_ensemble_ids
 
 

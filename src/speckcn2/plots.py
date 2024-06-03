@@ -70,8 +70,8 @@ def score_plot(
 
     # (1) Plot the input images
     for n in range(ensemble):
-        axs[n].imshow(inputs[ensemble * i + n].detach().cpu().squeeze(),
-                      cmap='bone')
+        img = inputs[ensemble * i + n].detach().cpu().squeeze().abs()
+        axs[n].imshow(img, cmap='bone')
     axs[1].set_title(f'Input {ensemble} images')
 
     # (2) Plot J vs nscreens
