@@ -45,7 +45,7 @@ class EnsembleModel(nn.Module):
         self.uniform_ensemble = uniform_ensemble
         if snr:
             # For the noise, you have to get the average pixel value
-            self.noise = 1. / eval(snr) * pixel_average
+            self.noise = (1. / eval(snr) * pixel_average).to(self.device)
             print(f'Adding noise with std={self.noise}')
 
         # Create a mask to ignore the spider
