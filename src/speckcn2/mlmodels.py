@@ -49,7 +49,7 @@ class EnsembleModel(nn.Module):
             print(f'Adding noise with std={self.noise}')
 
         # Create a mask to ignore the spider
-        self.mask = torch.ones(resolution, resolution)
+        self.mask = torch.ones(resolution, resolution).to(self.device)
         # Create a circular mask
         center = (int(resolution / 2), int(resolution / 2))
         radius = min(center)
