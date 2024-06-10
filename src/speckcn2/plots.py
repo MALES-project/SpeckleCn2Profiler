@@ -259,10 +259,19 @@ def plot_param_vs_loss(conf: dict, test_losses: list[dict], data_dir: str,
             loss[bin_indices == i].mean() if np.any(bin_indices == i) else 0
             for i in range(1, len(bins))
         ]
+        bin_stds = [
+            loss[bin_indices == i].std() if np.any(bin_indices == i) else 0
+            for i in range(1, len(bins))
+        ]
         bin_centers = 0.5 * (bins[:-1] + bins[1:])
 
         # Plotting the results
-        axs.plot(bin_centers, bin_means, marker='o', linestyle='-', alpha=0.75)
+        axs.errorbar(bin_centers,
+                     bin_means,
+                     yerr=bin_stds,
+                     marker='o',
+                     linestyle='-',
+                     alpha=0.75)
 
         # Plot error reference lines
         axs.axhline(y=1.0, linestyle='--', color='tab:red', label='100% error')
