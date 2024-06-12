@@ -37,7 +37,8 @@ def create_fully_connected(c, nscreens, final_n_features=64, dropout_p=0):
         torch.nn.ELU(inplace=True),
         torch.nn.Dropout(dropout_p) if dropout_p > 0 else torch.nn.Identity(),
         torch.nn.Linear(final_n_features, nscreens),
-        torch.nn.Sigmoid(),
+        # Removing this final activation function
+        #torch.nn.Sigmoid(),
     )
 
 
