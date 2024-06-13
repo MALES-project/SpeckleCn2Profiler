@@ -29,17 +29,58 @@ def create_pool(out_type, sigma, padding, stride):
                                        padding=padding))
 
 
-def create_fully_connected(c, nscreens, final_n_features=64, dropout_p=0):
-    return torch.nn.Sequential(
-        torch.nn.Dropout(dropout_p) if dropout_p > 0 else torch.nn.Identity(),
-        torch.nn.Linear(c, final_n_features),
-        torch.nn.BatchNorm1d(final_n_features),
-        torch.nn.ELU(inplace=True),
-        #torch.nn.Dropout(dropout_p) if dropout_p > 0 else torch.nn.Identity(),
-        torch.nn.Linear(final_n_features, nscreens),
-        # Removing this final activation function
-        #torch.nn.Sigmoid(),
-    )
+def create_final_block(config: dict, n_initial: int,
+                       nscreens: int) -> nn.Sequential:
+    """Creates a fully connected neural network block based on a predefined
+    configuration.
+
+    This function dynamically creates a sequence of PyTorch layers for a fully connected
+    neural network. The configuration for the layers is read from a global `config` dictionary
+    which should contain a 'final_block' key with a list of layer configurations. Each layer
+    configuration is a dictionary that must include a 'type' key with the name of the layer
+    class (e.g., 'Linear', 'Dropout', etc.) and can include additional keys for the layer
+    parameters.
+
+    The first 'Linear' layer in the configuration has its number of input features set to `n_in`,
+    and any 'Linear' layer with 'out_features' set to 'nscreens' has its number of output features
+    set to `nscreens`.
+
+    Args:
+    Parameters
+    ----------
+    config : dict
+        The global configuration dictionary containing the layer configurations.
+    n_initial : int
+        The number of input features for the first 'Linear' layer.
+    nscreens : int
+        The number of output features for any 'Linear' layer with 'out_features' set to 'nscreens'.
+
+    Returns
+    ----------
+    torch.nn.Sequential: A sequential container of the configured PyTorch layers.
+    """
+    layers = []
+
+    for layer_config in config['final_block']:
+        layer_type = layer_config.pop('type')
+
+        if layer_type == 'Linear':
+            # The first linear layer has a constrained number of input features
+            if n_initial != -1:
+                layer_config['in_features'] = n_initial
+                n_initial = -1
+            if layer_config['out_features'] == 'nscreens':
+                layer_config['out_features'] = nscreens
+            # Pass the number of features as args
+            n_in = layer_config.pop('in_features')
+            n_out = layer_config.pop('out_features')
+
+            layers.append(torch.nn.Linear(n_in, n_out, **layer_config))
+        else:
+            layer_class = getattr(torch.nn, layer_type)
+            layers.append(layer_class(**layer_config))
+
+    return torch.nn.Sequential(*layers)
 
 
 class SteerableCNN(torch.nn.Module):
@@ -60,8 +101,6 @@ class SteerableCNN(torch.nn.Module):
         self.SIGMA = config['scnn']['SIGMA']
         self.POOL_STRIDES = config['scnn']['POOL_STRIDES']
         self.POOL_PADDINGS = config['scnn']['POOL_PADDINGS']
-        self.final_n_features = config['scnn']['final_n_features']
-        self.dropout_p = config['scnn'].get('dropout_p', 0)
 
         # Decide the symmetry group
         symmetry_map = {
@@ -70,6 +109,7 @@ class SteerableCNN(torch.nn.Module):
             'C4': 4,
             'C6': 6,
             'C10': 10,
+            'C12': 12,
         }
         try:
             self.r2_act = gspaces.rot2dOnR2(N=symmetry_map[symmetry])
@@ -124,7 +164,7 @@ class SteerableCNN(torch.nn.Module):
         self.gpool = nn.GroupPooling(out_type)
 
         # number of output channels
-        c = self.gpool.out_type.size * self.nfeatures * self.nfeatures
+        nc = self.gpool.out_type.size * self.nfeatures * self.nfeatures
 
         # If the model uses multiple images as input,
         # I add an extra channel as confidence weight
@@ -134,9 +174,8 @@ class SteerableCNN(torch.nn.Module):
         else:
             out_size = self.nscreens
 
-        self.fully_net = create_fully_connected(c, out_size,
-                                                self.final_n_features,
-                                                self.dropout_p)
+        # Create the final fully connected layers
+        self.fully_net = create_final_block(config, nc, out_size)
 
     def forward(self, input: torch.Tensor):
         # wrap the input tensor in a GeometricTensor
