@@ -8,7 +8,7 @@ import torchvision
 from torch import nn
 
 from speckcn2.io import load_model_state
-from speckcn2.scnn import SteerableCNN
+from speckcn2.scnn import SteerableCNN, create_final_block
 
 
 class EnsembleModel(nn.Module):
@@ -139,46 +139,25 @@ def setup_model(config: dict) -> tuple[nn.Module, int]:
 
     model_name = config['model']['name']
     model_type = config['model']['type']
-    pretrained = config['model']['pretrained']
-    nscreens = config['speckle']['nscreens']
-    data_directory = config['speckle']['datadirectory']
-    ensemble = config['preproc'].get('ensemble', 1)
 
     print(f'^^^ Initializing model {model_name} of type {model_type}')
 
     if model_type.startswith('resnet'):
-        return get_a_resnet(nscreens, data_directory, model_name, model_type,
-                            pretrained, ensemble)
+        return get_a_resnet(config)
     elif model_type.startswith('scnnC'):
         return get_scnn(config)
     else:
         raise ValueError(f'Unknown model {model_name}')
 
 
-def get_a_resnet(nscreens: int,
-                 datadirectory: str,
-                 model_name: str,
-                 model_type: str,
-                 pretrained: bool,
-                 ensemble: int = 1) -> tuple[nn.Module, int]:
+def get_a_resnet(config: dict) -> tuple[nn.Module, int]:
     """Returns a pretrained ResNet model, with the last layer corresponding to
     the number of screens.
 
     Parameters
     ----------
-    nscreens : int
-        Number of screens
-    datadirectory : str
-        Path to the directory containing the data
-    model_name : str
-        The name of the model
-    model_type : str
-        The type of the ResNet
-    pretrained : bool
-        Whether to use a pretrained model or not
-    ensemble : int
-        The number of input images that will be processd
-        together as an ensemble corresponding to the same output
+    config : dict
+        Dictionary containing the configuration
 
     Returns
     -------
@@ -187,6 +166,13 @@ def get_a_resnet(nscreens: int,
     last_model_state : int
         The number of the last model state
     """
+
+    model_name = config['model']['name']
+    model_type = config['model']['type']
+    pretrained = config['model']['pretrained']
+    nscreens = config['speckle']['nscreens']
+    data_directory = config['speckle']['datadirectory']
+    ensemble = config['preproc'].get('ensemble', 1)
 
     if model_type == 'resnet18':
         model = torchvision.models.resnet18(
@@ -220,15 +206,9 @@ def get_a_resnet(nscreens: int,
                                   padding=(3, 3),
                                   bias=False)
     # Add a final fully connected piece to predict the output
-    model.fc = torch.nn.Sequential(
-        torch.nn.Linear(finaloutsize, 64),
-        torch.nn.BatchNorm1d(64),
-        torch.nn.ELU(inplace=True),
-        torch.nn.Linear(64, nscreens),
-        torch.nn.Sigmoid(),
-    )
+    model.fc = create_final_block(config, finaloutsize, nscreens)
 
-    return load_model_state(model, datadirectory)
+    return load_model_state(model, data_directory)
 
 
 def get_scnn(config: dict) -> tuple[nn.Module, int]:
@@ -245,6 +225,7 @@ def get_scnn(config: dict) -> tuple[nn.Module, int]:
         'scnnC4': 'C4',
         'scnnC6': 'C6',
         'scnnC10': 'C10',
+        'scnnC12': 'C12',
     }
     try:
         scnn_model = SteerableCNN(config, model_map[model_type])
