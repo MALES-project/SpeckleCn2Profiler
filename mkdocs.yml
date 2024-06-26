@@ -6,6 +6,9 @@ repo_name: MALES-project/SpeckleCn2Profiler
 nav:
   - Home: home.md
   - Installation: installation.md
+  - Python API:
+    - speckcn2: api/api.md
+    - Models: api/models.md
   - 🔗 Source code: https://github.com/MALES-project/SpeckleCn2Profiler
   - 🔗 Issues: https://github.com/MALES-project/SpeckleCn2Profiler/issues
 
@@ -16,7 +19,7 @@ theme:
     - media: "(prefers-color-scheme: light)"
       scheme: default
       primary: indigo
-      accent: lime 
+      accent: yellow 
       toggle:
         icon: material/brightness-7
         name: Switch to dark mode
@@ -25,7 +28,7 @@ theme:
     - media: "(prefers-color-scheme: light)"
       scheme: default
       primary: indigo
-      accent: lime  
+      accent: yellow  
       toggle:
         icon: material/brightness-7
         name: Switch to dark mode
@@ -34,7 +37,7 @@ theme:
     - media: "(prefers-color-scheme: dark)"
       scheme: slate
       primary: indigo
-      accent: lime 
+      accent: yellow 
       toggle:
         icon: material/brightness-4
         name: Switch to system preference
@@ -77,8 +80,9 @@ plugins:
           merge_init_into_class: yes
           filters: ["!^_"]
 
-
 watch:
   - src/
   - docs/
   - README.md
+  - CONTRIBUTING.md
+  - CODE_OF_CONDUCT.md
