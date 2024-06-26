@@ -1,0 +1,84 @@
+site_name: Speckcn2
+site_url: https://github.com/MALES-project/SpeckleCn2Profiler
+repo_url: https://github.com/MALES-project/SpeckleCn2Profiler
+repo_name: MALES-project/SpeckleCn2Profiler
+
+nav:
+  - Home: home.md
+  - Installation: installation.md
+  - 🔗 Source code: https://github.com/MALES-project/SpeckleCn2Profiler
+  - 🔗 Issues: https://github.com/MALES-project/SpeckleCn2Profiler/issues
+
+theme:
+  name: material
+  palette:    
+    # Palette toggle for light mode
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: indigo
+      accent: lime 
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+
+    # Palette toggle for light mode
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: indigo
+      accent: lime  
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+
+    # Palette toggle for dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: indigo
+      accent: lime 
+      toggle:
+        icon: material/brightness-4
+        name: Switch to system preference
+
+markdown_extensions:
+  - admonition
+  - attr_list
+  - markdown_include.include:
+      base_path: docs
+  - pymdownx.extra
+  - pymdownx.arithmatex:
+      generic: true
+
+extra_javascript:
+  - https://polyfill.io/v3/polyfill.min.js?features=es6
+  - https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js
+
+plugins:
+- search
+- mkdocstrings:
+    # https://mkdocstrings.github.io/usage/
+    handlers:
+      python:
+        paths: [src]
+        import:
+        - https://docs.python.org/3/objects.inv
+        - https://numpy.org/doc/stable/objects.inv
+        - https://matplotlib.org/stable/objects.inv
+        - https://pymatgen.org/objects.inv
+        options:
+          docstring_style: numpy
+          docstring_options:
+            ignore_init_summary: yes
+          show_submodules: no
+          show_source: true
+          show_root_heading: false
+          show_root_full_path: false
+          docstring_section_style: list
+          members_order: alphabetical
+          merge_init_into_class: yes
+          filters: ["!^_"]
+
+
+watch:
+  - src/
+  - docs/
+  - README.md
