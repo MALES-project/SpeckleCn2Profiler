@@ -9,46 +9,38 @@ from torch import nn
 
 from speckcn2.io import load_model_state
 from speckcn2.scnn import SteerableCNN, create_final_block
-from speckcn2.utils import create_circular_mask_with_spider
 
 
 class EnsembleModel(nn.Module):
     """Wrapper that allows any model to be used for ensembled data."""
 
-    def __init__(self,
-                 ensemble_size: int,
-                 device: torch.device,
-                 uniform_ensemble: bool = False,
-                 snr: str | None = None,
-                 pixel_average: float = 1.,
-                 resolution: int = 128):
+    def __init__(self, conf: dict, device: torch.device):
         """Initializes the EnsembleModel.
 
         Parameters
         ----------
-        ensemble_size : int
-            The number of images that will be processed together as an ensemble
+        conf: dict
+            The global configuration containing the model parameters.
         device : torch.device
             The device to use
-        uniform_ensemble : bool
-            If true, all the images in the ensemble will have the same weight
-        snr : str
-            Signal to noise ratio. If >0 add noise to the input images.
-            The noise is a Gaussian with mean=0 and std=1/snr
-        pixel_average : float
-            The average pixel value of the input images. It is used to calculate the noise
-        resolution : int
-            The resolution of the input images (assumed to be square)
         """
         super(EnsembleModel, self).__init__()
-        self.ensemble_size = ensemble_size
+
+        self.ensemble_size = conf['preproc'].get('ensemble', 1)
         self.device = device
-        self.uniform_ensemble = uniform_ensemble
-        if snr:
-            # For the noise, you have to get the average pixel value
-            self.noise = (1. / eval(snr) * pixel_average).to(self.device)
-            print(f'Adding noise with std={self.noise}')
-        self.mask = create_circular_mask_with_spider(resolution)
+        self.uniform_ensemble = conf['preproc'].get('ensemble_unif', False)
+        resolution = conf['preproc']['resize']
+        self.D = conf['noise']['D']
+        self.t = conf['noise']['t']
+        self.snr = conf['noise']['snr']
+        self.dT = conf['noise']['dT']
+        self.dO = conf['noise']['dO']
+        self.rn = conf['noise']['rn']
+        self.fw = conf['noise']['fw']
+        self.bit = conf['noise']['bit']
+        self.discretize = conf['noise']['discretize']
+        self.mask_D, self.mask_d, self.mask_X, self.mask_Y = self.create_masks(
+            resolution)
 
     def forward(self, model, batch_ensemble):
         """Forward pass through the model.
@@ -66,8 +58,7 @@ class EnsembleModel(nn.Module):
             # If no ensembling, each element of the batch is a tuple (image, tag, ensemble_id)
             images, tags, ensembles = zip(*batch)
             images = torch.stack(images).to(self.device)
-            if self.noise:
-                images += torch.randn_like(images) * self.noise * self.mask
+            images = self.apply_noise(images)
             tags = torch.tensor(np.stack(tags)).to(self.device)
 
             return model(images), tags, images
@@ -76,8 +67,7 @@ class EnsembleModel(nn.Module):
             # Like the ensemble=1 case, I can process independently each element of the batch
             images, tags, ensembles = zip(*batch)
             images = torch.stack(images).to(self.device)
-            if self.noise:
-                images += torch.randn_like(images) * self.noise * self.mask
+            images = self.apply_noise(images)
             tags = torch.tensor(np.stack(tags)).to(self.device)
 
             model_output = model(images)
@@ -104,6 +94,92 @@ class EnsembleModel(nn.Module):
             ensembles = ensembles[::self.ensemble_size]
 
             return ensemble_output, tags, images
+
+    def apply_noise(self, image_tensor: torch.Tensor) -> torch.Tensor:
+        """Processes a tensor of 2D images.
+
+        Parameters
+        ----------
+        image_tensor : torch.Tensor
+            Tensor of 2D images with shape (batch, channels, width, height).
+
+        Returns
+        -------
+        processed_tensor : torch.Tensor
+            Tensor of processed 2D images.
+        """
+        batch, channels, height, width = image_tensor.shape
+        processed_tensor = torch.zeros_like(image_tensor)
+
+        # Normalize wrt optical power
+        image_tensor = image_tensor / torch.mean(
+            image_tensor, dim=(2, 3), keepdim=True)
+
+        amp = self.rn * 10**(self.snr / 20)
+
+        for i in range(batch):
+            for j in range(channels):
+                B = image_tensor[i, j]
+
+                # Apply masks
+                B[self.mask_D] = 0
+                B[self.mask_d] = 0
+                B[self.mask_X] = 0
+                B[self.mask_Y] = 0
+
+                # Add noise sources
+                A = self.rn + self.rn * torch.randn(
+                    height, width, device=self.device) + amp * B + torch.sqrt(
+                        amp * B) * torch.randn(
+                            height, width, device=self.device)
+
+                # Make a discretized version
+                if self.discretize == 'on':
+                    C = torch.round(A / self.fw * 2**self.bit)
+                    C[A > self.fw] = self.fw
+                    C[A < 0] = 0
+                else:
+                    C = A
+
+                processed_tensor[i, j] = C
+
+        return processed_tensor
+
+    def create_masks(
+        self, resolution: int
+    ) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]:
+        """Creates the masks for the circular aperture and the spider.
+
+        Parameters
+        ----------
+        resolution : int
+            Resolution of the images.
+
+        Returns
+        -------
+        mask_D : torch.Tensor
+            Mask for the circular aperture.
+        mask_d : torch.Tensor
+            Mask for the central obscuration.
+        mask_X : torch.Tensor
+            Mask for the horizontal spider.
+        mask_Y : torch.Tensor
+            Mask for the vertical spider.
+        """
+        # Coordinates
+        x = torch.linspace(-1, 1, resolution, device=self.device)
+        X, Y = torch.meshgrid(x, x, indexing='ij')  # XY grid
+        d = self.dO * self.D  # Diameter obscuration
+
+        R = torch.sqrt(X**2 + Y**2)
+
+        # Masking image
+        mask_D = R > self.D
+        mask_d = R < d
+        mask_X = torch.abs(X) < self.t
+        mask_Y = torch.abs(Y) < self.t
+
+        return mask_D, mask_d, mask_X, mask_Y
 
 
 def setup_model(config: dict) -> tuple[nn.Module, int]:

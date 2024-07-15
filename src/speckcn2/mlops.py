@@ -52,11 +52,7 @@ def train(model: nn.Module, last_model_state: int, conf: dict, train_set: list,
     batch_size = conf['hyppar']['batch_size']
 
     # Setup the EnsembleModel wrapper
-    ensemble = EnsembleModel(conf['preproc'].get('ensemble', 1), device,
-                             conf['preproc'].get('ensemble_unif', False),
-                             conf['model'].get('signal_noise_r', None),
-                             conf['preproc']['pixel_average'],
-                             conf['preproc']['resize'])
+    ensemble = EnsembleModel(conf, device)
 
     print(f'Training the model from epoch {last_model_state} to {final_epoch}')
     average_loss = 0.0
@@ -168,11 +164,7 @@ def score(
     data_dir = conf['speckle']['datadirectory']
     batch_size = conf['hyppar']['batch_size']
     # Setup the EnsembleModel wrapper
-    ensemble = EnsembleModel(conf['preproc'].get('ensemble', 1), device,
-                             conf['preproc'].get('ensemble_unif', False),
-                             conf['model'].get('signal_noise_r', None),
-                             conf['preproc']['pixel_average'],
-                             conf['preproc']['resize'])
+    ensemble = EnsembleModel(conf, device)
 
     # For scoring the model, I enforce to use with the same weights:
     # 1. MAE on screen tags
