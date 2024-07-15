@@ -3,6 +3,7 @@ from __future__ import annotations
 import os
 
 import matplotlib.pyplot as plt
+import numpy as np
 import torch
 import torch.nn as nn
 
@@ -95,3 +96,37 @@ def setup_optimizer(config: dict, model: nn.Module) -> nn.Module:
         return torch.optim.SGD(model.parameters(), lr=config['hyppar']['lr'])
     else:
         raise ValueError(f'Unknown optimizer {optimizer_name}')
+
+
+def create_circular_mask_with_spider(resolution: int,
+                                     bkg_value: int = 0) -> torch.Tensor:
+    """Creates a circular mask with an inner "spider" circle removed.
+
+    Parameters
+    ----------
+    resolution : int
+        The resolution of the square mask.
+    bkg_value : int
+        The background value to set for the masked areas. Defaults to 0.
+
+    Returns
+    -------
+    torch.Tensor : np.ndarray
+        A 2D tensor representing the mask.
+    """
+    # Create a circular mask
+    center = (int(resolution / 2), int(resolution / 2))
+    radius = min(center)
+    Y, X = np.ogrid[:resolution, :resolution]
+    mask = (X - center[0])**2 + (Y - center[1])**2 > radius**2
+
+    # Remove the inner circle (spider)
+    spider_radius = int(0.22 * resolution)
+    spider_mask = (X - center[0])**2 + (Y - center[1])**2 < spider_radius**2
+
+    # Apply background value to the mask and spider mask
+    final_mask = np.ones((resolution, resolution), dtype=np.uint8)
+    final_mask[mask] = bkg_value
+    final_mask[spider_mask] = bkg_value
+
+    return torch.Tensor(final_mask)

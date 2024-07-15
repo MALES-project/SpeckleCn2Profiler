@@ -9,6 +9,7 @@ from torch import nn
 
 from speckcn2.io import load_model_state
 from speckcn2.scnn import SteerableCNN, create_final_block
+from speckcn2.utils import create_circular_mask_with_spider
 
 
 class EnsembleModel(nn.Module):
@@ -47,22 +48,7 @@ class EnsembleModel(nn.Module):
             # For the noise, you have to get the average pixel value
             self.noise = (1. / eval(snr) * pixel_average).to(self.device)
             print(f'Adding noise with std={self.noise}')
-
-        # Create a mask to ignore the spider
-        self.mask = torch.ones(resolution, resolution).to(self.device)
-        # Create a circular mask
-        center = (int(resolution / 2), int(resolution / 2))
-        radius = min(center)
-        Y, X = np.ogrid[:resolution, :resolution]
-        mask = (X - center[0])**2 + (Y - center[1])**2 > radius**2
-        # Then the inner circle (called spider) is also removed
-        # its default diameter, defined by the experimental setup, is 44% of the image width
-        spider_radius = int(0.22 * resolution)
-        spider_mask = (X - center[0])**2 + (Y -
-                                            center[1])**2 < spider_radius**2
-        bkg_value = 0
-        self.mask[mask] = bkg_value
-        self.mask[spider_mask] = bkg_value
+        self.mask = create_circular_mask_with_spider(resolution)
 
     def forward(self, model, batch_ensemble):
         """Forward pass through the model.
