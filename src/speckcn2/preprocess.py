@@ -12,7 +12,7 @@ import torchvision.transforms as transforms
 from PIL import Image
 
 from speckcn2.normalizer import Normalizer
-from speckcn2.transformations import PolarCoordinateTransform, ShiftRowsTransform, SpiderMask, ToUnboundTensor
+from speckcn2.transformations import PolarCoordinateTransform, ShiftRowsTransform, ToUnboundTensor
 from speckcn2.utils import ensure_directory, plot_preprocessed_image
 
 
@@ -56,7 +56,8 @@ def assemble_transform(conf: dict) -> transforms.Compose:
         # Apply the equivariant transform, which makes sense only in polar coordinates
         list_transforms.append(ShiftRowsTransform())
 
-    list_transforms.append(SpiderMask())
+
+#    list_transforms.append(SpiderMask())
     list_transforms.append(ToUnboundTensor())
 
     return transforms.Compose(list_transforms)
