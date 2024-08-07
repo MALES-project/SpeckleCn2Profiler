@@ -1,0 +1,91 @@
+site_name: Speckcn2
+site_url: https://github.com/MALES-project/SpeckleCn2Profiler
+repo_url: https://github.com/MALES-project/SpeckleCn2Profiler
+repo_name: Speckcn2
+
+nav:
+  - Home: index.md
+  - Installation: installation.md
+  - Python API:
+    - speckcn2: api/api.md
+    - Models: api/models.md
+    - I/O: api/io.md
+    - MlOps: api/mlops.md
+    - Loss: api/loss.md
+    - Normalizer: api/normalizer.md
+    - Plot: api/plot.md
+    - Preprocess: api/preprocess.md
+    - Postprocess: api/postprocess.md
+    - Utils: api/utils.md
+    - SCNN: api/scnn.md
+    - Transformations: api/transformations.md
+  - Contributing: CONTRIBUTING.md
+  - Code of Conduct: CODE_OF_CONDUCT.md
+  - 🔗 Source code: https://github.com/MALES-project/SpeckleCn2Profiler
+  - 🔗 Issues: https://github.com/MALES-project/SpeckleCn2Profiler/issues
+
+theme:
+  name: material
+  palette:
+    # Palette toggle for light mode
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: indigo
+      accent: yellow
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+
+    # Palette toggle for dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: indigo
+      accent: yellow
+      toggle:
+        icon: material/brightness-4
+        name: Switch to system preference
+
+markdown_extensions:
+  - admonition
+  - attr_list
+  - markdown_include.include:
+      base_path: docs
+  - pymdownx.extra
+  - pymdownx.arithmatex:
+      generic: true
+
+extra_javascript:
+  - https://polyfill.io/v3/polyfill.min.js?features=es6
+  - https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js
+
+plugins:
+- search
+- mkdocstrings:
+    # https://mkdocstrings.github.io/usage/
+    handlers:
+      python:
+        paths: [src]
+        import:
+        - https://docs.python.org/3/objects.inv
+        - https://numpy.org/doc/stable/objects.inv
+        - https://matplotlib.org/stable/objects.inv
+        - https://pymatgen.org/objects.inv
+        options:
+          docstring_style: numpy
+          docstring_options:
+            ignore_init_summary: yes
+          show_submodules: no
+          show_source: true
+          show_root_heading: false
+          show_root_full_path: false
+          docstring_section_style: list
+          members_order: alphabetical
+          merge_init_into_class: yes
+          filters: ["!^_"]
+
+watch:
+  - src/
+  - docs/
+  - README.md
+  - CONTRIBUTING.md
+  - CODE_OF_CONDUCT.md
