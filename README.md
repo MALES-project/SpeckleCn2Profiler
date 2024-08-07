@@ -42,7 +42,7 @@ This repository contains:
 
 - **Dataset:** Sample datasets for training and testing the machine learning models.
 
-- **Documentation:** In-depth documentation explaining the methodology, algorithms used, and guidelines for using the code.
+- **[Documentation](https://males-project.github.io/SpeckleCn2Profiler/):** In-depth documentation explaining the methodology, algorithms used, and guidelines for using the code.
 
 ## Getting Started
 
