@@ -11,6 +11,14 @@ nav:
     - Models: api/models.md
     - I/O: api/io.md
     - MlOps: api/mlops.md
+    - Loss: api/loss.md
+    - Normalizer: api/normalizer.md
+    - Plot: api/plot.md
+    - Preprocess: api/preprocess.md
+    - Postprocess: api/postprocess.md
+    - Utils: api/utils.md
+    - SCNN: api/scnn.md
+    - Transformations: api/transformations.md
   - Contributing: CONTRIBUTING.md
   - Code of Conduct: CODE_OF_CONDUCT.md
   - 🔗 Source code: https://github.com/MALES-project/SpeckleCn2Profiler
