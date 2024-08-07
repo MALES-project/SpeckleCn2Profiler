@@ -7,9 +7,18 @@ import yaml
 
 from speckcn2.utils import ensure_directory
 
+"""This module provides utility functions for loading and saving model
+configurations and states.
+
+It includes functions to load configuration files, save model states,
+load model states, and load the latest model state from a directory.
+"""
+
 
 def load_config(config_file_path: str) -> dict:
-    """Load the configuration file.
+    """Load the configuration file from a given path.
+
+    This function reads a YAML configuration file and returns its contents as a dictionary.
 
     Parameters
     ----------
@@ -27,18 +36,18 @@ def load_config(config_file_path: str) -> dict:
 
 
 def save(model: torch.nn.Module, datadirectory: str) -> None:
-    """Save the model state and the model itself.
+    """Save the model state and the model itself to a specified directory.
+
+    This function saves the model's state dictionary and other relevant information
+    such as epoch, loss, validation loss, and time to a file in the specified directory.
 
     Parameters
     ----------
     model : torch.nn.Module
         The model to save
-    epoch : int
-        The epoch of the model
     datadirectory : str
         The directory where the data is stored
     """
-
     model_state = {
         'epoch': model.epoch,
         'loss': model.loss,
@@ -54,7 +63,11 @@ def save(model: torch.nn.Module, datadirectory: str) -> None:
 
 
 def load(model: torch.nn.Module, datadirectory: str, epoch: int) -> None:
-    """Load the model state and the model itself.
+    """Load the model state and the model itself from a specified directory and
+    epoch.
+
+    This function loads the model's state dictionary and other relevant information
+    such as epoch, loss, validation loss, and time from a file in the specified directory.
 
     Parameters
     ----------
@@ -65,7 +78,6 @@ def load(model: torch.nn.Module, datadirectory: str, epoch: int) -> None:
     epoch : int
         The epoch of the model
     """
-
     model_state = torch.load(
         f'{datadirectory}/{model.name}_states/{model.name}_{epoch}.pth')
 
@@ -81,7 +93,11 @@ def load(model: torch.nn.Module, datadirectory: str, epoch: int) -> None:
 
 def load_model_state(model: torch.nn.Module,
                      datadirectory: str) -> tuple[torch.nn.Module, int]:
-    """Loads the model state from the given directory.
+    """Loads the latest model state from the given directory.
+
+    This function checks the specified directory for the latest model state file,
+    loads it, and updates the model with the loaded state. If no state is found,
+    it initializes the model state.
 
     Parameters
     ----------
@@ -97,15 +113,14 @@ def load_model_state(model: torch.nn.Module,
     last_model_state : int
         The number of the last model state
     """
-
-    # Print model informations
+    # Print model information
     print(model)
     model.nparams = sum(p.numel() for p in model.parameters())
     print(f'\n--> Nparams = {model.nparams}')
 
     ensure_directory(f'{datadirectory}/{model.name}_states')
 
-    # check what is the last model state
+    # Check what is the last model state
     try:
         last_model_state = sorted([
             int(file_name.split('.pth')[0].split('_')[-1])
@@ -122,7 +137,7 @@ def load_model_state(model: torch.nn.Module,
     else:
         print('No pretrained model to load')
 
-        # Initialize some model state measure
+        # Initialize some model state measures
         model.loss = []
         model.val_loss = []
         model.time = []
