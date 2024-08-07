@@ -1,7 +1,7 @@
 site_name: Speckcn2
 site_url: https://github.com/MALES-project/SpeckleCn2Profiler
 repo_url: https://github.com/MALES-project/SpeckleCn2Profiler
-repo_name: MALES-project/SpeckleCn2Profiler
+repo_name: Speckcn2
 
 nav:
   - Home: home.md
@@ -9,26 +9,21 @@ nav:
   - Python API:
     - speckcn2: api/api.md
     - Models: api/models.md
+    - I/O: api/io.md
+    - MlOps: api/mlops.md
+  - Contributing: CONTRIBUTING.md
+  - Code of Conduct: CODE_OF_CONDUCT.md
   - 🔗 Source code: https://github.com/MALES-project/SpeckleCn2Profiler
   - 🔗 Issues: https://github.com/MALES-project/SpeckleCn2Profiler/issues
 
 theme:
   name: material
-  palette:    
+  palette:
     # Palette toggle for light mode
     - media: "(prefers-color-scheme: light)"
       scheme: default
       primary: indigo
-      accent: yellow 
-      toggle:
-        icon: material/brightness-7
-        name: Switch to dark mode
-
-    # Palette toggle for light mode
-    - media: "(prefers-color-scheme: light)"
-      scheme: default
-      primary: indigo
-      accent: yellow  
+      accent: yellow
       toggle:
         icon: material/brightness-7
         name: Switch to dark mode
@@ -37,7 +32,7 @@ theme:
     - media: "(prefers-color-scheme: dark)"
       scheme: slate
       primary: indigo
-      accent: yellow 
+      accent: yellow
       toggle:
         icon: material/brightness-4
         name: Switch to system preference
