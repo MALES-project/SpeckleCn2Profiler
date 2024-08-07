@@ -1,3 +1,12 @@
+"""This module provides utility functions for image processing and model
+optimization.
+
+It includes functions to plot original and preprocessed images along
+with their tags, ensure the existence of specified directories, set up
+optimizers based on configuration files, and create circular masks with
+an inner "spider" circle removed. These utilities facilitate various
+tasks in image analysis and machine learning model training.
+"""
 from __future__ import annotations
 
 import os

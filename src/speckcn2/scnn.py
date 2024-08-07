@@ -1,3 +1,28 @@
+"""This module defines a Steerable Convolutional Neural Network (SteerableCNN)
+using the escnn library for equivariant neural networks. The primary class,
+SteerableCNN, allows for the creation of a convolutional neural network that
+handles various symmetries, making it useful for tasks requiring rotational
+invariance.
+
+The module imports necessary libraries, including torch and escnn, and defines utility
+functions such as `create_block`, `compute_new_features`, `create_pool`, and `create_final_block`.
+These functions help construct convolutional blocks, calculate feature map sizes,
+create anti-aliased pooling layers, and build fully connected layers.
+
+The SteerableCNN class initializes with a configuration dictionary and a symmetry parameter,
+setting up parameters like kernel sizes, paddings, strides, and feature fields.
+It determines the symmetry group and initializes the input type for the network.
+
+The network is built by iterating through specified kernel sizes, creating convolutional
+blocks and pooling layers, adding a group pooling layer for invariance, and creating final
+fully connected layers using `create_final_block`.
+
+The forward method processes the input tensor through the network, applying each
+equivariant block, performing group pooling, and classifying the output using the fully connected layers.
+
+Overall, this module provides a flexible framework for building steerable
+convolutional neural networks with configurable symmetries and architectures.
+"""
 from __future__ import annotations
 
 import torch

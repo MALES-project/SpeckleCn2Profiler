@@ -1,3 +1,16 @@
+"""This module defines several image transformation classes using PyTorch and
+NumPy.
+
+The `PolarCoordinateTransform` class converts a Cartesian image to polar
+coordinates, which can be useful for certain types of image analysis.
+The `ShiftRowsTransform` class shifts the rows of an image so that the row with the
+smallest sum is positioned at the bottom, which can help in aligning images for further processing.
+The `ToUnboundTensor` class converts an image to a tensor without normalizing it,
+preserving the original pixel values.
+Lastly, the `SpiderMask` class applies a circular mask to the image, simulating
+the effect of a spider by setting pixels outside the mask to a background value,
+which can be useful in certain experimental setups.
+"""
 from __future__ import annotations
 
 import numpy as np

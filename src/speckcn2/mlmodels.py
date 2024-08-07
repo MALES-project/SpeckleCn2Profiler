@@ -1,3 +1,11 @@
+"""This module contains the definition of the EnsembleModel class and a
+setup_model function.
+
+The EnsembleModel class is a wrapper that allows any model to be used
+for ensembled data. The setup_model function initializes and returns a
+model based on the provided configuration.
+"""
+
 from __future__ import annotations
 
 import itertools

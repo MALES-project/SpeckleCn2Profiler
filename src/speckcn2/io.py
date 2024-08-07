@@ -1,3 +1,10 @@
+"""This module provides utility functions for loading and saving model
+configurations and states.
+
+It includes functions to load configuration files, save model states,
+load model states, and load the latest model state from a directory.
+"""
+
 from __future__ import annotations
 
 import os
@@ -6,13 +13,6 @@ import torch
 import yaml
 
 from speckcn2.utils import ensure_directory
-
-"""This module provides utility functions for loading and saving model
-configurations and states.
-
-It includes functions to load configuration files, save model states,
-load model states, and load the latest model state from a directory.
-"""
 
 
 def load_config(config_file_path: str) -> dict:
