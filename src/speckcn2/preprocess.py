@@ -1,3 +1,15 @@
+"""This module contains functions for training and evaluating a neural network
+model using PyTorch. It includes the following key components:
+
+1. `train`: Trains the model for a specified number of epochs, logs training
+   and validation losses, and saves the model state at specified intervals.
+2. `score`: Evaluates the model on a test dataset, calculates various metrics,
+   and generates plots for a specified number of test samples.
+
+The module relies on several external utilities and models from the `speckcn2`
+package, including `EnsembleModel`, `ComposableLoss`, and `Normalizer`.
+"""
+
 from __future__ import annotations
 
 import os

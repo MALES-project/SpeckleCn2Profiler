@@ -1,3 +1,15 @@
+"""This module defines the Normalizer class, which handles the normalization of
+images and tags based on a given configuration.
+
+The class includes methods to precompile normalization functions,
+normalize images and tags, and define specific normalization strategies
+such as Z-score and uniform normalization. The normalization process
+involves replacing NaN values, creating masks, and scaling values to a
+specified range. The module also provides functions to recover the
+original values from the normalized data. The Normalizer class ensures
+that both images and tags are consistently normalized according to the
+specified configuration, facilitating further processing and analysis.
+"""
 from __future__ import annotations
 
 from typing import Callable

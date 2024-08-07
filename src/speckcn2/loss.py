@@ -1,3 +1,15 @@
+"""This module implements various loss functions for training machine learning
+models.
+
+It includes custom loss functions that extend PyTorch's nn.Module,
+allowing for flexible and efficient computation of loss values during
+training. The loss functions handle different scenarios such as
+classification, regression, and segmentation tasks. They incorporate
+techniques like weighted losses, focal losses, and smooth L1 losses to
+address class imbalances and improve model performance. The module
+ensures that the loss calculations are compatible with PyTorch's
+autograd system, enabling seamless integration into training loops.
+"""
 from __future__ import annotations
 
 from typing import Callable
@@ -460,12 +472,6 @@ class ComposableLoss(nn.Module):
             Dictionary containing the measures
         """
         measures = {}
-        #mse_loss = nn.MSELoss(reduction='none')
-        #l1_loss = nn.L1Loss(reduction='none')
-        #measures['MSE'] = (mse_loss(pred, target)/(target*target+1e-7)).mean()
-        #measures['MAE'] = (l1_loss(pred, target)/torch.abs(target+1e-7)).mean()
-        #mse_loss = nn.MSELoss()
-        #measures['MSE'] = mse_loss(pred, target)
         measures['Fried_true'] = self.get_FriedParameter(target)
         measures['Fried_pred'] = self.get_FriedParameter(pred)
         measures['Isoplanatic_true'] = self.get_IsoplanaticAngle(Cn2t)
