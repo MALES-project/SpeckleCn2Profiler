@@ -33,7 +33,7 @@ Typically this means:
 5. Pushing the code back to Github
 6. [Create a new Pull Request](https://help.github.com/articles/creating-a-pull-request/)
 
-One of the code owners will review your code and request changes if needed. Once your changes have been approved, your contributions will become part of *GEMDAT*. 🎉
+One of the code owners will review your code and request changes if needed. Once your changes have been approved, your contributions will become part of *SpeckCn2*. 🎉
 
 ## Getting started with development
 
