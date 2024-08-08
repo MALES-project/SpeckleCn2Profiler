@@ -1,18 +1,18 @@
 # Contributing guidelines
 
-Welcome! *SpeckCn2* is an open-source project for analysis of speckle patterns. If you're trying *SpeckCn2* with your data, your experience, questions, bugs you encountered, and suggestions for improvement are important to the success of the project.
+Welcome! *SpeckCn2* is an open-source project for the analysis of speckle patterns. If you're trying *SpeckCn2* with your data, your experience, questions, bugs you encountered, and suggestions for improvement are important to the success of the project.
 
 We have a [Code of Conduct](CODE_OF_CONDUCT.md), please follow it in all your interactions with the project.
 
 ## Questions, feedback, bugs
 
-Use the search function to see if someone else already ran accross the same issue. Feel free to open a new [issue here](https://github.com/GEMDAT-repos/GEMDAT/issues) to ask a question, suggest improvements/new features, or report any bugs that you ran into.
+Use the search function to see if someone else already ran across the same issue. Feel free to open a new [issue here](https://github.com/MALES-project/SpeckleCn2Profiler/issues) to ask a question, suggest improvements/new features, or report any bugs that you ran into.
 
 ## Submitting changes
 
 Even better than a good bug report is a fix for the bug or the implementation of a new feature. We welcome any contributions that help improve the code.
 
-When contributing to this repository, please first discuss the change you wish to make via an [issue](https://github.com/GEMDAT-repos/GEMDAT/issues) with the owners of this repository before making a change.
+When contributing to this repository, please first discuss the change you wish to make via an [issue](https://github.com/MALES-project/SpeckleCn2Profiler/issues) with the owners of this repository before making a change.
 
 Contributions can come in the form of:
 
@@ -22,7 +22,7 @@ Contributions can come in the form of:
 - Updates to the documentation
 - ... ?
 
-We use the usual GitHub pull-request flow. For more info see [GitHub's own documentation](https://help.github.com/articles/using-pull-requests/).
+We use the usual GitHub pull request flow. For more info see [GitHub's own documentation](https://help.github.com/articles/using-pull-requests/).
 
 Typically this means:
 
