@@ -203,7 +203,8 @@ def plot_histo_losses(conf: dict, test_losses: list[dict],
     fig, axs = plt.subplots(1, 1, figsize=(5, 5))
     for key in ['MAE', 'Fried', 'Isoplanatic', 'Scintillation_w']:
         loss = [d[key].detach().cpu() for d in test_losses]
-        bins = np.logspace(np.log10(min(loss)), np.log10(max(loss)), num=50)
+        bins = np.logspace(np.log10(min(loss)), np.log10(max(loss)),
+                           num=50).tolist()
         axs.hist(loss, bins=bins, alpha=0.5, label=key, density=True)
     axs.set_xlabel('Loss')
     axs.set_ylabel('Frequency')
@@ -331,7 +332,7 @@ def plot_param_histo(conf: dict, test_losses: list[dict], data_dir: str,
 
         bins = np.logspace(np.log10(min(params_true)),
                            np.log10(max(params_true)),
-                           num=50)
+                           num=50).tolist()
         axs.hist(params_true,
                  bins=bins,
                  alpha=0.5,
@@ -340,7 +341,7 @@ def plot_param_histo(conf: dict, test_losses: list[dict], data_dir: str,
 
         bins = np.logspace(np.log10(min(params_model)),
                            np.log10(max(params_model)),
-                           num=50)
+                           num=50).tolist()
         axs.hist(params_model,
                  bins=bins,
                  alpha=0.5,
