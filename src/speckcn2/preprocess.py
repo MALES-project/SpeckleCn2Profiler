@@ -219,7 +219,10 @@ def imgs_as_single_datapoint(
 
             # Load the tags
             with h5py.File(tag_files[file_name], 'r') as f:
-                tags = f['data'][:]
+                if 'sample' in file_name:
+                    tags = f['J'][:].reshape(8, 1)
+                else:
+                    tags = f['data'][:]
 
             # Plot the image using maplotlib
             if counter > nimg_print:
@@ -267,9 +270,13 @@ def get_tag_files(file_list: list, datadirectory: str) -> dict:
     """
     tag_files = {}
     for file_name in file_list:
-        ftagname = file_name.replace(
-            '.h5', '_tag.h5'
-        ) if 'MALES' in file_name else file_name.rpartition('_')[0] + '_tag.h5'
+        if 'MALES' in file_name:
+            ftagname = file_name.replace('.h5', '_tag.h5')
+        elif 'sample' in file_name:
+            ftagname = file_name.rpartition('-')[0] + '_tag.h5'
+        else:
+            ftagname = file_name.rpartition('_')[0] + '_tag.h5'
+
         tag_path = os.path.join(datadirectory, ftagname)
         if os.path.exists(tag_path):
             tag_files[file_name] = tag_path
