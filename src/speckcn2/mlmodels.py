@@ -47,7 +47,9 @@ class EnsembleModel(nn.Module):
         self.fw = conf['noise']['fw']
         self.bit = conf['noise']['bit']
         self.discretize = conf['noise']['discretize']
-        self.mask_D, self.mask_d, self.mask_X, self.mask_Y = self.create_masks(
+        self.apply_masks= conf['noise'].get('apply_masks', False)
+        if self.apply_masks:
+            self.mask_D, self.mask_d, self.mask_X, self.mask_Y = self.create_masks(
             resolution)
 
     def forward(self, model, batch_ensemble):
@@ -129,11 +131,12 @@ class EnsembleModel(nn.Module):
             for j in range(channels):
                 B = image_tensor[i, j]
 
-                # Apply masks
-                B[self.mask_D] = 0
-                B[self.mask_d] = 0
-                B[self.mask_X] = 0
-                B[self.mask_Y] = 0
+                ## Apply masks
+                if self.apply_masks:
+                    B[self.mask_D] = 0
+                    B[self.mask_d] = 0
+                    B[self.mask_X] = 0
+                    B[self.mask_Y] = 0
 
                 # Add noise sources
                 A = self.rn + self.rn * torch.randn(
@@ -184,8 +187,8 @@ class EnsembleModel(nn.Module):
         # Masking image
         mask_D = R > self.D
         mask_d = R < d
-        mask_X = torch.abs(X) < self.t
-        mask_Y = torch.abs(Y) < self.t
+        mask_X = torch.abs(X) < self.t/2
+        mask_Y = torch.abs(Y) < self.t/2
 
         return mask_D, mask_d, mask_X, mask_Y
 
