@@ -47,10 +47,10 @@ class EnsembleModel(nn.Module):
         self.fw = conf['noise']['fw']
         self.bit = conf['noise']['bit']
         self.discretize = conf['noise']['discretize']
-        self.apply_masks= conf['noise'].get('apply_masks', False)
+        self.apply_masks = conf['noise'].get('apply_masks', False)
         if self.apply_masks:
             self.mask_D, self.mask_d, self.mask_X, self.mask_Y = self.create_masks(
-            resolution)
+                resolution)
 
     def forward(self, model, batch_ensemble):
         """Forward pass through the model.
@@ -187,8 +187,8 @@ class EnsembleModel(nn.Module):
         # Masking image
         mask_D = R > self.D
         mask_d = R < d
-        mask_X = torch.abs(X) < self.t/2
-        mask_Y = torch.abs(Y) < self.t/2
+        mask_X = torch.abs(X) < self.t / 2
+        mask_Y = torch.abs(Y) < self.t / 2
 
         return mask_D, mask_d, mask_X, mask_Y
 
