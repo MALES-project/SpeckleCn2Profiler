@@ -200,6 +200,7 @@ def imgs_as_single_datapoint(
             file_path = os.path.join(datadirectory, file_name)
 
             # Open the HDF5 file
+            print(file_path, flush=True)
             with h5py.File(file_path, 'r') as f:
                 # Load the data from the 'data' dataset
                 pixel_values = np.float32(f['data'][:])
