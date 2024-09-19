@@ -1,13 +1,17 @@
 from __future__ import annotations
 
 import itertools
-from typing import Callable, Optional
+from typing import Callable, Dict, Optional
 
+import matplotlib.cm as cm
 import matplotlib.pyplot as plt
 import numpy as np
-from torch import Tensor
+import torch
+from torch import Tensor, nn
 from torch import device as Device
 
+from speckcn2.loss import ComposableLoss
+from speckcn2.mlmodels import EnsembleModel
 from speckcn2.utils import ensure_directory
 
 
@@ -129,3 +133,106 @@ def tags_distribution(conf: dict,
         plt.savefig(f'{data_directory}/result_plots/{model_name}_sumJ.png')
 
         plt.close()
+
+
+def average_speckle(conf: dict,
+                    test_set: list,
+                    device: Device,
+                    model: nn.Torch,
+                    criterion: ComposableLoss,
+                    n_ensembles_to_plot: int = 100) -> None:
+    """Test to see if averaging over speckle patterns improves the results.
+    This function is then going to plot the relative error over the screen tags
+    and the Fried parameter to make this evaluation.
+
+    Parameters
+    ----------
+    conf : dict
+        Dictionary containing the configuration
+    test_set : list
+        The test set
+    device : torch.device
+        The device to use
+    model : nn.Torch
+        The trained model
+    criterion : ComposableLoss
+        The loss function
+    n_ensembles_to_plot : int
+        The number of ensembles to plot
+    """
+
+    data_directory = conf['speckle']['datadirectory']
+    model_name = conf['model']['name']
+
+    ensure_directory(f'{data_directory}/result_plots')
+
+    # group the sets that have the same n[1]
+    grouped_test_set: Dict = {}
+    for n in test_set:
+        key = tuple(n[1])
+        if key not in grouped_test_set:
+            grouped_test_set[key] = []
+        grouped_test_set[key].append(n)
+    print(
+        '\nChecking if averaging speckle from the same turbulence improves results'
+    )
+    print(f'Number of samples: {len(test_set)}')
+    print(f'Number of speckle groups: {len(grouped_test_set)}')
+
+    # For each group compare the model prediction to the exact tag
+    ensemble = EnsembleModel(conf, device)
+    with torch.no_grad():
+        model.eval()
+
+        for ensemble_count, (key,
+                             value) in enumerate(grouped_test_set.items()):
+            avg_output = None
+            cmap = cm.get_cmap('coolwarm')
+            norm = plt.Normalize(1, len(value))
+
+            if ensemble_count > n_ensembles_to_plot:
+                continue
+
+            for count, speckle in enumerate(value, 1):
+                output, target, _ = ensemble(model, [speckle])
+
+                if count == 1:
+                    fig, ax = plt.subplots(1, 2, figsize=(10, 5))
+
+                if avg_output is None:
+                    avg_output = output
+                else:
+                    avg_output += output
+
+                loss, losses = criterion(avg_output / count, target)
+
+                color = cmap(norm(count))
+                ax[0].plot((torch.abs(avg_output / count - target) /
+                            (target + 1e-7)).flatten(),
+                           color=color)
+
+                # Get the Cn2 profile and the recovered tags
+                Cn2_pred = criterion.reconstruct_cn2(avg_output / count)
+                Cn2_true = criterion.reconstruct_cn2(target)
+                # and get all the measures
+                all_measures = criterion._get_all_measures(
+                    avg_output / count, target, Cn2_pred, Cn2_true)
+
+                Fried_err = torch.abs(
+                    all_measures['Fried_true'] -
+                    all_measures['Fried_pred']) / all_measures['Fried_true']
+                ax[1].scatter(count, Fried_err, color=color)
+
+            ax[0].set_xlabel('# screen')
+            ax[0].set_ylabel('J relative error ')
+            ax[1].set_xlabel('# averaged speckles')
+            ax[1].set_ylabel('Fried relative error')
+            ax[0].set_yscale('log')
+            ax[1].set_yscale('log')
+            fig.tight_layout()
+            plt.subplots_adjust(top=0.92)
+            plt.suptitle('Effect of averaging speckles')
+            plt.savefig(
+                f'{data_directory}/{model_name}_score/average_ensemble{ensemble_count}.png'
+            )
+            plt.close()
