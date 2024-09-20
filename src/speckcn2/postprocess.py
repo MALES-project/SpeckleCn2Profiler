@@ -135,15 +135,15 @@ def tags_distribution(conf: dict,
         plt.close()
 
 
-def average_speckle(conf: dict,
-                    test_set: list,
-                    device: Device,
-                    model: nn.Torch,
-                    criterion: ComposableLoss,
-                    n_ensembles_to_plot: int = 100) -> None:
-    """Test to see if averaging over speckle patterns improves the results.
-    This function is then going to plot the relative error over the screen tags
-    and the Fried parameter to make this evaluation.
+def average_speckle_output(conf: dict,
+                           test_set: list,
+                           device: Device,
+                           model: nn.Torch,
+                           criterion: ComposableLoss,
+                           n_ensembles_to_plot: int = 100) -> None:
+    """Test to see if averaging the prediction of multiple speckle patterns
+    improves the results. This function is then going to plot the relative
+    error over the screen tags and the Fried parameter to make this evaluation.
 
     Parameters
     ----------
@@ -173,9 +173,7 @@ def average_speckle(conf: dict,
         if key not in grouped_test_set:
             grouped_test_set[key] = []
         grouped_test_set[key].append(n)
-    print(
-        '\nChecking if averaging speckle from the same turbulence improves results'
-    )
+    print('\nChecking if averaging speckle predictions improves results')
     print(f'Number of samples: {len(test_set)}')
     print(f'Number of speckle groups: {len(grouped_test_set)}')
 
@@ -231,8 +229,114 @@ def average_speckle(conf: dict,
             ax[1].set_yscale('log')
             fig.tight_layout()
             plt.subplots_adjust(top=0.92)
-            plt.suptitle('Effect of averaging speckles')
+            plt.suptitle('Effect of averaging speckle predictions')
             plt.savefig(
-                f'{data_directory}/{model_name}_score/average_ensemble{ensemble_count}.png'
+                f'{data_directory}/{model_name}_score/average_predictions_ensemble{ensemble_count}.png'
+            )
+            plt.close()
+
+
+def average_speckle_input(conf: dict,
+                          test_set: list,
+                          device: Device,
+                          model: nn.Torch,
+                          criterion: ComposableLoss,
+                          n_ensembles_to_plot: int = 100) -> None:
+    """Test to see if averaging the speckle patterns (before the prediction)
+    improves the results. This function is then going to plot the relative
+    error over the screen tags and the Fried parameter to make this evaluation.
+
+    Parameters
+    ----------
+    conf : dict
+        Dictionary containing the configuration
+    test_set : list
+        The test set
+    device : torch.device
+        The device to use
+    model : nn.Torch
+        The trained model
+    criterion : ComposableLoss
+        The loss function
+    n_ensembles_to_plot : int
+        The number of ensembles to plot
+    """
+
+    data_directory = conf['speckle']['datadirectory']
+    model_name = conf['model']['name']
+
+    ensure_directory(f'{data_directory}/result_plots')
+
+    # group the sets that have the same n[1]
+    grouped_test_set: Dict = {}
+    for n in test_set:
+        key = tuple(n[1])
+        if key not in grouped_test_set:
+            grouped_test_set[key] = []
+        grouped_test_set[key].append(n)
+    print('\nChecking if averaging speckle patterns improves results')
+    print(f'Number of samples: {len(test_set)}')
+    print(f'Number of speckle groups: {len(grouped_test_set)}')
+
+    # For each group compare the model prediction to the exact tag
+    ensemble = EnsembleModel(conf, device)
+    with torch.no_grad():
+        model.eval()
+
+        for ensemble_count, (key,
+                             value) in enumerate(grouped_test_set.items()):
+            avg_speckle = None
+            cmap = cm.get_cmap('coolwarm')
+            norm = plt.Normalize(1, len(value))
+
+            if ensemble_count > n_ensembles_to_plot:
+                continue
+
+            for count, speckle in enumerate(value, 1):
+
+                if count == 1:
+                    fig, ax = plt.subplots(1, 2, figsize=(10, 5))
+
+                if avg_speckle is None:
+                    avg_speckle = speckle
+                else:
+                    avg_speckle = (torch.add(avg_speckle[0],
+                                             speckle[0]), *avg_speckle[1:])
+
+                # Average only the speckle pattern (first element)
+                avg_speckle_divided = (torch.div(avg_speckle[0],
+                                                 count), *avg_speckle[1:])
+
+                output, target, _ = ensemble(model, [avg_speckle_divided])
+                loss, losses = criterion(output, target)
+
+                color = cmap(norm(count))
+                ax[0].plot(
+                    (torch.abs(output - target) / (target + 1e-7)).flatten(),
+                    color=color)
+
+                # Get the Cn2 profile and the recovered tags
+                Cn2_pred = criterion.reconstruct_cn2(output)
+                Cn2_true = criterion.reconstruct_cn2(target)
+                # and get all the measures
+                all_measures = criterion._get_all_measures(
+                    output, target, Cn2_pred, Cn2_true)
+
+                Fried_err = torch.abs(
+                    all_measures['Fried_true'] -
+                    all_measures['Fried_pred']) / all_measures['Fried_true']
+                ax[1].scatter(count, Fried_err, color=color)
+
+            ax[0].set_xlabel('# screen')
+            ax[0].set_ylabel('J relative error ')
+            ax[1].set_xlabel('# averaged speckles')
+            ax[1].set_ylabel('Fried relative error')
+            ax[0].set_yscale('log')
+            ax[1].set_yscale('log')
+            fig.tight_layout()
+            plt.subplots_adjust(top=0.92)
+            plt.suptitle('Effect of averaging speckle patterns')
+            plt.savefig(
+                f'{data_directory}/{model_name}_score/average_speckle_ensemble{ensemble_count}.png'
             )
             plt.close()
