@@ -206,7 +206,7 @@ def average_speckle_output(conf: dict,
 
                 color = cmap(norm(count))
                 ax[0].plot((torch.abs(avg_output / count - target) /
-                            (target + 1e-7)).flatten(),
+                            (target + 1e-7)).flatten().detach().cpu(),
                            color=color)
 
                 # Get the Cn2 profile and the recovered tags
@@ -219,7 +219,7 @@ def average_speckle_output(conf: dict,
                 Fried_err = torch.abs(
                     all_measures['Fried_true'] -
                     all_measures['Fried_pred']) / all_measures['Fried_true']
-                ax[1].scatter(count, Fried_err, color=color)
+                ax[1].scatter(count, Fried_err.detach().cpu(), color=color)
 
             ax[0].set_xlabel('# screen')
             ax[0].set_ylabel('J relative error ')
@@ -311,9 +311,9 @@ def average_speckle_input(conf: dict,
                 loss, losses = criterion(output, target)
 
                 color = cmap(norm(count))
-                ax[0].plot(
-                    (torch.abs(output - target) / (target + 1e-7)).flatten(),
-                    color=color)
+                ax[0].plot((torch.abs(output - target) /
+                            (target + 1e-7)).flatten().detach().cpu(),
+                           color=color)
 
                 # Get the Cn2 profile and the recovered tags
                 Cn2_pred = criterion.reconstruct_cn2(output)
@@ -325,7 +325,7 @@ def average_speckle_input(conf: dict,
                 Fried_err = torch.abs(
                     all_measures['Fried_true'] -
                     all_measures['Fried_pred']) / all_measures['Fried_true']
-                ax[1].scatter(count, Fried_err, color=color)
+                ax[1].scatter(count, Fried_err.detach().cpu(), color=color)
 
             ax[0].set_xlabel('# screen')
             ax[0].set_ylabel('J relative error ')
