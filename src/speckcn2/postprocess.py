@@ -4,6 +4,7 @@ import itertools
 from typing import Callable, Dict, Optional
 
 import matplotlib.cm as cm
+import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
 import numpy as np
 import torch
@@ -192,10 +193,21 @@ def average_speckle_output(conf: dict,
                 continue
 
             for count, speckle in enumerate(value, 1):
+                color = cmap(norm(count))
                 output, target, _ = ensemble(model, [speckle])
 
                 if count == 1:
-                    fig, ax = plt.subplots(1, 2, figsize=(10, 5))
+                    fig, ax = plt.subplots(1, 3, figsize=(12, 4))
+
+                    # (1) Plot J vs nscreens
+                    recovered_tag_true = criterion.get_J(target)
+                    ax[0].plot(recovered_tag_true.squeeze(0).detach().cpu(),
+                               '*',
+                               label='True',
+                               color='tab:green',
+                               zorder=100)
+                    blue_patch = mpatches.Patch(color=color,
+                                                label='One speckle')
 
                 if avg_output is None:
                     avg_output = output
@@ -204,14 +216,17 @@ def average_speckle_output(conf: dict,
 
                 loss, losses = criterion(avg_output / count, target)
 
-                color = cmap(norm(count))
-                ax[0].plot((torch.abs(avg_output / count - target) /
+                ax[1].plot((torch.abs(avg_output / count - target) /
                             (target + 1e-7)).flatten().detach().cpu(),
                            color=color)
 
                 # Get the Cn2 profile and the recovered tags
                 Cn2_pred = criterion.reconstruct_cn2(avg_output / count)
                 Cn2_true = criterion.reconstruct_cn2(target)
+                recovered_tag_pred = criterion.get_J(avg_output / count)
+                ax[0].plot(recovered_tag_pred.squeeze(0).detach().cpu(),
+                           'o',
+                           color=color)
                 # and get all the measures
                 all_measures = criterion._get_all_measures(
                     avg_output / count, target, Cn2_pred, Cn2_true)
@@ -219,14 +234,28 @@ def average_speckle_output(conf: dict,
                 Fried_err = torch.abs(
                     all_measures['Fried_true'] -
                     all_measures['Fried_pred']) / all_measures['Fried_true']
-                ax[1].scatter(count, Fried_err.detach().cpu(), color=color)
+                ax[2].scatter(count, Fried_err.detach().cpu(), color=color)
+                if count == 1:
+                    ax[2].plot(
+                        [], [],
+                        ' ',
+                        label='(True) Fried = {:.3f}'.format(
+                            all_measures['Fried_true'].detach().cpu().numpy()))
 
-            ax[0].set_xlabel('# screen')
-            ax[0].set_ylabel('J relative error ')
-            ax[1].set_xlabel('# averaged speckles')
-            ax[1].set_ylabel('Fried relative error')
             ax[0].set_yscale('log')
+            ax[0].set_ylabel('J')
+            ax[0].set_xlabel('# screen')
+            red_patch = mpatches.Patch(color=color, label='All speckles')
+            handles, labels = ax[0].get_legend_handles_labels()
+            handles.extend([blue_patch, red_patch])
+            ax[0].legend(handles=handles)
+            ax[1].set_xlabel('# screen')
+            ax[1].set_ylabel('J relative error ')
+            ax[2].set_xlabel('# averaged speckles')
+            ax[2].set_ylabel('Fried relative error')
+            ax[2].legend(frameon=False)
             ax[1].set_yscale('log')
+            ax[2].set_yscale('log')
             fig.tight_layout()
             plt.subplots_adjust(top=0.92)
             plt.suptitle('Effect of averaging speckle predictions')
@@ -293,9 +322,7 @@ def average_speckle_input(conf: dict,
                 continue
 
             for count, speckle in enumerate(value, 1):
-
-                if count == 1:
-                    fig, ax = plt.subplots(1, 2, figsize=(10, 5))
+                color = cmap(norm(count))
 
                 if avg_speckle is None:
                     avg_speckle = speckle
@@ -310,14 +337,29 @@ def average_speckle_input(conf: dict,
                 output, target, _ = ensemble(model, [avg_speckle_divided])
                 loss, losses = criterion(output, target)
 
-                color = cmap(norm(count))
-                ax[0].plot((torch.abs(output - target) /
+                if count == 1:
+                    fig, ax = plt.subplots(1, 3, figsize=(12, 4))
+
+                    recovered_tag_true = criterion.get_J(target)
+                    ax[0].plot(recovered_tag_true.squeeze(0).detach().cpu(),
+                               '*',
+                               label='True',
+                               color='tab:green',
+                               zorder=100)
+                    blue_patch = mpatches.Patch(color=color,
+                                                label='One speckle')
+
+                ax[1].plot((torch.abs(output - target) /
                             (target + 1e-7)).flatten().detach().cpu(),
                            color=color)
 
                 # Get the Cn2 profile and the recovered tags
                 Cn2_pred = criterion.reconstruct_cn2(output)
                 Cn2_true = criterion.reconstruct_cn2(target)
+                recovered_tag_pred = criterion.get_J(output / count)
+                ax[0].plot(recovered_tag_pred.squeeze(0).detach().cpu(),
+                           '.',
+                           color=color)
                 # and get all the measures
                 all_measures = criterion._get_all_measures(
                     output, target, Cn2_pred, Cn2_true)
@@ -325,14 +367,28 @@ def average_speckle_input(conf: dict,
                 Fried_err = torch.abs(
                     all_measures['Fried_true'] -
                     all_measures['Fried_pred']) / all_measures['Fried_true']
-                ax[1].scatter(count, Fried_err.detach().cpu(), color=color)
+                ax[2].scatter(count, Fried_err.detach().cpu(), color=color)
+                if count == 1:
+                    ax[2].plot(
+                        [], [],
+                        ' ',
+                        label='(True) Fried = {:.3f}'.format(
+                            all_measures['Fried_true'].detach().cpu().numpy()))
 
-            ax[0].set_xlabel('# screen')
-            ax[0].set_ylabel('J relative error ')
-            ax[1].set_xlabel('# averaged speckles')
-            ax[1].set_ylabel('Fried relative error')
             ax[0].set_yscale('log')
+            ax[0].set_ylabel('J')
+            ax[0].set_xlabel('# screen')
+            red_patch = mpatches.Patch(color=color, label='All speckles')
+            handles, labels = ax[0].get_legend_handles_labels()
+            handles.extend([blue_patch, red_patch])
+            ax[0].legend(handles=handles)
+            ax[1].set_xlabel('# screen')
+            ax[1].set_ylabel('J relative error ')
+            ax[2].set_xlabel('# averaged speckles')
+            ax[2].set_ylabel('Fried relative error')
             ax[1].set_yscale('log')
+            ax[2].set_yscale('log')
+            ax[2].legend(frameon=False)
             fig.tight_layout()
             plt.subplots_adjust(top=0.92)
             plt.suptitle('Effect of averaging speckle patterns')

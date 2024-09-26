@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import matplotlib.pyplot as plt
 import numpy as np
+import scipy.stats as stats
 import torch
 
 from speckcn2.utils import ensure_directory
@@ -219,7 +220,8 @@ def plot_histo_losses(conf: dict, test_losses: list[dict],
 
 def plot_param_vs_loss(conf: dict, test_losses: list[dict], data_dir: str,
                        measures: list) -> None:
-    """Plots the parameter vs the loss.
+    """Plots the parameter vs the loss. Optionally, it also plots the detailed
+    histo for all the bins for the desired metrics.
 
     Parameters
     ----------
@@ -242,7 +244,6 @@ def plot_param_vs_loss(conf: dict, test_losses: list[dict], data_dir: str,
         ['Fried parameter', 'Isoplanatic angle', '(weak) Scintillation index'],
         ['[m]', '[rad]', '[1]'],
     ):
-        fig, axs = plt.subplots(1, 1, figsize=(5, 5))
 
         params = [d[param].detach().cpu() for d in measures]
         loss = [d[lname].detach().cpu() for d in test_losses]
@@ -267,6 +268,7 @@ def plot_param_vs_loss(conf: dict, test_losses: list[dict], data_dir: str,
         bin_centers = 0.5 * (bins[:-1] + bins[1:])
 
         # Plotting the results
+        fig, axs = plt.subplots(1, 1, figsize=(5, 5))
         axs.errorbar(bin_centers,
                      bin_means,
                      yerr=bin_stds,
@@ -293,6 +295,33 @@ def plot_param_vs_loss(conf: dict, test_losses: list[dict], data_dir: str,
         plt.tight_layout()
         plt.savefig(f'{data_dir}/result_plots/{param}_vs_sum_{model_name}.png')
         plt.close()
+
+        # If specified, plot the histogram per single bin
+        if conf['preproc'].get(lname + '_details', False):
+            print(f'\nComputing {lname} details')
+            for idx, single_bin in enumerate(bin_centers):
+                l_data = loss[bin_indices == idx]
+                if len(l_data) == 0:
+                    continue
+                fig, axs = plt.subplots(1, 1, figsize=(5, 5))
+                axs.hist(l_data, bins=50, alpha=0.5, density=True)
+                mu = np.mean(l_data)
+                sigma = np.std(l_data)
+                print(
+                    f'{lname} = {single_bin:.3f} -> mu = {mu:.3f}, sigma = {sigma:.3f}'
+                )
+                if sigma > 0:
+                    x = np.linspace(mu - 3 * sigma, mu + 3 * sigma, 100)
+                    axs.plot(x,
+                             stats.norm.pdf(x, mu, sigma),
+                             label=f'Average err: {mu:.3f}, Std: {sigma:.3f}')
+                axs.set_xlabel(f'Relative error {lname}')
+                axs.set_ylabel('Frequency')
+                axs.legend()
+                plt.title(f'{lname} value = {single_bin:.3f} {units}')
+                plt.tight_layout()
+                plt.savefig(f'{data_dir}/result_plots/{param}_bin{idx}.png')
+                plt.close()
 
 
 def plot_param_histo(conf: dict, test_losses: list[dict], data_dir: str,
