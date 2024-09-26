@@ -312,6 +312,7 @@ def plot_param_vs_loss(conf: dict, test_losses: list[dict], data_dir: str,
                 )
                 if sigma > 0:
                     x = np.linspace(mu - 3 * sigma, mu + 3 * sigma, 100)
+                    x = x[x > 0]
                     axs.plot(x,
                              stats.norm.pdf(x, mu, sigma),
                              label=f'Average err: {mu:.3f}, Std: {sigma:.3f}')
@@ -320,7 +321,8 @@ def plot_param_vs_loss(conf: dict, test_losses: list[dict], data_dir: str,
                 axs.legend()
                 plt.title(f'{lname} value = {single_bin:.3f} {units}')
                 plt.tight_layout()
-                plt.savefig(f'{data_dir}/result_plots/{param}_bin{idx}.png')
+                plt.savefig(
+                    f'{data_dir}/{model_name}_score/{param}_bin{idx}.png')
                 plt.close()
 
 
