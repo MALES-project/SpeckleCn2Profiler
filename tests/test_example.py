@@ -6,8 +6,8 @@ from pathlib import Path
 
 import pytest
 
-CONF_YAML = ('tests/test_data/test_resnet.yaml',
-             'tests/test_data/test_scnn.yaml')
+CONF_YAML = ('tests/test_data/conf_resnet.yaml',
+             'tests/test_data/conf_scnn.yaml')
 
 
 @pytest.mark.parametrize('conf', CONF_YAML)
@@ -21,7 +21,7 @@ def test_example(conf):
 
 
 @pytest.mark.parametrize('conf', CONF_YAML)
-@pytest.mark.dependency(depends=['test_example'])
+#@pytest.mark.dependency(depends=['test_example'])
 def test_example_figures(conf, image_diff):
     basefolder = 'tests/test_data/speckles/expected_results/'
     os.walk(basefolder)
