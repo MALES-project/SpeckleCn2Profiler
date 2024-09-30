@@ -115,7 +115,8 @@ def prepare_data(
         print(f'*** There are {len(all_images)} images in the dataset.')
     else:
         # Check if there is at least one image file in the directory
-        if not any('.h5' in file_name for file_name in os.listdir(datadirectory)):
+        if not any('.h5' in file_name
+                   for file_name in os.listdir(datadirectory)):
             raise FileNotFoundError(
                 'No image files found in the directory. Please provide the '
                 'correct path to the data directory.')
