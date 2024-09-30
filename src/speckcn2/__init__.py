@@ -1,7 +1,7 @@
 # Import any modules or subpackages here
 from __future__ import annotations
 
-from .io import load, load_config, save
+from .io import load, load_config, load_model_state, save
 from .loss import ComposableLoss
 from .mlmodels import EnsembleModel, get_a_resnet, setup_model
 from .mlops import score, train
