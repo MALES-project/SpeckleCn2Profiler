@@ -59,6 +59,8 @@ develop = [
     "pre-commit",
     "pytest",
     "pytest-mpl",
+    "pytest-dependency",
+    "pytest-image-diff",
 ]
 
 docs = [
