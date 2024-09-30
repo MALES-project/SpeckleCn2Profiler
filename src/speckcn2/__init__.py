@@ -31,6 +31,7 @@ __all__ = [
     'plot_time',
     'save',
     'load',
+    'load_model_state',
     'plot_histo_losses',
     'plot_param_vs_loss',
     'plot_param_histo',
