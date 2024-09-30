@@ -45,12 +45,17 @@ Clone the repository into the `speckcn2` directory:
 
 ```console
 git clone https://github.com/MALES-project/SpeckleCn2Profiler speckcn2
+cd speckcn2
+```
+
+Initialize all submodules:
+```console
+git submodule update --recursive --init
 ```
 
 Install using `virtualenv`:
 
 ```console
-cd speckcn2
 python3 -m venv env
 source env/bin/activate
 python3 -m pip install -e .[develop]
@@ -59,7 +64,6 @@ python3 -m pip install -e .[develop]
 Alternatively, install using Conda:
 
 ```console
-cd speckcn2
 conda create -n speckcn2 python=3.10
 conda activate speckcn2
 pip install -e .[develop]
