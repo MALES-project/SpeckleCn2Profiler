@@ -10,7 +10,7 @@ nav:
     - speckcn2: api/api.md
     - Models: api/models.md
     - I/O: api/io.md
-    - MlOps: api/mlops.md
+    - MLOps: api/mlops.md
     - Loss: api/loss.md
     - Normalizer: api/normalizer.md
     - Plot: api/plot.md
