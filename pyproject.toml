@@ -58,6 +58,7 @@ develop = [
     "mypy",
     "pre-commit",
     "pytest",
+    "pytest-mpl",
 ]
 
 docs = [
