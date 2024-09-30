@@ -48,14 +48,18 @@ This repository contains:
 
 To get started with the project, follow these steps:
 
-1. **Install the package:**
+- **Install the package:**
    ```bash
-   python -m pip install git+https://github.com/MALES-project/SpeckleCn2Profiler
+   python -m pip install speck2cn
    ```
-while the above command works, `speckcn2` will be available on pypi as soon as its dependencies get updated.
 
-2. **Explore the Code:**
-    Dive into the codebase to understand the implementation details and customize it according to your needs.
+- **Or: Clone the repository:**
+  ```bash
+  git clone https://github.com/MALES-project/SpeckleCn2Profiler.git
+  cd SpeckleCn2Profiler
+  git submodule init
+  git submodule update
+  ```
 
 ## Contribution Guidelines
 
