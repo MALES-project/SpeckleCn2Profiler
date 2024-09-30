@@ -114,6 +114,11 @@ def prepare_data(
         # print the info about the dataset
         print(f'*** There are {len(all_images)} images in the dataset.')
     else:
+        # Check if there is at least one image file in the directory
+        if not any('.h5' in file_name for file_name in os.listdir(datadirectory)):
+            raise FileNotFoundError(
+                'No image files found in the directory. Please provide the '
+                'correct path to the data directory.')
         # Otherwise, preprocess the raw data separating the single images
         all_images, all_tags, all_ensemble_ids = imgs_as_single_datapoint(
             conf, nimg_print)
