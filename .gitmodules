@@ -1,3 +1,6 @@
 [submodule "examples"]
 	path = examples
 	url = https://github.com/MALES-project/examples_speckcn2
+[submodule "tests/test_data"]
+	path = tests/test_data
+	url = https://github.com/MALES-project/test_data.git
