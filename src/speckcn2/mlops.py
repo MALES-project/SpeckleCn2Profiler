@@ -166,7 +166,8 @@ def score(
     # Setup the EnsembleModel wrapper
     ensemble = EnsembleModel(conf, device)
 
-    # For scoring the model, I enforce to use with the same weights:
+    # For scoring the model, you can compose the loss as you did during training
+    # so it is possible to include:
     # 1. MAE on screen tags
     # 2. Fried MAE
     # 3. Isoplanatic angle MAE
