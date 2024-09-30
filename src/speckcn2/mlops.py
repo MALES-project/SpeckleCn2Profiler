@@ -78,7 +78,7 @@ def train(model: nn.Module, last_model_state: int, conf: dict, train_set: list,
             # Accumulate the loss
             total_loss += loss.item()
 
-        # Suffle the training set
+        # Shuffle the training set
         random.shuffle(train_set)
 
         # Calculate average loss for the epoch

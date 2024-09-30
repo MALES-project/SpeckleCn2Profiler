@@ -3,7 +3,6 @@ from __future__ import annotations
 import itertools
 from typing import Callable, Dict, Optional
 
-import matplotlib.cm as cm
 import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
 import numpy as np
@@ -186,7 +185,7 @@ def average_speckle_output(conf: dict,
         for ensemble_count, (key,
                              value) in enumerate(grouped_test_set.items()):
             avg_output = None
-            cmap = cm.get_cmap('coolwarm')
+            cmap = plt.get_cmap('coolwarm')
             norm = plt.Normalize(1, len(value))
 
             if ensemble_count > n_ensembles_to_plot:
@@ -315,7 +314,7 @@ def average_speckle_input(conf: dict,
         for ensemble_count, (key,
                              value) in enumerate(grouped_test_set.items()):
             avg_speckle = None
-            cmap = cm.get_cmap('coolwarm')
+            cmap = plt.get_cmap('coolwarm')
             norm = plt.Normalize(1, len(value))
 
             if ensemble_count > n_ensembles_to_plot:
