@@ -218,8 +218,13 @@ def plot_histo_losses(conf: dict, test_losses: list[dict],
     plt.close()
 
 
-def plot_param_vs_loss(conf: dict, test_losses: list[dict], data_dir: str,
-                       measures: list) -> None:
+def plot_param_vs_loss(conf: dict,
+                       test_losses: list[dict],
+                       data_dir: str,
+                       measures: list,
+                       no_sign: bool = False,
+                       nbins: int = 10,
+                       linear_bins: bool = False) -> None:
     """Plots the parameter vs the loss. Optionally, it also plots the detailed
     histo for all the bins for the desired metrics.
 
@@ -233,6 +238,12 @@ def plot_param_vs_loss(conf: dict, test_losses: list[dict], data_dir: str,
         The directory where the data is stored
     measures : list
         The measures of the model
+    no_sign : bool
+        If True, it will plot the abs of the relative error
+    nbins : int
+        The number of bins in which to partition the data
+    linear_bins : bool
+        If True, the bins are linearly spaced, otherwise they are log spaced
     """
     model_name = conf['model']['name']
 
@@ -245,17 +256,25 @@ def plot_param_vs_loss(conf: dict, test_losses: list[dict], data_dir: str,
         ['[m]', '[rad]', '[1]'],
     ):
 
-        params = [d[param].detach().cpu() for d in measures]
-        loss = [d[lname].detach().cpu() for d in test_losses]
+        p_data = [d[param].detach().cpu() for d in measures]
+        if no_sign:
+            l_data = [d[lname].detach().cpu() for d in test_losses]
+        else:
+            pname = lname.split('_true')[0] + '_pred'
+            l_data = [((d[pname] - d[param]) / d[param]).detach().cpu()
+                      for d in measures]
 
-        pairs = sorted(zip(params, loss))
+        pairs = sorted(zip(p_data, l_data))
         params, loss = zip(*pairs)
         params = np.array(params)
         loss = np.array(loss)
 
-        bins = np.logspace(np.log10(min(params)),
-                           np.log10(max(params)),
-                           num=50)
+        if linear_bins:
+            bins = np.linspace(min(params), max(params), num=nbins)
+        else:
+            bins = np.logspace(np.log10(min(params)),
+                               np.log10(max(params)),
+                               num=nbins)
         bin_indices = np.digitize(params, bins)
         bin_means = [
             loss[bin_indices == i].mean() if np.any(bin_indices == i) else 0
@@ -312,7 +331,8 @@ def plot_param_vs_loss(conf: dict, test_losses: list[dict], data_dir: str,
                 )
                 if sigma > 0:
                     x = np.linspace(mu - 3 * sigma, mu + 3 * sigma, 100)
-                    x = x[x > 0]
+                    x = x[x > min(l_data)]
+                    x = x[x < max(l_data)]
                     axs.plot(x,
                              stats.norm.pdf(x, mu, sigma),
                              label=f'Average err: {mu:.3f}, Std: {sigma:.3f}')
@@ -322,7 +342,7 @@ def plot_param_vs_loss(conf: dict, test_losses: list[dict], data_dir: str,
                 plt.title(f'{lname} value = {single_bin:.3f} {units}')
                 plt.tight_layout()
                 plt.savefig(
-                    f'{data_dir}/{model_name}_score/{param}_bin{idx}.png')
+                    f'{data_dir}/{model_name}_score/{lname}_bin{idx}.png')
                 plt.close()
 
 
@@ -389,3 +409,84 @@ def plot_param_histo(conf: dict, test_losses: list[dict], data_dir: str,
         plt.savefig(
             f'{data_dir}/result_plots/histo_{param_true}_{model_name}.png')
         plt.close()
+
+
+def plot_J_error_details(conf: dict,
+                         tags_true: list,
+                         tags_pred: list,
+                         nbins: int = 10,
+                         linear_bins: bool = False) -> None:
+    """Function to plot the histograms per single bin of each single screen tag
+    to quantify the relative error as a function of J.
+
+    Parameters
+    ----------
+    conf : dict
+        Dictionary containing the configuration
+    tags_true : list
+        The true tags of the validation set
+    tags_pred : list
+        The predicted tags of the validation set
+    nbins : int
+        The number of bins in which to partition the data
+    linear_bins : bool
+        If True, the bins are linearly spaced, otherwise they are log spaced
+    """
+
+    nscreens = conf['speckle']['nscreens']
+    data_dir = conf['speckle']['datadirectory']
+    model_name = conf['model']['name']
+
+    if conf['preproc'].get('J_details', False):
+        for screen_id in range(nscreens):
+            print(f'\nComputing screen-{screen_id} details')
+
+            # Collect the data
+            params = []
+            loss = []
+            for i in range(len(tags_true)):
+                params.append(tags_true[i][0,
+                                           screen_id].detach().cpu().numpy())
+                loss.append(
+                    (tags_pred[i][0, screen_id] - tags_true[i][0, screen_id]) /
+                    (tags_true[i][0, screen_id]))
+            params = np.array(params)
+            loss = np.array(loss)
+
+            if linear_bins:
+                bins = np.linspace(min(params), max(params), num=nbins)
+            else:
+                bins = np.logspace(np.log10(min(params)),
+                                   np.log10(max(params)),
+                                   num=nbins)
+            bin_indices = np.digitize(params, bins)
+            # get the average and std of the error per bin of J[screen_id]
+            bin_centers = 0.5 * (bins[:-1] + bins[1:])
+
+            for idx, single_bin in enumerate(bin_centers):
+                l_data = loss[bin_indices == idx]
+                if len(l_data) == 0:
+                    continue
+                fig, axs = plt.subplots(1, 1, figsize=(5, 5))
+                axs.hist(l_data, bins=50, alpha=0.5, density=True)
+                mu = np.mean(l_data)
+                sigma = np.std(l_data)
+                print(
+                    f'J-{screen_id} = {single_bin:.3g} -> mu = {mu:.3f}, sigma = {sigma:.3f}'
+                )
+                if sigma > 0:
+                    x = np.linspace(mu - 3 * sigma, mu + 3 * sigma, 100)
+                    x = x[x > min(l_data)]
+                    x = x[x < max(l_data)]
+                    axs.plot(x,
+                             stats.norm.pdf(x, mu, sigma),
+                             label=f'Average err: {mu:.3f}, Std: {sigma:.3f}')
+                axs.set_xlabel(f'Relative error J (screen-{screen_id})')
+                axs.set_ylabel('Frequency')
+                axs.legend()
+                plt.title(f'J (screen-{screen_id}) value = {single_bin:.3g}')
+                plt.tight_layout()
+                plt.savefig(
+                    f'{data_dir}/{model_name}_score/Jscreen{screen_id}_bin{idx}.png'
+                )
+                plt.close()

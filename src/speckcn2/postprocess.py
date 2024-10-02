@@ -21,7 +21,10 @@ def tags_distribution(conf: dict,
                       device: Device,
                       rescale: bool = False,
                       recover_tag: Optional[list[Callable]] = None) -> None:
-    """Plots the distribution of the tags.
+    """Function to plot the following:
+    - distribution of the tags for unscaled results
+    - distribution of the tags for rescaled results
+    - distribution of the sum of the tags.
 
     Parameters
     ----------
@@ -56,12 +59,6 @@ def tags_distribution(conf: dict,
 
     # Get the tags from the test set
     predic_tags = np.array([n.cpu().numpy() for n in test_tags])
-    print(f'Data shape: {train_tags.shape}')
-    print(f'Prediction shape: {predic_tags.shape}')
-    print(f'Train mean: {train_tags.mean()}')
-    print(f'Train std: {train_tags.std()}')
-    print(f'Prediction mean: {predic_tags.mean()}')
-    print(f'Prediction std: {predic_tags.std()}')
 
     # Keep track of J=sum(tags) for each sample
     J_pred = np.zeros(predic_tags.shape[0])
