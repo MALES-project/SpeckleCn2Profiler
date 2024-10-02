@@ -212,8 +212,6 @@ def score(
             # Loop each input separately
             for i in range(len(outputs)):
                 loss, losses = criterion(outputs[i], targets[i])
-                # Print the loss for every epoch
-                print(f'Item {counter} loss: {loss.item():.4f}')
 
                 # Get the Cn2 profile and the recovered tags
                 Cn2_pred = criterion.reconstruct_cn2(outputs[i])
@@ -225,6 +223,7 @@ def score(
                     outputs[i], targets[i], Cn2_pred, Cn2_true)
 
                 if counter < nimg_plot:
+                    print(f'Item {counter} loss: {loss.item():.4f}')
                     score_plot(conf, inputs, targets, loss, losses, i, counter,
                                all_measures, Cn2_pred, Cn2_true,
                                recovered_tag_pred, recovered_tag_true)

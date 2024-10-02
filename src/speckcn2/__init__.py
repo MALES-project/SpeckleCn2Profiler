@@ -6,7 +6,14 @@ from .loss import ComposableLoss
 from .mlmodels import EnsembleModel, get_a_resnet, setup_model
 from .mlops import score, train
 from .normalizer import Normalizer
-from .plots import plot_histo_losses, plot_loss, plot_param_histo, plot_param_vs_loss, plot_time
+from .plots import (
+    plot_histo_losses,
+    plot_J_error_details,
+    plot_loss,
+    plot_param_histo,
+    plot_param_vs_loss,
+    plot_time,
+)
 from .postprocess import average_speckle_input, average_speckle_output, tags_distribution
 from .preprocess import prepare_data, train_test_split
 from .utils import setup_optimizer
@@ -27,6 +34,7 @@ __all__ = [
     'tags_distribution',
     'average_speckle_input',
     'average_speckle_output',
+    'plot_J_error_details',
     'plot_loss',
     'plot_time',
     'save',

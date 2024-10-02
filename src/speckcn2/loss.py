@@ -50,8 +50,6 @@ class ComposableLoss(nn.Module):
         super(ComposableLoss, self).__init__()
         self.device = device
         self.loss_functions: dict[str, Callable] = {
-            #'MSE': torch.nn.MSELoss(reduction='none'),
-            #'MAE': torch.nn.L1Loss(reduction='none'),
             'MSE': torch.nn.MSELoss(),
             'MAE': torch.nn.L1Loss(),
             'JMSE': self._MSELoss,
