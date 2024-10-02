@@ -51,6 +51,13 @@ jobs:
       run: |
           coverage run -p -m pytest
 
+    - name: Upload test images
+      if: always()
+      uses: actions/upload-artifact@v2
+      with:
+        name: test-images
+        path: .tests/image_diff/
+
     - name: Combine
       run: |
         coverage combine
