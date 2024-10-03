@@ -24,6 +24,20 @@ def remove_files(pattern, is_dir=False):
             os.remove(path)
 
 
+# Helper function to generate image paths
+def generate_image_paths(basefolder):
+    image_pairs = []
+    for single_folder in os.walk(basefolder):
+        for img in single_folder[2]:
+            if 'time' not in img and 'sum' not in img:
+                expected = single_folder[0] + '/' + img
+                test_folder = 'tests/test_data/speckles/' + Path(
+                    single_folder[0]).parts[-1]
+                test_img = test_folder + '/' + img
+                image_pairs.append((expected, test_img))
+    return image_pairs
+
+
 @pytest.mark.parametrize(('conf', 'model_type'), CONF_YAML)
 @pytest.mark.dependency(name='test_train_and_score')
 def test_train_and_score(conf, model_type):
@@ -45,21 +59,16 @@ def test_train_and_score(conf, model_type):
     post['main'](conf)
 
 
+# Parametrization with conf, model_type, and image pairs
 @pytest.mark.parametrize(('conf', 'model_type'), CONF_YAML)
 @pytest.mark.dependency(depends=['test_train_and_score'])
-def test_figures(conf, model_type, image_diff):
-    basefolder = 'tests/test_data/speckles/expected_results/'
-    os.walk(basefolder)
-    for single_folder in os.walk(basefolder):
-        for img in single_folder[2]:
-            if 'time' not in img and 'sum' not in img:
-                expected = single_folder[0] + '/' + img
-                test_folder = 'tests/test_data/speckles/' + Path(
-                    single_folder[0]).parts[-1]
-                test_img = test_folder + '/' + img
-                print(f'test img {test_img}', flush=True)
-                print(f'expected img {expected}', flush=True)
-                image_diff(expected, test_img)
+@pytest.mark.parametrize(
+    ('expected', 'test_img'),
+    generate_image_paths('tests/test_data/speckles/expected_results/'))
+def test_figures(conf, model_type, expected, test_img, image_diff):
+    print(f'test img {test_img}', flush=True)
+    print(f'expected img {expected}', flush=True)
+    image_diff(expected, test_img)
 
 
 @pytest.mark.parametrize(('conf', 'model_type'), CONF_YAML)
