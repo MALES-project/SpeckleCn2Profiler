@@ -447,8 +447,8 @@ def plot_J_error_details(conf: dict,
             for i in range(len(tags_true)):
                 params.append(tags_true[i][0,
                                            screen_id].detach().cpu().numpy())
-                loss.append(
-                    ((tags_pred[i][0, screen_id] - tags_true[i][0, screen_id]) /
+                loss.append((
+                    (tags_pred[i][0, screen_id] - tags_true[i][0, screen_id]) /
                     (tags_true[i][0, screen_id])).detach().cpu().numpy())
             params = np.array(params)
             loss = np.array(loss)
