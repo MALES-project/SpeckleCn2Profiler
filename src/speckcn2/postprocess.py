@@ -7,6 +7,7 @@ import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
 import numpy as np
 import torch
+from scipy import stats
 from torch import Tensor, nn
 from torch import device as Device
 
@@ -137,6 +138,7 @@ def average_speckle_output(conf: dict,
                            device: Device,
                            model: nn.Torch,
                            criterion: ComposableLoss,
+                           trimming: float = 0.1,
                            n_ensembles_to_plot: int = 100) -> None:
     """Test to see if averaging the prediction of multiple speckle patterns
     improves the results. This function is then going to plot the relative
@@ -181,7 +183,7 @@ def average_speckle_output(conf: dict,
 
         for ensemble_count, (key,
                              value) in enumerate(grouped_test_set.items()):
-            avg_output = None
+            _outputs = []
             cmap = plt.get_cmap('coolwarm')
             norm = plt.Normalize(1, len(value))
 
@@ -205,27 +207,26 @@ def average_speckle_output(conf: dict,
                     blue_patch = mpatches.Patch(color=color,
                                                 label='One speckle')
 
-                if avg_output is None:
-                    avg_output = output
-                else:
-                    avg_output += output
+                # Use the trimmed mean to get the average output
+                _outputs.append(output)
+                avg_output = torch.tensor(stats.trim_mean(_outputs, trimming))
 
-                loss, losses = criterion(avg_output / count, target)
+                loss, losses = criterion(avg_output, target)
 
-                ax[1].plot((torch.abs(avg_output / count - target) /
+                ax[1].plot((torch.abs(avg_output - target) /
                             (target + 1e-7)).flatten().detach().cpu(),
                            color=color)
 
                 # Get the Cn2 profile and the recovered tags
-                Cn2_pred = criterion.reconstruct_cn2(avg_output / count)
+                Cn2_pred = criterion.reconstruct_cn2(avg_output)
                 Cn2_true = criterion.reconstruct_cn2(target)
-                recovered_tag_pred = criterion.get_J(avg_output / count)
+                recovered_tag_pred = criterion.get_J(avg_output)
                 ax[0].plot(recovered_tag_pred.squeeze(0).detach().cpu(),
                            'o',
                            color=color)
                 # and get all the measures
                 all_measures = criterion._get_all_measures(
-                    avg_output / count, target, Cn2_pred, Cn2_true)
+                    avg_output, target, Cn2_pred, Cn2_true)
 
                 Fried_err = torch.abs(
                     all_measures['Fried_true'] -
