@@ -162,6 +162,7 @@ def average_speckle_output(conf: dict,
 
     data_directory = conf['speckle']['datadirectory']
     model_name = conf['model']['name']
+    n_screens = conf['speckle']['nscreens']
 
     ensure_directory(f'{data_directory}/result_plots')
 
@@ -176,26 +177,27 @@ def average_speckle_output(conf: dict,
     print(f'Number of samples: {len(test_set)}')
     print(f'Number of speckle groups: {len(grouped_test_set)}')
 
-    # For each group compare the model prediction to the exact tag
+    # In the end, we will plot groups that have uncommon values of loss
+    loss_min = 1e10
+    loss_max = 0
+    ensemble_count = 0
+
     ensemble = EnsembleModel(conf, device)
     with torch.no_grad():
         model.eval()
 
-        for ensemble_count, (key,
-                             value) in enumerate(grouped_test_set.items()):
+        for key, value in grouped_test_set.items():
             _outputs = []
+            _all_tags_pred = []
             cmap = plt.get_cmap('coolwarm')
             norm = plt.Normalize(1, len(value))
-
-            if ensemble_count > n_ensembles_to_plot:
-                continue
 
             for count, speckle in enumerate(value, 1):
                 color = cmap(norm(count))
                 output, target, _ = ensemble(model, [speckle])
 
                 if count == 1:
-                    fig, ax = plt.subplots(1, 3, figsize=(12, 4))
+                    fig, ax = plt.subplots(1, 4, figsize=(16, 4))
 
                     # (1) Plot J vs nscreens
                     recovered_tag_true = criterion.get_J(target)
@@ -203,6 +205,15 @@ def average_speckle_output(conf: dict,
                                '*',
                                label='True',
                                color='tab:green',
+                               markersize=10,
+                               markeredgecolor='black',
+                               zorder=100)
+                    ax[1].plot(recovered_tag_true.squeeze(0).detach().cpu(),
+                               '*',
+                               label='True',
+                               color='tab:green',
+                               markersize=10,
+                               markeredgecolor='black',
                                zorder=100)
                     blue_patch = mpatches.Patch(color=color,
                                                 label='One speckle')
@@ -213,15 +224,12 @@ def average_speckle_output(conf: dict,
 
                 loss, losses = criterion(avg_output, target)
 
-                ax[1].plot((torch.abs(avg_output - target) /
-                            (target + 1e-7)).flatten().detach().cpu(),
-                           color=color)
-
                 # Get the Cn2 profile and the recovered tags
                 Cn2_pred = criterion.reconstruct_cn2(avg_output)
                 Cn2_true = criterion.reconstruct_cn2(target)
                 recovered_tag_pred = criterion.get_J(avg_output)
-                ax[0].plot(recovered_tag_pred.squeeze(0).detach().cpu(),
+                _all_tags_pred.append(recovered_tag_pred)
+                ax[1].plot(recovered_tag_pred.squeeze(0).detach().cpu(),
                            'o',
                            color=color)
                 # and get all the measures
@@ -239,27 +247,104 @@ def average_speckle_output(conf: dict,
                         label='(True) Fried = {:.3f}'.format(
                             all_measures['Fried_true'].detach().cpu().numpy()))
 
-            ax[0].set_yscale('log')
-            ax[0].set_ylabel('J')
-            ax[0].set_xlabel('# screen')
-            red_patch = mpatches.Patch(color=color, label='All speckles')
-            handles, labels = ax[0].get_legend_handles_labels()
-            handles.extend([blue_patch, red_patch])
-            ax[0].legend(handles=handles)
-            ax[1].set_xlabel('# screen')
-            ax[1].set_ylabel('J relative error ')
-            ax[2].set_xlabel('# averaged speckles')
-            ax[2].set_ylabel('Fried relative error')
-            ax[2].legend(frameon=False)
-            ax[1].set_yscale('log')
-            ax[2].set_yscale('log')
-            fig.tight_layout()
-            plt.subplots_adjust(top=0.92)
-            plt.suptitle('Effect of averaging speckle predictions')
-            plt.savefig(
-                f'{data_directory}/{model_name}_score/average_predictions_ensemble{ensemble_count}.png'
-            )
+            # Now at the end of the loop, we decide if this set needs to plotted or not
+            # by checking that the loss
+            if loss > loss_max or loss < loss_min:
+                avg_tags_trim = stats.trim_mean(_all_tags_pred,
+                                                trimming).squeeze()
+                percentiles_50 = np.percentile(_all_tags_pred, [25, 75],
+                                               axis=0).squeeze()
+                percentiles_68 = np.percentile(_all_tags_pred, [16, 84],
+                                               axis=0).squeeze()
+                percentiles_95 = np.percentile(_all_tags_pred, [2.5, 97.5],
+                                               axis=0).squeeze()
+
+                x_vals = np.arange(n_screens)
+                alp = 1
+                ax[0].plot(avg_tags_trim,
+                           label='Mean',
+                           color='tab:red',
+                           zorder=50)
+                ax[0].fill_between(x_vals,
+                                   percentiles_50[0],
+                                   percentiles_50[1],
+                                   color='gold',
+                                   alpha=alp,
+                                   label='50% CI',
+                                   zorder=5)
+                ax[0].fill_between(x_vals,
+                                   percentiles_68[0],
+                                   percentiles_50[0],
+                                   color='cadetblue',
+                                   alpha=alp,
+                                   label='68% CI',
+                                   zorder=4)
+                ax[0].fill_between(x_vals,
+                                   percentiles_50[1],
+                                   percentiles_68[1],
+                                   color='cadetblue',
+                                   alpha=alp,
+                                   zorder=4)
+                ax[0].fill_between(x_vals,
+                                   percentiles_95[0],
+                                   percentiles_68[0],
+                                   color='blue',
+                                   label='95% CI',
+                                   alpha=alp,
+                                   zorder=3)
+                ax[0].fill_between(x_vals,
+                                   percentiles_68[1],
+                                   percentiles_95[1],
+                                   color='blue',
+                                   alpha=alp,
+                                   zorder=3)
+
+                ax[3].axis('off')  # Hide axis
+                recap_info = f'LOSS TERMS:\nTotal Loss: {loss.item():.4g}\n'
+                # the individual losses
+                for key, value in losses.items():
+                    recap_info += f'{key}: {value.item():.4g}\n'
+                recap_info += '-------------------\nPARAMETERS:\n'
+                # then the single parameters
+                for key, value in all_measures.items():
+                    recap_info += f'{key}: {value:.4g}\n'
+                ax[3].text(0.5,
+                           0.5,
+                           recap_info,
+                           horizontalalignment='center',
+                           verticalalignment='center',
+                           fontsize=10,
+                           color='black')
+
+                ax[0].set_yscale('log')
+                ax[0].set_ylabel('J')
+                ax[0].set_xlabel('# screen')
+                ax[0].legend()
+                ax[1].set_yscale('log')
+                ax[1].set_ylabel('J')
+                ax[1].set_xlabel('# screen')
+                red_patch = mpatches.Patch(color=color, label='All speckles')
+                handles, labels = ax[1].get_legend_handles_labels()
+                handles.extend([blue_patch, red_patch])
+                ax[1].legend(handles=handles)
+                ax[2].set_xlabel('# averaged speckles')
+                ax[2].set_ylabel('Fried relative error')
+                ax[2].legend(frameon=False)
+                ax[2].set_yscale('log')
+                fig.tight_layout()
+                plt.subplots_adjust(top=0.92)
+                plt.suptitle('Effect of averaging speckle predictions')
+                plt.savefig(
+                    f'{data_directory}/{model_name}_score/average_ensemble_loss{loss.item():.4g}.png'
+                )
+                loss_max = max(loss, loss_max)
+                loss_min = min(loss, loss_min)
+                ensemble_count += 1
+
             plt.close()
+
+            if ensemble_count > n_ensembles_to_plot:
+                break
 
 
 def average_speckle_input(conf: dict,
@@ -390,6 +475,6 @@ def average_speckle_input(conf: dict,
             plt.subplots_adjust(top=0.92)
             plt.suptitle('Effect of averaging speckle patterns')
             plt.savefig(
-                f'{data_directory}/{model_name}_score/average_speckle_ensemble{ensemble_count}.png'
+                f'{data_directory}/{model_name}_score/average_speckle_loss{loss.item():.4g}.png'
             )
             plt.close()

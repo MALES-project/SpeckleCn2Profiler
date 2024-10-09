@@ -119,7 +119,9 @@ def score_plot(
                  color='black')
 
     plt.tight_layout()
-    plt.savefig(f'{data_dir}/{model_name}_score/{counter}.png')
+    plt.savefig(
+        f'{data_dir}/{model_name}_score/single_speckle_loss{loss.item():.4g}.png'
+    )
     plt.close()
 
 

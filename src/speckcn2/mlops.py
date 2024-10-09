@@ -200,6 +200,10 @@ def score(
         test_cn2_true = []
         test_recovered_tag_pred = []
         test_recovered_tag_true = []
+        # Initialize the loss max and min. They are used to plot the images with the
+        # highest and lowest loss. We skip examples with a common average value of the loss.
+        loss_max = 0
+        loss_min = 1e6
         # create the directory where the images will be stored
         ensure_directory(f'{data_dir}/{model.name}_score')
 
@@ -221,12 +225,17 @@ def score(
                 # and get all the measures
                 all_measures = criterion._get_all_measures(
                     outputs[i], targets[i], Cn2_pred, Cn2_true)
+                this_loss = loss.item()
 
-                if counter < nimg_plot:
-                    print(f'Item {counter} loss: {loss.item():.4f}')
+                if counter < nimg_plot and (this_loss > loss_max
+                                            or this_loss < loss_min):
+                    loss_max = max(this_loss, loss_max)
+                    loss_min = min(this_loss, loss_min)
+                    print(f'Plotting item {counter} loss: {this_loss:.4f}')
                     score_plot(conf, inputs, targets, loss, losses, i, counter,
                                all_measures, Cn2_pred, Cn2_true,
                                recovered_tag_pred, recovered_tag_true)
+                    counter += 1
 
                 # and get all the tags for statistic analysis
                 for tag in outputs:
@@ -239,8 +248,6 @@ def score(
                 test_cn2_true.append(Cn2_true)
                 test_recovered_tag_pred.append(recovered_tag_pred)
                 test_recovered_tag_true.append(recovered_tag_true)
-
-                counter += 1
 
     return (test_tags, test_losses, test_measures, test_cn2_pred,
             test_cn2_true, test_recovered_tag_pred, test_recovered_tag_true)
