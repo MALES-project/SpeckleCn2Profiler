@@ -20,6 +20,7 @@ def tags_distribution(conf: dict,
                       train_set: list,
                       test_tags: Tensor,
                       device: Device,
+                      nbins: int = 20,
                       rescale: bool = False,
                       recover_tag: Optional[list[Callable]] = None) -> None:
     """Function to plot the following:
@@ -39,6 +40,8 @@ def tags_distribution(conf: dict,
         The device to use
     data_directory : str
         The directory where the data is stored
+    nbins : int, optional
+        Number of bins to use for the histograms
     rescale : bool, optional
         Whether to rescale the tags using recover_tag() or leave them between 0 and 1
     recover_tag : list, optional
@@ -73,54 +76,53 @@ def tags_distribution(conf: dict,
                 [recover_tag[i](predic_tags[:, i], i)]).squeeze(0)
             recovered_tag_true = np.asarray(
                 [recover_tag[i](train_tags[:, i], i)]).squeeze(0)
+            J_pred += 10**recovered_tag_model
+            J_true += 10**recovered_tag_true
             axs[i // 4, i % 4].hist(recovered_tag_model,
-                                    bins=20,
+                                    bins=nbins,
                                     color='tab:red',
                                     density=True,
                                     alpha=0.5,
                                     label='Model prediction')
             axs[i // 4, i % 4].hist(recovered_tag_true,
-                                    bins=20,
+                                    bins=nbins,
                                     color='tab:blue',
                                     density=True,
                                     alpha=0.5,
                                     label='Training data')
-            J_pred += 10**recovered_tag_model
-            J_true += 10**recovered_tag_true
         else:
             axs[i // 4, i % 4].hist(predic_tags[:, i],
-                                    bins=20,
+                                    bins=nbins,
                                     color='tab:red',
                                     density=True,
                                     alpha=0.5,
                                     label='Model prediction')
             axs[i // 4, i % 4].hist(train_tags[:, i],
-                                    bins=20,
+                                    bins=nbins,
                                     color='tab:blue',
                                     density=True,
                                     alpha=0.5,
                                     label='Training data')
-        axs[i // 4, i % 4].set_title(f'Tag {i}')
+        axs[i // 4, i % 4].set_title(f'Screen {i}')
     axs[0, 1].legend()
     plt.tight_layout()
-    if rescale:
-        plt.savefig(f'{data_directory}/result_plots/{model_name}_tags.png')
-    else:
-        plt.savefig(
-            f'{data_directory}/result_plots/{model_name}_tags_unscaled.png')
+    figname = f'{data_directory}/result_plots/{model_name}_tags'
+    if not rescale:
+        figname += '_unscaled'
+    plt.savefig(f'{figname}.png')
     plt.close()
 
     if rescale and recover_tag is not None:
         # Also plot the distribution of the sum of the tags
         fig, axs = plt.subplots(1, 1, figsize=(6, 6))
         axs.hist(np.log10(J_pred),
-                 bins=20,
+                 bins=nbins,
                  color='tab:red',
                  density=True,
                  alpha=0.5,
                  label='Model prediction')
         axs.hist(np.log10(J_true),
-                 bins=20,
+                 bins=nbins,
                  color='tab:blue',
                  density=True,
                  alpha=0.5,
@@ -478,3 +480,118 @@ def average_speckle_input(conf: dict,
                 f'{data_directory}/{model_name}_score/average_speckle_loss{loss.item():.4g}.png'
             )
             plt.close()
+
+
+def screen_errors(conf: dict,
+                  cn2_pred: Tensor,
+                  cn2_true: Tensor,
+                  nbins: int = 20,
+                  trimming: float = 0.1) -> None:
+    """Plot the relative error of Cn2 for each screen.
+
+    Parameters
+    ----------
+    conf : dict
+        Dictionary containing the configuration
+    cn2_pred : torch.Tensor
+        The predicted Cn2 profile
+    cn2_true : torch.Tensor
+        The true Cn2 profile
+    nbins : int, optional
+        Number of bins to use for the histograms
+    trimming : float, optional
+        The fraction of data to trim from each end of the distribution
+    """
+    data_directory = conf['speckle']['datadirectory']
+    model_name = conf['model']['name']
+    n_screens = conf['speckle']['nscreens']
+
+    # Plot the distribution of each tag element
+    fig, axs = plt.subplots(2, 4, figsize=(20, 10))
+    for si in range(n_screens):
+
+        data_pred = np.asarray(cn2_pred)[:, 0, si]
+        data_true = np.asarray(cn2_true)[:, 0, si]
+        # Define the bins
+        bins = np.linspace(min(data_true), max(data_true), nbins + 1)
+
+        # Digitize the data to get bin indices
+        bin_indices = np.digitize(data_true, bins)
+
+        # Compute the relative error for each bin
+        relative_errors = []
+        percentiles_50 = []
+        percentiles_68 = []
+        percentiles_95 = []
+
+        for bi in range(1, len(bins)):
+            model_bin_values = data_pred[bin_indices == bi]
+            true_bin_values = data_true[bin_indices == bi]
+
+            if len(true_bin_values) > 0:
+                relative_error = np.abs(
+                    (model_bin_values - true_bin_values) / true_bin_values)
+                relative_errors.append(
+                    stats.trim_mean(relative_error, trimming))
+                percentiles_50.append(
+                    np.percentile(relative_error, [25, 75], axis=0))
+                percentiles_68.append(
+                    np.percentile(relative_error, [16, 84], axis=0))
+                percentiles_95.append(
+                    np.percentile(relative_error, [2.5, 97.5], axis=0))
+            else:
+                relative_errors.append(0)
+                percentiles_50.append([0, 0])
+                percentiles_68.append([0, 0])
+                percentiles_95.append([0, 0])
+
+        percentiles_50 = np.asarray(percentiles_50)
+        percentiles_68 = np.asarray(percentiles_68)
+        percentiles_95 = np.asarray(percentiles_95)
+        # Plot the relative errors
+        axs[si // 4, si % 4].plot(bins[:-1],
+                                  relative_errors,
+                                  label='Mean',
+                                  color='tab:red',
+                                  zorder=50)
+        axs[si // 4, si % 4].set_title(f'Screen {si}')
+        # and the percentiles
+        axs[si // 4, si % 4].fill_between(bins[:-1],
+                                          percentiles_50[:, 0],
+                                          percentiles_50[:, 1],
+                                          color='gold',
+                                          alpha=0.5,
+                                          label='50% CI',
+                                          zorder=5)
+        axs[si // 4, si % 4].fill_between(bins[:-1],
+                                          percentiles_68[:, 0],
+                                          percentiles_50[:, 0],
+                                          color='cadetblue',
+                                          alpha=0.5,
+                                          label='68% CI',
+                                          zorder=4)
+        axs[si // 4, si % 4].fill_between(bins[:-1],
+                                          percentiles_50[:, 1],
+                                          percentiles_68[:, 1],
+                                          color='cadetblue',
+                                          alpha=0.5,
+                                          zorder=4)
+        axs[si // 4, si % 4].fill_between(bins[:-1],
+                                          percentiles_95[:, 0],
+                                          percentiles_68[:, 0],
+                                          color='blue',
+                                          label='95% CI',
+                                          alpha=0.5,
+                                          zorder=3)
+        axs[si // 4, si % 4].fill_between(bins[:-1],
+                                          percentiles_68[:, 1],
+                                          percentiles_95[:, 1],
+                                          color='blue',
+                                          alpha=0.5,
+                                          zorder=3)
+    axs[0, 1].legend()
+    plt.suptitle('Relative Error of Cn2')
+    plt.tight_layout()
+    figname = f'{data_directory}/result_plots/{model_name}_Jerrors'
+    plt.savefig(f'{figname}.png')
+    plt.close()
