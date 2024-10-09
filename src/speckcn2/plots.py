@@ -328,6 +328,12 @@ def plot_param_vs_loss(conf: dict,
                 axs.hist(l_data, bins=50, alpha=0.5, density=True)
                 mu = np.mean(l_data)
                 sigma = np.std(l_data)
+                if no_sign:
+                    print(
+                        'Warning: you are requesting the analysis of absolute value using'
+                        + ' normal gaussian assumption.' +
+                        'This is not correct and the error will be overestimated.'
+                    )
                 print(
                     f'{lname} = {single_bin:.3f} -> mu = {mu:.3f}, sigma = {sigma:.3f}'
                 )
