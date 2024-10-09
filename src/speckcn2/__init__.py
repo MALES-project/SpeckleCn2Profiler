@@ -14,7 +14,7 @@ from .plots import (
     plot_param_vs_loss,
     plot_time,
 )
-from .postprocess import average_speckle_input, average_speckle_output, tags_distribution
+from .postprocess import average_speckle_input, average_speckle_output, screen_errors, tags_distribution
 from .preprocess import prepare_data, train_test_split
 from .utils import setup_optimizer
 
@@ -32,6 +32,7 @@ __all__ = [
     'train',
     'score',
     'tags_distribution',
+    'screen_errors',
     'average_speckle_input',
     'average_speckle_output',
     'plot_J_error_details',
