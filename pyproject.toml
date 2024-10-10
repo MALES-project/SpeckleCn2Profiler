@@ -55,6 +55,7 @@ changelog = "https://github.com/MALES-project/SpeckleCn2Profiler/releases"
 develop = [
     "bump-my-version",
     "coverage[toml]",
+    "docformatter",
     "mypy",
     "pre-commit",
     "pytest",
