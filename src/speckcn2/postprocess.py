@@ -232,7 +232,7 @@ def average_speckle_output(conf: dict,
                 Cn2_pred = criterion.reconstruct_cn2(avg_output)
                 Cn2_true = criterion.reconstruct_cn2(target)
                 recovered_tag_pred = criterion.get_J(avg_output)
-                _all_tags_pred.append(recovered_tag_pred)
+                _all_tags_pred.append(recovered_tag_pred.detach().cpu())
                 ax[1].plot(recovered_tag_pred.squeeze(0).detach().cpu(),
                            'o',
                            color=color)
