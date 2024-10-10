@@ -221,8 +221,10 @@ def average_speckle_output(conf: dict,
                                                 label='One speckle')
 
                 # Use the trimmed mean to get the average output
-                _outputs.append(output)
-                avg_output = torch.tensor(stats.trim_mean(_outputs, trimming))
+                # (trim_mean works only on cpu so you have to move back and forth)
+                _outputs.append(output.detach().cpu().numpy())
+                avg_output = torch.tensor(stats.trim_mean(_outputs,
+                                                          trimming)).to(device)
 
                 loss, losses = criterion(avg_output, target)
 
