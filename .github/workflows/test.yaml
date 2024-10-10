@@ -52,9 +52,12 @@ jobs:
       run: |
         python -m pip install -r tests/test_requirements.txt
 
+    - name: Clean Pytest Cache
+      run: rm -rf .pytest_cache
+
     - name: Test with pytest
       run: |
-          coverage run -p -m pytest
+          coverage run -p -m pytest --verbose
 
     - name: Upload test images
       if: always()
