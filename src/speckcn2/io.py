@@ -131,7 +131,8 @@ def load_model_state(model: torch.nn.Module,
         last_model_state = 0
 
     if last_model_state > 0:
-        print(f'Loading model at epoch {last_model_state}')
+        print(
+            f'Loading model at epoch {last_model_state}, from {datadirectory}')
         load(model, datadirectory, last_model_state)
         return model, last_model_state
     else:
