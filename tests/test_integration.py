@@ -105,7 +105,6 @@ def test_train_and_score(conf, model_type):
     post['main'](conf)
 
 
-# Parametrization with conf, model_type, and image pairs
 @pytest.mark.skipif(
     (sys.version_info.major != 3 or sys.version_info.minor != 10),
     reason='Test only runs on Python 3.10')
@@ -131,9 +130,13 @@ def test_weights(conf, model_type):
     test_model, _ = sp2.setup_model(config)
     test_model, _ = sp2.load_model_state(test_model, datadirectory)
 
-    basefolder = 'tests/test_data/speckles/expected_results/'
+    basefolder = 'tests/test_data/speckles/expected_model_weights/'
     config = sp2.load_config(conf)
+    config['speckle']['datadirectory'] = basefolder
     expected_model, _ = sp2.setup_model(config)
     expected_model, _ = sp2.load_model_state(expected_model, basefolder)
+    assert len(list(test_model.parameters())) > 0
+    assert len(list(expected_model.parameters())) == len(
+        list(test_model.parameters()))
     for p1, p2 in zip(expected_model.parameters(), test_model.parameters()):
         assert torch.equal(p1, p2)
