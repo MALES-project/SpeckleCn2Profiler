@@ -485,6 +485,7 @@ def average_speckle_input(conf: dict,
 
 
 def screen_errors(conf: dict,
+                  device: Device,
                   cn2_pred: Tensor,
                   cn2_true: Tensor,
                   nbins: int = 20,
@@ -495,6 +496,8 @@ def screen_errors(conf: dict,
     ----------
     conf : dict
         Dictionary containing the configuration
+    device : torch.device
+        The device on which the data are stored
     cn2_pred : torch.Tensor
         The predicted Cn2 profile
     cn2_true : torch.Tensor
@@ -512,8 +515,14 @@ def screen_errors(conf: dict,
     fig, axs = plt.subplots(2, 4, figsize=(20, 10))
     for si in range(n_screens):
 
-        data_pred = np.asarray(cn2_pred)[:, 0, si]
-        data_true = np.asarray(cn2_true)[:, 0, si]
+        if device == 'cpu':
+            data_pred = np.asarray(cn2_pred)[:, 0, si]
+            data_true = np.asarray(cn2_true)[:, 0, si]
+        else:
+            data_pred = np.asarray(
+                [d.detach().cpu().numpy() for d in cn2_pred])[:, 0, si]
+            data_true = np.asarray(
+                [d.detach().cpu().numpy() for d in cn2_true])[:, 0, si]
         # Define the bins
         bins = np.linspace(min(data_true), max(data_true), nbins + 1)
 
