@@ -106,8 +106,9 @@ def test_train_and_score(conf, model_type):
 
 
 # Parametrization with conf, model_type, and image pairs
-@pytest.mark.skipif(sys.version_info != (3, 10),
-                    reason='Test only runs on Python 3.10')
+@pytest.mark.skipif(
+    (sys.version_info.major != 3 or sys.version_info.minor != 10),
+    reason='Test only runs on Python 3.10')
 @pytest.mark.parametrize(('conf', 'model_type'), CONF_YAML)
 @pytest.mark.dependency(depends=['test_train_and_score'])
 @pytest.mark.parametrize(
@@ -119,8 +120,9 @@ def test_figures(conf, model_type, expected, test_img, image_diff):
     image_diff(expected, test_img)
 
 
-@pytest.mark.skipif(sys.version_info != (3, 10),
-                    reason='Test only runs on Python 3.10')
+@pytest.mark.skipif(
+    (sys.version_info.major != 3 or sys.version_info.minor != 10),
+    reason='Test only runs on Python 3.10')
 @pytest.mark.parametrize(('conf', 'model_type'), CONF_YAML)
 @pytest.mark.dependency(depends=['test_train_and_score'])
 def test_weights(conf, model_type):
