@@ -2,10 +2,12 @@ from __future__ import annotations
 
 import glob
 import os
+import random
 import runpy
 import shutil
 from pathlib import Path
 
+import numpy as np
 import pytest
 import torch
 
@@ -13,6 +15,48 @@ import speckcn2 as sp2
 
 CONF_YAML = (('tests/test_data/conf_resnet.yaml', 'resnet'),
              ('tests/test_data/conf_scnn.yaml', 'scnn'))
+SEEDS = (42, 43, 44)
+EXPECTED_VALUES_SEED = {
+    42: {
+        'random': 0.8554501933059546,
+        'numpy': 0.44600577295795574,
+        'torch': 0.02965700626373291,
+    },
+    43: {
+        'random': 0.8160040884005317,
+        'numpy': 0.38412578876288583,
+        'torch': 0.15573692321777344,
+    },
+    44: {
+        'random': 0.4159863274445267,
+        'numpy': 0.7251349509702875,
+        'torch': 0.06965392827987671,
+    }
+}
+
+
+# test to check if numpy, random and pytorch generate the expected random numbers on this machine
+@pytest.mark.parametrize('seed', SEEDS)
+@pytest.mark.dependency(name='random_numbers')
+def test_random_numbers(seed):
+    torch.manual_seed(seed)
+    np.random.seed(seed)
+    random.seed(seed)
+
+    for _ in range(1000):
+        random_value = random.random()
+        numpy_value = np.random.rand()
+        torch_value = torch.rand(1).item()
+
+    assert random_value == pytest.approx(
+        EXPECTED_VALUES_SEED[seed]
+        ['random']), f'random.random() mismatch for seed {seed}'
+    assert numpy_value == pytest.approx(
+        EXPECTED_VALUES_SEED[seed]
+        ['numpy']), f'np.random.rand() mismatch for seed {seed}'
+    assert torch_value == pytest.approx(
+        EXPECTED_VALUES_SEED[seed]
+        ['torch']), f'torch.rand(1).item() mismatch for seed {seed}'
 
 
 # Function to remove files or directories matching a pattern
@@ -39,7 +83,8 @@ def generate_image_paths(basefolder):
 
 
 @pytest.mark.parametrize(('conf', 'model_type'), CONF_YAML)
-@pytest.mark.dependency(name='test_train_and_score')
+@pytest.mark.dependency(name='test_train_and_score',
+                        depends=['random_numbers'])
 def test_train_and_score(conf, model_type):
     basefolder = 'tests/test_data/speckles/'
     patterns = {
