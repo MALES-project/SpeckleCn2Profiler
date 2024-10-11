@@ -18,10 +18,10 @@ jobs:
   Build-n-test:
 
     if: github.event.pull_request.draft == false
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: ['3.9', '3.10.12']
+        python-version: ['3.9', '3.10']
         toolchain:
           - {compiler: gcc, version: 13}
 
@@ -41,58 +41,113 @@ jobs:
         path: ${{ env.pythonLocation }}
         key: ${{ env.pythonLocation }}-${{ hashFiles('pyproject.toml') }}
 
+    - name: Download ResNet results
+      id: download-artifact
+      uses: dawidd6/action-download-artifact@v6
+      with:
+        github_token: ${{secrets.GITHUB_TOKEN}}
+        workflow: generate_test_reference.yaml
+        workflow_search: false
+        workflow_conclusion: success
+        name: ResNet-results-${{ matrix.python-version }}
+        path: Model_test_resnet_score
+        if_no_artifact_found: fail
+
+    - name: Download SCNN results
+      id: download-artifact2
+      uses: dawidd6/action-download-artifact@v6
+      with:
+        github_token: ${{secrets.GITHUB_TOKEN}}
+        workflow: generate_test_reference.yaml
+        workflow_search: false
+        workflow_conclusion: success
+        name: SCNN-results-${{ matrix.python-version }}
+        path: Model_test_scnn_score
+        if_no_artifact_found: fail
+
+    - name: Download ResNet weights
+      id: download-artifact3
+      uses: dawidd6/action-download-artifact@v6
+      with:
+        github_token: ${{secrets.GITHUB_TOKEN}}
+        workflow: generate_test_reference.yaml
+        workflow_search: false
+        workflow_conclusion: success
+        name: ResNet-weights-${{ matrix.python-version }}
+        path: Model_test_resnet_states
+        if_no_artifact_found: fail
+
+    - name: Download SCNN weights
+      id: download-artifact4
+      uses: dawidd6/action-download-artifact@v6
+      with:
+        github_token: ${{secrets.GITHUB_TOKEN}}
+        workflow: generate_test_reference.yaml
+        workflow_search: false
+        workflow_conclusion: success
+        name: SCNN-weights-${{ matrix.python-version }}
+        path: Model_test_scnn_states
+        if_no_artifact_found: fail
+
+    - name: Move test baseline to the correct location
+      run: |
+        ls -lrta
+        rm -rf tests/test_data/speckles/expected_results/*
+        mv Model_test_*_score tests/test_data/speckles/expected_results/.
+        rm -rf tests/test_data/speckles/expected_model_weights/*
+        mv Model_test_*_states tests/test_data/speckles/expected_model_weights/.
+
     - name: Install dependencies
       if: steps.cache-virtualenv.outputs.cache-hit != 'true'
       run: |
         python -m pip install --upgrade pip
         python -m pip install -e .[develop]
 
-    - name: Install test dependencies for Python 3.10.12
-      if: matrix.python-version == '3.10.12'
-      run: |
-        python -m pip install -r tests/test_requirements.txt
-
     - name: Clean Pytest Cache
       run: rm -rf .pytest_cache
 
     - name: Test with pytest
       run: |
-          coverage run -p -m pytest --verbose
+          coverage run -p -m pytest
 
     - name: Upload test results
-      if: always() && matrix.python-version == '3.10.12'
+      if: always()
       uses: actions/upload-artifact@v4
       with:
-        name: test-images
+        name: testfail-images-${{ matrix.python-version }}
         path: .tests/image_diff/
 
     - name: Upload ResNet images
-      if: always() && matrix.python-version == '3.10.12'
+      if: always()
       uses: actions/upload-artifact@v4
       with:
-        name: resnet-images
+        name: resnet-images-testfail-${{ matrix.python-version }}
         path: tests/test_data/speckles/Model_test_resnet_score
+        retention-days: 1
 
     - name: Upload SCNN images
-      if: always() && matrix.python-version == '3.10.12'
+      if: always()
       uses: actions/upload-artifact@v4
       with:
-        name: scnn-images
+        name: scnn-images-testfail-${{ matrix.python-version }}
         path: tests/test_data/speckles/Model_test_scnn_score
+        retention-days: 1
 
     - name: Upload ResNet weights
-      if: always() && matrix.python-version == '3.10.12'
+      if: always()
       uses: actions/upload-artifact@v4
       with:
-        name: resnet-weights
+        name: resnet-weights-testfail-${{ matrix.python-version }}
         path: tests/test_data/speckles/Model_test_resnet_states
+        retention-days: 1
 
     - name: Upload SCNN weights
-      if: always() && matrix.python-version == '3.10.12'
+      if: always()
       uses: actions/upload-artifact@v4
       with:
-        name: scnn-weights
+        name: scnn-weights-testfail-${{ matrix.python-version }}
         path: tests/test_data/speckles/Model_test_scnn_states
+        retention-days: 1
 
     - name: Combine
       run: |
