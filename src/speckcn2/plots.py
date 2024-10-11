@@ -268,6 +268,7 @@ def plot_param_vs_loss(conf: dict,
         ['[m]', '[rad]', '[1]'],
     ):
 
+        dirname = f'{data_dir}/{model_name}_score'
         p_data = [d[param].detach().cpu() for d in measures]
         if no_sign:
             l_data = [d[lname].detach().cpu() for d in test_losses]
@@ -307,7 +308,7 @@ def plot_param_vs_loss(conf: dict,
                      linestyle='-',
                      alpha=0.75)
 
-        # Plot error reference lines
+        # Plot error reference lines+shade
         axs.axhline(y=1.0, linestyle='--', color='tab:red', label='100% error')
         axs.axhline(y=0.5,
                     linestyle='--',
@@ -317,9 +318,43 @@ def plot_param_vs_loss(conf: dict,
                     linestyle='--',
                     color='tab:green',
                     label='10% error')
+        axs.axhline(y=-1.0, linestyle='--', color='tab:red')
+        axs.axhline(
+            y=-0.5,
+            linestyle='--',
+            color='tab:orange',
+        )
+        axs.axhline(
+            y=-0.1,
+            linestyle='--',
+            color='tab:green',
+        )
+        plt.tight_layout()
+        x_min, x_max = axs.get_xlim()
+        axs.fill_between([x_min, x_max],
+                         -0.1,
+                         0.1,
+                         color='tab:green',
+                         alpha=0.1)
+        axs.fill_between([x_min, x_max],
+                         0.1,
+                         0.5,
+                         color='tab:orange',
+                         alpha=0.1)
+        axs.fill_between([x_min, x_max],
+                         -0.5,
+                         -0.1,
+                         color='tab:orange',
+                         alpha=0.1)
+        axs.fill_between([x_min, x_max], 0.5, 1.0, color='tab:red', alpha=0.1)
+        axs.fill_between([x_min, x_max],
+                         -1.0,
+                         -0.5,
+                         color='tab:red',
+                         alpha=0.1)
         axs.set_xlabel(f'{name} {units}')
         axs.set_xscale('log')
-        axs.set_yscale('symlog', linthresh=0.01)
+        axs.set_yscale('symlog', linthresh=0.1)
         axs.set_ylabel('Relative error')
         axs.legend()
         plt.title(f'Model: {model_name}')
