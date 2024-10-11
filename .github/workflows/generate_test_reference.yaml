@@ -1,0 +1,74 @@
+name: Generate Results and Store as Artifact
+
+on:
+  workflow_dispatch: # This workflow can only be triggered manually
+
+jobs:
+  generate-secret:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ['3.9', '3.10']
+        toolchain:
+          - {compiler: gcc, version: 13}
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v3
+        with:
+          submodules: 'true'
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - uses: actions/cache@v3
+        id: cache-virtualenv
+        with:
+          path: ${{ env.pythonLocation }}
+          key: ${{ env.pythonLocation }}-${{ hashFiles('pyproject.toml') }}
+
+      - name: Install dependencies
+        if: steps.cache-virtualenv.outputs.cache-hit != 'true'
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e .[develop]
+
+      - name: Train the ResNet
+        run: |
+          python examples/example_train.py tests/test_data/conf_resnet.yaml
+          python examples/example_post.py tests/test_data/conf_resnet.yaml
+
+      - name: Upload ResNet results
+        uses: actions/upload-artifact@v4
+        with:
+          name: ResNet-results-${{ matrix.python-version }}
+          path: tests/test_data/speckles/Model_test_resnet_score
+          retention-days: 90
+
+      - name: Upload ResNet weights
+        uses: actions/upload-artifact@v4
+        with:
+          name: ResNet-weights-${{ matrix.python-version }}
+          path: tests/test_data/speckles/Model_test_resnet_states
+          retention-days: 90
+
+      - name: Train the SCNN
+        run: |
+          python examples/example_train.py tests/test_data/conf_scnn.yaml
+          python examples/example_post.py tests/test_data/conf_scnn.yaml
+
+      - name: Upload SCNN results
+        uses: actions/upload-artifact@v4
+        with:
+          name: SCNN-results-${{ matrix.python-version }}
+          path: tests/test_data/speckles/Model_test_scnn_score
+          retention-days: 90
+
+      - name: Upload SCNN weights
+        uses: actions/upload-artifact@v4
+        with:
+          name: SCNN-weights-${{ matrix.python-version }}
+          path: tests/test_data/speckles/Model_test_scnn_states
+          retention-days: 90
