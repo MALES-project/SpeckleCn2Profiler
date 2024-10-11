@@ -59,15 +59,26 @@ jobs:
       run: |
           coverage run -p -m pytest --verbose
 
-    - name: Upload test images
+    - name: Upload test results
       if: always()
       uses: actions/upload-artifact@v4
       with:
         name: test-images
-        path: |
-          .tests/image_diff/
-          tests/test_data/speckles/Model_test_resnet_score
-          tests/test_data/speckles/Model_test_scnn_score
+        path: .tests/image_diff/
+
+    - name: Upload ResNet images
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: resnet-images
+        path: tests/test_data/speckles/Model_test_resnet_score
+
+    - name: Upload SCNN images
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: scnn-images
+        path: tests/test_data/speckles/Model_test_scnn_score
 
     - name: Combine
       run: |
