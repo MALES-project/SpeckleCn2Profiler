@@ -603,7 +603,7 @@ def screen_errors(conf: dict,
                                           color='blue',
                                           alpha=0.5,
                                           zorder=3)
-        axs[si // 4, si % 4].set_yscale('symlog', linthresh=0.01)
+        axs[si // 4, si % 4].set_yscale('symlog', linthresh=0.1)
     axs[0, 1].legend()
     plt.suptitle('Relative Error of Cn2')
     plt.tight_layout()
