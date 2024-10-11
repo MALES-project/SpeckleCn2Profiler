@@ -91,7 +91,6 @@ jobs:
 
     - name: Move test baseline to the correct location
       run: |
-        ls -lrta
         rm -rf tests/test_data/speckles/expected_results/*
         mv Model_test_*_score tests/test_data/speckles/expected_results/.
         rm -rf tests/test_data/speckles/expected_model_weights/*
