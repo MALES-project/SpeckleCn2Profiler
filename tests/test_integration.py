@@ -6,7 +6,6 @@ import random
 import runpy
 import shutil
 import sys
-from pathlib import Path
 
 import numpy as np
 import pytest
@@ -72,13 +71,14 @@ def remove_files(pattern, is_dir=False):
 # Helper function to generate image paths
 def generate_image_paths(basefolder):
     image_pairs = []
-    for single_folder in os.walk(basefolder):
-        for img in single_folder[2]:
+    for root, dirs, files in os.walk(basefolder):
+        for img in files:
             if 'time' not in img and 'sum' not in img:
-                expected = single_folder[0] + '/' + img
-                test_folder = 'tests/test_data/speckles/' + Path(
-                    single_folder[0]).parts[-1]
-                test_img = test_folder + '/' + img
+                expected = os.path.join(root, img)
+                relative_path = os.path.relpath(root, basefolder)
+                test_folder = os.path.join('tests/test_data/speckles',
+                                           relative_path)
+                test_img = os.path.join(test_folder, img)
                 image_pairs.append((expected, test_img))
     return image_pairs
 

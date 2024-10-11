@@ -52,7 +52,8 @@ def tags_distribution(conf: dict,
     model_name = conf['model']['name']
     ensemble = conf['preproc'].get('ensemble', 1)
 
-    ensure_directory(f'{data_directory}/result_plots')
+    dirname = f'{data_directory}/{model_name}_score'
+    ensure_directory(dirname)
 
     # Get the tags from the training set
     if ensemble > 1:
@@ -106,7 +107,7 @@ def tags_distribution(conf: dict,
         axs[i // 4, i % 4].set_title(f'Screen {i}')
     axs[0, 1].legend()
     plt.tight_layout()
-    figname = f'{data_directory}/result_plots/{model_name}_tags'
+    figname = f'{dirname}/{model_name}_tags'
     if not rescale:
         figname += '_unscaled'
     plt.savefig(f'{figname}.png')
@@ -130,7 +131,7 @@ def tags_distribution(conf: dict,
         axs.set_title('Sum of J')
         axs.legend()
         plt.tight_layout()
-        plt.savefig(f'{data_directory}/result_plots/{model_name}_sumJ.png')
+        plt.savefig(f'{dirname}/{model_name}_sumJ.png')
 
         plt.close()
 
@@ -166,7 +167,8 @@ def average_speckle_output(conf: dict,
     model_name = conf['model']['name']
     n_screens = conf['speckle']['nscreens']
 
-    ensure_directory(f'{data_directory}/result_plots')
+    dirname = f'{data_directory}/{model_name}_score/effect_averaging'
+    ensure_directory(dirname)
 
     # group the sets that have the same n[1]
     grouped_test_set: Dict = {}
@@ -339,8 +341,7 @@ def average_speckle_output(conf: dict,
                 plt.subplots_adjust(top=0.92)
                 plt.suptitle('Effect of averaging speckle predictions')
                 plt.savefig(
-                    f'{data_directory}/{model_name}_score/average_ensemble_loss{loss.item():.4g}.png'
-                )
+                    f'{dirname}/average_ensemble_loss{loss.item():.4g}.png')
                 loss_max = max(loss, loss_max)
                 loss_min = min(loss, loss_min)
                 ensemble_count += 1
@@ -380,7 +381,8 @@ def average_speckle_input(conf: dict,
     data_directory = conf['speckle']['datadirectory']
     model_name = conf['model']['name']
 
-    ensure_directory(f'{data_directory}/result_plots')
+    dirname = f'{data_directory}/{model_name}_score/effect_averaging'
+    ensure_directory(dirname)
 
     # group the sets that have the same n[1]
     grouped_test_set: Dict = {}
@@ -478,9 +480,7 @@ def average_speckle_input(conf: dict,
             fig.tight_layout()
             plt.subplots_adjust(top=0.92)
             plt.suptitle('Effect of averaging speckle patterns')
-            plt.savefig(
-                f'{data_directory}/{model_name}_score/average_speckle_loss{loss.item():.4g}.png'
-            )
+            plt.savefig(f'{dirname}/average_speckle_loss{loss.item():.4g}.png')
             plt.close()
 
 
@@ -510,6 +510,9 @@ def screen_errors(conf: dict,
     data_directory = conf['speckle']['datadirectory']
     model_name = conf['model']['name']
     n_screens = conf['speckle']['nscreens']
+
+    dirname = f'{data_directory}/{model_name}_score'
+    ensure_directory(dirname)
 
     # Plot the distribution of each tag element
     fig, axs = plt.subplots(2, 4, figsize=(20, 10))
@@ -600,9 +603,10 @@ def screen_errors(conf: dict,
                                           color='blue',
                                           alpha=0.5,
                                           zorder=3)
+        axs[si // 4, si % 4].set_yscale('symlog', linthresh=0.01)
     axs[0, 1].legend()
     plt.suptitle('Relative Error of Cn2')
     plt.tight_layout()
-    figname = f'{data_directory}/result_plots/{model_name}_Jerrors'
+    figname = f'{dirname}/{model_name}_Jerrors'
     plt.savefig(f'{figname}.png')
     plt.close()

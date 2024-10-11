@@ -67,13 +67,17 @@ def score_plot(
         )
         return
 
+    dirname = f'{data_dir}/{model_name}_score/single-shot_predictions'
+    ensure_directory(dirname)
+
     fig, axs = plt.subplots(1, 3 + ensemble, figsize=(4 * (2 + ensemble), 3.5))
 
     # (1) Plot the input images
     for n in range(ensemble):
         img = inputs[ensemble * i + n].detach().cpu().squeeze().abs()
         axs[n].imshow(img, cmap='bone')
-    axs[1].set_title(f'Input {ensemble} images')
+    title_string = f'Input {ensemble} images' if ensemble > 1 else 'Input single image'
+    axs[1].set_title(title_string)
 
     # (2) Plot J vs nscreens
     axs[-3].plot(recovered_tag_true.squeeze(0).detach().cpu(),
@@ -89,16 +93,16 @@ def score_plot(
     axs[-3].legend()
 
     # (3) Plot Cn2 vs altitude
-    axs[-2].plot(Cn2_true.squeeze(0).detach().cpu(), hs, 'o', label='True')
-    axs[-2].plot(Cn2_pred.squeeze(0).detach().cpu(),
-                 hs,
+    axs[-2].plot(hs, Cn2_true.squeeze(0).detach().cpu(), 'o', label='True')
+    axs[-2].plot(hs,
+                 Cn2_pred.squeeze(0).detach().cpu(),
                  '.',
                  color='tab:red',
                  label='Predicted')
     axs[-2].set_xscale('log')
     axs[-2].set_yscale('log')
-    axs[-2].set_xlabel(r'$Cn^2$')
-    axs[-2].set_ylabel('Altitude [m]')
+    axs[-2].set_ylabel(r'$Cn^2$')
+    axs[-2].set_xlabel('Altitude [m]')
 
     # (4) Plot the recap information
     axs[-1].axis('off')  # Hide axis
@@ -119,9 +123,7 @@ def score_plot(
                  color='black')
 
     plt.tight_layout()
-    plt.savefig(
-        f'{data_dir}/{model_name}_score/single_speckle_loss{loss.item():.4g}.png'
-    )
+    plt.savefig(f'{dirname}/single_speckle_loss{loss.item():.4g}.png')
     plt.close()
 
 
@@ -139,8 +141,10 @@ def plot_loss(conf: dict, model, data_dir: str) -> None:
     """
 
     model_name = conf['model']['name']
+    data_dir = conf['speckle']['datadirectory']
 
-    ensure_directory(f'{data_dir}/result_plots')
+    dirname = f'{data_dir}/{model_name}_score'
+    ensure_directory(dirname)
 
     # plot the loss
     fig, axs = plt.subplots(1, 1, figsize=(5, 5))
@@ -152,7 +156,7 @@ def plot_loss(conf: dict, model, data_dir: str) -> None:
     axs.legend()
     plt.title(f'Model: {model_name}')
     plt.tight_layout()
-    plt.savefig(f'{data_dir}/result_plots/loss_{model_name}.png')
+    plt.savefig(f'{dirname}/loss_{model_name}.png')
     plt.close()
 
 
@@ -170,8 +174,10 @@ def plot_time(conf: dict, model, data_dir: str) -> None:
     """
 
     model_name = conf['model']['name']
+    data_dir = conf['speckle']['datadirectory']
 
-    ensure_directory(f'{data_dir}/result_plots')
+    dirname = f'{data_dir}/{model_name}_score'
+    ensure_directory(dirname)
 
     # plot the loss
     fig, axs = plt.subplots(1, 1, figsize=(5, 5))
@@ -181,7 +187,7 @@ def plot_time(conf: dict, model, data_dir: str) -> None:
     axs.legend()
     plt.title(f'Model: {model_name}')
     plt.tight_layout()
-    plt.savefig(f'{data_dir}/result_plots/time_{model_name}.png')
+    plt.savefig(f'{dirname}/time_{model_name}.png')
     plt.close()
 
 
@@ -199,8 +205,10 @@ def plot_histo_losses(conf: dict, test_losses: list[dict],
         The directory where the data is stored
     """
     model_name = conf['model']['name']
+    data_dir = conf['speckle']['datadirectory']
 
-    ensure_directory(f'{data_dir}/result_plots')
+    dirname = f'{data_dir}/{model_name}_score/histo_losses'
+    ensure_directory(dirname)
 
     # plot the loss
     fig, axs = plt.subplots(1, 1, figsize=(5, 5))
@@ -216,7 +224,7 @@ def plot_histo_losses(conf: dict, test_losses: list[dict],
     axs.legend()
     plt.title(f'Model: {model_name}')
     plt.tight_layout()
-    plt.savefig(f'{data_dir}/result_plots/histo_losses_{model_name}.png')
+    plt.savefig(f'{dirname}/histo_losses_{model_name}.png')
     plt.close()
 
 
@@ -248,8 +256,10 @@ def plot_param_vs_loss(conf: dict,
         If True, the bins are linearly spaced, otherwise they are log spaced
     """
     model_name = conf['model']['name']
+    data_dir = conf['speckle']['datadirectory']
 
-    ensure_directory(f'{data_dir}/result_plots')
+    dirname = f'{data_dir}/{model_name}_score'
+    ensure_directory(dirname)
 
     for param, lname, name, units in zip(
         ['Fried_true', 'Isoplanatic_true', 'Scintillation_w_true'],
@@ -309,17 +319,20 @@ def plot_param_vs_loss(conf: dict,
                     label='10% error')
         axs.set_xlabel(f'{name} {units}')
         axs.set_xscale('log')
-        axs.set_yscale('log')
+        axs.set_yscale('symlog', linthresh=0.01)
         axs.set_ylabel('Relative error')
         axs.legend()
         plt.title(f'Model: {model_name}')
         plt.tight_layout()
-        plt.savefig(f'{data_dir}/result_plots/{param}_vs_sum_{model_name}.png')
+        plt.savefig(f'{dirname}/{param}_vs_sum_{model_name}.png')
         plt.close()
 
         # If specified, plot the histogram per single bin
         if conf['preproc'].get(lname + '_details', False):
             print(f'\nComputing {lname} details')
+            dirname = f'{data_dir}/{model_name}_score/{lname}_bin_details'
+            ensure_directory(dirname)
+
             for idx, single_bin in enumerate(bin_centers):
                 l_data = loss[bin_indices == idx]
                 if len(l_data) == 0:
@@ -349,8 +362,7 @@ def plot_param_vs_loss(conf: dict,
                 axs.legend()
                 plt.title(f'{lname} value = {single_bin:.3f} {units}')
                 plt.tight_layout()
-                plt.savefig(
-                    f'{data_dir}/{model_name}_score/{lname}_bin{idx}.png')
+                plt.savefig(f'{dirname}/{lname}_bin{idx}.png')
                 plt.close()
 
 
@@ -370,8 +382,10 @@ def plot_param_histo(conf: dict, test_losses: list[dict], data_dir: str,
         The measures of the model
     """
     model_name = conf['model']['name']
+    data_dir = conf['speckle']['datadirectory']
 
-    ensure_directory(f'{data_dir}/result_plots')
+    dirname = f'{data_dir}/{model_name}_score'
+    ensure_directory(dirname)
 
     for param_model, param_true, name, units in zip(
         ['Fried_pred', 'Isoplanatic_pred', 'Scintillation_w_pred'],
@@ -414,8 +428,7 @@ def plot_param_histo(conf: dict, test_losses: list[dict], data_dir: str,
         axs.legend()
         plt.title(f'Model: {model_name}')
         plt.tight_layout()
-        plt.savefig(
-            f'{data_dir}/result_plots/histo_{param_true}_{model_name}.png')
+        plt.savefig(f'{dirname}/histo_{param_true}_{model_name}.png')
         plt.close()
 
 
@@ -444,6 +457,9 @@ def plot_J_error_details(conf: dict,
     nscreens = conf['speckle']['nscreens']
     data_dir = conf['speckle']['datadirectory']
     model_name = conf['model']['name']
+
+    dirname = f'{data_dir}/{model_name}_score/J_bin_details'
+    ensure_directory(dirname)
 
     if conf['preproc'].get('J_details', False):
         for screen_id in range(nscreens):
@@ -494,7 +510,5 @@ def plot_J_error_details(conf: dict,
                 axs.legend()
                 plt.title(f'J (screen-{screen_id}) value = {single_bin:.3g}')
                 plt.tight_layout()
-                plt.savefig(
-                    f'{data_dir}/{model_name}_score/Jscreen{screen_id}_bin{idx}.png'
-                )
+                plt.savefig(f'{dirname}/Jscreen{screen_id}_bin{idx}.png')
                 plt.close()
