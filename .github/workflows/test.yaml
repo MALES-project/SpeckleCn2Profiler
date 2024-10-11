@@ -64,7 +64,10 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: test-images
-        path: .tests/image_diff/
+        path: |
+          .tests/image_diff/
+          tests/test_data/speckles/Model_test_resnet_score
+          tests/test_data/speckles/Model_test_scnn_score
 
     - name: Combine
       run: |
