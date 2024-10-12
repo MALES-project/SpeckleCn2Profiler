@@ -1,7 +1,9 @@
 name: Generate Results and Store as Artifact
 
 on:
-  workflow_dispatch: # This workflow can only be triggered manually
+  schedule:
+    - cron: '0 0 1 * *' # Run every month on the first day
+  workflow_dispatch:
 
 jobs:
   generate-secret:
@@ -45,14 +47,14 @@ jobs:
         with:
           name: ResNet-results-${{ matrix.python-version }}
           path: tests/test_data/speckles/Model_test_resnet_score
-          retention-days: 90
+          retention-days: 31
 
       - name: Upload ResNet weights
         uses: actions/upload-artifact@v4
         with:
           name: ResNet-weights-${{ matrix.python-version }}
           path: tests/test_data/speckles/Model_test_resnet_states
-          retention-days: 90
+          retention-days: 31
 
       - name: Train the SCNN
         run: |
@@ -64,11 +66,11 @@ jobs:
         with:
           name: SCNN-results-${{ matrix.python-version }}
           path: tests/test_data/speckles/Model_test_scnn_score
-          retention-days: 90
+          retention-days: 31
 
       - name: Upload SCNN weights
         uses: actions/upload-artifact@v4
         with:
           name: SCNN-weights-${{ matrix.python-version }}
           path: tests/test_data/speckles/Model_test_scnn_states
-          retention-days: 90
+          retention-days: 31
