@@ -1,12 +1,21 @@
 name: Generate Results and Store as Artifact
 
 on:
+  # Run every month on the first day
   schedule:
-    - cron: '0 0 1 * *' # Run every month on the first day
+    - cron: '0 0 1 * *'
+  # Allow manual triggering
   workflow_dispatch:
+  # Check if github runner is updated
+  workflow_run:
+    workflows: ["Detect Runner Change"]
+    types:
+      - completed
 
 jobs:
   generate-secret:
+    # It runs only if the runner is updated
+    if: ${{ github.event.workflow_run.conclusion == 'failure' }}
     runs-on: ubuntu-latest
     strategy:
       matrix:
