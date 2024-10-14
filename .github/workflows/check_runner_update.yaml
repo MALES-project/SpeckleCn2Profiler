@@ -1,0 +1,50 @@
+name: Detect Runner Change
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 12 * * *"
+
+jobs:
+  detect-runner-change:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Get runner details
+        run: |
+          echo "Runner OS: ${{ runner.os }}" > runner_info.txt
+          echo "Runner Arch: ${{ runner.arch }}" >> runner_info.txt
+          echo "Operating System and Version:" >> runner_info.txt
+          uname -srvpio >> runner_info.txt
+          echo "Distribution and Version:" >> runner_info.txt
+          lsb_release -a || cat /etc/os-release >> runner_info.txt
+
+      - name: Download previous runner info
+        id: download-artifact4
+        uses: dawidd6/action-download-artifact@v6
+        with:
+          github_token: ${{secrets.GITHUB_TOKEN}}
+          workflow: check_runner_update.yaml
+          workflow_search: true
+          workflow_conclusion: ""
+          name: runner-info-artifact
+          path: ./previous_runner_info
+          search_artifacts: true
+          if_no_artifact_found: fail
+
+      - name: Compare with previous runner details
+        id: check
+        run: |
+          if [ -f ./previous_runner_info/runner_info.txt ]; then
+            echo "Comparing with previous runner info..."
+            diff runner_info.txt ./previous_runner_info/runner_info.txt || exit 1
+          else
+            echo "No previous runner info found."
+          fi
+
+      - name: Save runner info
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: runner-info-artifact
+          path: ./runner_info.txt
+          retention-days: 2
