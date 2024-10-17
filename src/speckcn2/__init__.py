@@ -12,6 +12,7 @@ from .plots import (
     plot_loss,
     plot_param_histo,
     plot_param_vs_loss,
+    plot_samples_in_ensemble,
     plot_time,
 )
 from .postprocess import average_speckle_input, average_speckle_output, screen_errors, tags_distribution
@@ -44,4 +45,5 @@ __all__ = [
     'plot_histo_losses',
     'plot_param_vs_loss',
     'plot_param_histo',
+    'plot_samples_in_ensemble',
 ]
