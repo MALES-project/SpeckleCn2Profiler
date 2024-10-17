@@ -1,10 +1,16 @@
 from __future__ import annotations
 
+from typing import Dict
+
 import matplotlib.pyplot as plt
 import numpy as np
 import scipy.stats as stats
 import torch
+from torch import device as Device
+from torch import nn
 
+from speckcn2.loss import ComposableLoss
+from speckcn2.mlmodels import EnsembleModel
 from speckcn2.utils import ensure_directory
 
 
@@ -264,7 +270,7 @@ def plot_param_vs_loss(conf: dict,
     for param, lname, name, units in zip(
         ['Fried_true', 'Isoplanatic_true', 'Scintillation_w_true'],
         ['Fried', 'Isoplanatic', 'Scintillation_w'],
-        ['Fried parameter', 'Isoplanatic angle', '(weak) Scintillation index'],
+        ['Fried parameter', 'Isoplanatic angle', 'Rytov index'],
         ['[m]', '[rad]', '[1]'],
     ):
 
@@ -329,6 +335,11 @@ def plot_param_vs_loss(conf: dict,
             linestyle='--',
             color='tab:green',
         )
+        axs.axhline(
+            y=0,
+            linestyle='--',
+            color='black',
+        )
         plt.tight_layout()
         x_min, x_max = axs.get_xlim()
         axs.fill_between([x_min, x_max],
@@ -356,7 +367,10 @@ def plot_param_vs_loss(conf: dict,
         axs.set_xscale('log')
         axs.set_yscale('symlog', linthresh=0.1)
         axs.set_ylabel('Relative error')
-        axs.legend()
+        yticks = [-1, -0.5, -0.1, 0, 0.1, 0.5, 1]
+        plt.yticks(yticks)
+        yticklabels = ['-100%', '-50%', '-10%', '0', '10%', '50%', '100%']
+        plt.gca().set_yticklabels(yticklabels)
         plt.title(f'Model: {model_name}')
         plt.tight_layout()
         plt.savefig(f'{dirname}/{param}_vs_sum_{model_name}.png')
@@ -425,7 +439,7 @@ def plot_param_histo(conf: dict, test_losses: list[dict], data_dir: str,
     for param_model, param_true, name, units in zip(
         ['Fried_pred', 'Isoplanatic_pred', 'Scintillation_w_pred'],
         ['Fried_true', 'Isoplanatic_true', 'Scintillation_w_true'],
-        ['Fried parameter', 'Isoplanatic angle', '(weak) Scintillation index'],
+        ['Fried parameter', 'Isoplanatic angle', 'Rytov index'],
         ['[m]', '[rad]', '[1]'],
     ):
         fig, axs = plt.subplots(1, 1, figsize=(5, 5))
@@ -547,3 +561,191 @@ def plot_J_error_details(conf: dict,
                 plt.tight_layout()
                 plt.savefig(f'{dirname}/Jscreen{screen_id}_bin{idx}.png')
                 plt.close()
+
+
+def plot_samples_in_ensemble(conf: dict,
+                             test_set: list,
+                             device: Device,
+                             model: nn.Torch,
+                             criterion: ComposableLoss,
+                             trimming: float = 0.2,
+                             n_max_plots: int = 100) -> None:
+    """Plot the prediction over a sample and compare it with the ones
+    from its ensemble.
+
+    Parameters
+    ----------
+    conf : dict
+        Dictionary containing the configuration
+    test_set : list
+        The test set
+    device : torch.device
+        The device to use
+    model : nn.Torch
+        The trained model
+    criterion : ComposableLoss
+        The loss function
+    trimming : float
+        The trimming to use for the mean
+    n_max_plots : int
+        The maximum number of plots
+    """
+
+    data_directory = conf['speckle']['datadirectory']
+    model_name = conf['model']['name']
+    n_screens = conf['speckle']['nscreens']
+
+    dirname = f'{data_directory}/{model_name}_score/single-shot_predictions'
+    ensure_directory(dirname)
+
+    # group the sets that have the same n[1]
+    grouped_test_set: Dict = {}
+    for n in test_set:
+        key = tuple(n[1])
+        if key not in grouped_test_set:
+            grouped_test_set[key] = []
+        grouped_test_set[key].append(n)
+    print('\nChecking if averaging speckle predictions improves results')
+    print(f'Number of samples: {len(test_set)}')
+    print(f'Number of speckle groups: {len(grouped_test_set)}')
+
+    # In the end, we will plot groups that have uncommon values of loss
+    loss_min = 1e10
+    loss_max = 0
+    ensemble_count = 0
+
+    ensemble = EnsembleModel(conf, device)
+    with torch.no_grad():
+        model.eval()
+
+        for key, value in grouped_test_set.items():
+            _outputs = []
+            _all_tags_pred = []
+
+            for count, speckle in enumerate(value, 1):
+                output, target, _ = ensemble(model, [speckle])
+                _outputs.append(output.detach().cpu().numpy())
+                loss, losses = criterion(output, target)
+
+                # Get the Cn2 profile and the recovered tags
+                Cn2_pred = criterion.reconstruct_cn2(output)
+                Cn2_true = criterion.reconstruct_cn2(target)
+                recovered_tag_pred = criterion.get_J(output)
+                _all_tags_pred.append(recovered_tag_pred.detach().cpu())
+                # and get all the measures
+                all_measures = criterion._get_all_measures(
+                    output, target, Cn2_pred, Cn2_true)
+
+                if count == 1:
+                    fig, ax = plt.subplots(1, 3, figsize=(12, 4))
+                    loss_0 = loss
+
+                    # (0) Plot the speckle pattern
+                    ax[0].axis('off')  # Hide axis
+                    ax[0].imshow(speckle[0][0, :, :], cmap='bone')
+
+                    # (1) Plot J vs nscreens
+                    recovered_tag_true = criterion.get_J(target)
+                    ax[1].plot(recovered_tag_true.squeeze(0).detach().cpu(),
+                               '*',
+                               label='True',
+                               color='tab:green',
+                               markersize=10,
+                               markeredgecolor='black',
+                               zorder=100)
+                    ax[1].plot(recovered_tag_pred.squeeze(0).detach().cpu(),
+                               'o',
+                               label='This speckle',
+                               color='tab:red',
+                               markersize=7,
+                               markeredgecolor='black',
+                               zorder=90)
+
+                    # (2) Plot the parameters of this speckle prediction
+                    ax[2].axis('off')  # Hide axis
+                    recap_info = f'LOSS TERMS:\nTotal Loss: {loss.item():.4g}\n'
+                    # the individual losses
+                    for key, value in losses.items():
+                        recap_info += f'{key}: {value.item():.4g}\n'
+                    recap_info += '-------------------\nPARAMETERS:\n'
+                    # then the single parameters
+                    for key, value in all_measures.items():
+                        recap_info += f'{key}: {value:.4g}\n'
+                    ax[2].text(0.5,
+                               0.5,
+                               recap_info,
+                               horizontalalignment='center',
+                               verticalalignment='center',
+                               fontsize=10,
+                               color='black')
+
+            # Now at the end of the loop, we decide if this set needs to plotted or not
+            # by checking that the loss
+            if loss_0 > loss_max or loss_0 < loss_min:
+                avg_tags_trim = stats.trim_mean(_all_tags_pred,
+                                                trimming).squeeze()
+                percentiles_50 = np.percentile(_all_tags_pred, [25, 75],
+                                               axis=0).squeeze()
+                percentiles_68 = np.percentile(_all_tags_pred, [16, 84],
+                                               axis=0).squeeze()
+                percentiles_95 = np.percentile(_all_tags_pred, [2.5, 97.5],
+                                               axis=0).squeeze()
+
+                x_vals = np.arange(n_screens)
+                alp = 0.3
+                ax[1].plot(avg_tags_trim,
+                           label='Mean',
+                           color='tab:red',
+                           zorder=50)
+                ax[1].fill_between(x_vals,
+                                   percentiles_50[0],
+                                   percentiles_50[1],
+                                   color='gold',
+                                   alpha=alp,
+                                   label='50% CI',
+                                   zorder=5)
+                ax[1].fill_between(x_vals,
+                                   percentiles_68[0],
+                                   percentiles_50[0],
+                                   color='cadetblue',
+                                   alpha=alp,
+                                   label='68% CI',
+                                   zorder=4)
+                ax[1].fill_between(x_vals,
+                                   percentiles_50[1],
+                                   percentiles_68[1],
+                                   color='cadetblue',
+                                   alpha=alp,
+                                   zorder=4)
+                ax[1].fill_between(x_vals,
+                                   percentiles_95[0],
+                                   percentiles_68[0],
+                                   color='blue',
+                                   label='95% CI',
+                                   alpha=alp,
+                                   zorder=3)
+                ax[1].fill_between(x_vals,
+                                   percentiles_68[1],
+                                   percentiles_95[1],
+                                   color='blue',
+                                   alpha=alp,
+                                   zorder=3)
+
+                ax[1].set_yscale('log')
+                ax[1].set_ylabel('J')
+                ax[1].set_xlabel('# screen')
+                ax[1].legend()
+                fig.tight_layout()
+                plt.subplots_adjust(top=0.92)
+                plt.suptitle(
+                    'Prediction from a single speckle, compared to similar')
+                plt.savefig(
+                    f'{dirname}/single_speckle_loss{loss_0.item():.4g}.png')
+                loss_max = max(loss_0, loss_max)
+                loss_min = min(loss_0, loss_min)
+                ensemble_count += 1
+
+            plt.close()
+
+            if ensemble_count >= n_max_plots:
+                break

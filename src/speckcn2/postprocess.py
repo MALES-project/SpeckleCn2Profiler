@@ -486,8 +486,8 @@ def average_speckle_input(conf: dict,
 
 def screen_errors(conf: dict,
                   device: Device,
-                  cn2_pred: Tensor,
-                  cn2_true: Tensor,
+                  J_pred: Tensor,
+                  J_true: Tensor,
                   nbins: int = 20,
                   trimming: float = 0.1) -> None:
     """Plot the relative error of Cn2 for each screen.
@@ -498,10 +498,10 @@ def screen_errors(conf: dict,
         Dictionary containing the configuration
     device : torch.device
         The device on which the data are stored
-    cn2_pred : torch.Tensor
-        The predicted Cn2 profile
-    cn2_true : torch.Tensor
-        The true Cn2 profile
+    J_pred : torch.Tensor
+        The predicted J profile
+    J_true : torch.Tensor
+        The true J profile
     nbins : int, optional
         Number of bins to use for the histograms
     trimming : float, optional
@@ -519,13 +519,13 @@ def screen_errors(conf: dict,
     for si in range(n_screens):
 
         if device == 'cpu':
-            data_pred = np.asarray(cn2_pred)[:, 0, si]
-            data_true = np.asarray(cn2_true)[:, 0, si]
+            data_pred = np.asarray(J_pred)[:, 0, si]
+            data_true = np.asarray(J_true)[:, 0, si]
         else:
-            data_pred = np.asarray(
-                [d.detach().cpu().numpy() for d in cn2_pred])[:, 0, si]
-            data_true = np.asarray(
-                [d.detach().cpu().numpy() for d in cn2_true])[:, 0, si]
+            data_pred = np.asarray([d.detach().cpu().numpy()
+                                    for d in J_pred])[:, 0, si]
+            data_true = np.asarray([d.detach().cpu().numpy()
+                                    for d in J_true])[:, 0, si]
         # Define the bins
         bins = np.linspace(min(data_true), max(data_true), nbins + 1)
 
@@ -605,7 +605,15 @@ def screen_errors(conf: dict,
                                           zorder=3)
         axs[si // 4, si % 4].set_yscale('symlog', linthresh=0.1)
     axs[0, 1].legend()
-    plt.suptitle('Relative Error of Cn2')
+    for ax in axs.flatten():
+        ax.axhline(
+            y=0,
+            linestyle='--',
+            color='black',
+        )
+    for i in range(1, n_screens - 1):
+        axs.flat[i].sharey(axs.flat[0])
+    plt.suptitle('Relative Error of J')
     plt.tight_layout()
     figname = f'{dirname}/{model_name}_Jerrors'
     plt.savefig(f'{figname}.png')
