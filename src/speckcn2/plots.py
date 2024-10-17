@@ -608,6 +608,8 @@ def plot_samples_in_ensemble(conf: dict,
     print('\nChecking if averaging speckle predictions improves results')
     print(f'Number of samples: {len(test_set)}')
     print(f'Number of speckle groups: {len(grouped_test_set)}')
+    # Define a random probability to plot each ensemble
+    p_plot = n_max_plots / len(grouped_test_set)
 
     # In the end, we will plot groups that have uncommon values of loss
     loss_min = 1e10
@@ -680,8 +682,9 @@ def plot_samples_in_ensemble(conf: dict,
                                color='black')
 
             # Now at the end of the loop, we decide if this set needs to plotted or not
-            # by checking that the loss
-            if loss_0 > loss_max or loss_0 < loss_min:
+            # by checking that the loss is uncommon, or via a random probability
+            if loss_0 > loss_max or loss_0 < loss_min or np.random.rand(
+            ) < p_plot:
                 avg_tags_trim = stats.trim_mean(_all_tags_pred,
                                                 trimming).squeeze()
                 percentiles_50 = np.percentile(_all_tags_pred, [25, 75],
