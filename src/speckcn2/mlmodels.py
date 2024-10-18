@@ -9,6 +9,7 @@ model based on the provided configuration.
 from __future__ import annotations
 
 import itertools
+import random
 
 import numpy as np
 import torch
@@ -47,6 +48,9 @@ class EnsembleModel(nn.Module):
         self.fw = conf['noise']['fw']
         self.bit = conf['noise']['bit']
         self.discretize = conf['noise']['discretize']
+        self.rot_sym = conf['noise'].get('rotation_sym', 0)
+        if self.rot_sym > 0:
+            self.rot_fold = 360 // self.rot_sym
         self.apply_masks = conf['noise'].get('apply_masks', False)
         if self.apply_masks:
             self.mask_D, self.mask_d, self.mask_X, self.mask_Y = self.create_masks(
@@ -120,6 +124,11 @@ class EnsembleModel(nn.Module):
         """
         batch, channels, height, width = image_tensor.shape
         processed_tensor = torch.zeros_like(image_tensor)
+
+        # Apply rotation symmetry
+        if self.rot_sym > 0:
+            angle = random.randint(0, self.rot_fold)
+            image_tensor = torch.rot90(image_tensor, angle, (2, 3))
 
         # Normalize wrt optical power
         image_tensor = image_tensor / torch.mean(
