@@ -611,6 +611,10 @@ def screen_errors(conf: dict,
             linestyle='--',
             color='black',
         )
+    vals = axs[0, 0].get_yticks()
+    axs[0, 0].set_yticklabels(['{:.0f}'.format(x * 100) + '%' for x in vals])
+    vals = axs[-1, -1].get_yticks()
+    axs[-1, -1].set_yticklabels(['{:.0f}'.format(x * 100) + '%' for x in vals])
     for i in range(1, n_screens - 1):
         axs.flat[i].sharey(axs.flat[0])
     plt.suptitle('Relative Error of J')

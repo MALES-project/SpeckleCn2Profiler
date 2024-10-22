@@ -605,7 +605,7 @@ def plot_samples_in_ensemble(conf: dict,
         if key not in grouped_test_set:
             grouped_test_set[key] = []
         grouped_test_set[key].append(n)
-    print('\nChecking if averaging speckle predictions improves results')
+    print('\nAnalysis of single shot predictions')
     print(f'Number of samples: {len(test_set)}')
     print(f'Number of speckle groups: {len(grouped_test_set)}')
     # Define a random probability to plot each ensemble
