@@ -317,3 +317,46 @@ def get_scnn(config: dict) -> tuple[nn.Module, int]:
     scnn_model.name = model_name
 
     return load_model_state(scnn_model, datadirectory)
+
+
+class EarlyStopper:
+    """ Early stopping to stop the training when the validation loss does not decrease anymore.
+    """
+
+    def __init__(self, patience: int = 1, min_delta: float = 0):
+        """Initializes the EarlyStopper.
+
+        Parameters
+        ----------
+        patience: int
+            Number of epochs of tolerance before stopping.
+        min_delta: float
+            Percentage of tolerance in considering the loss acceptable.
+        """
+
+        self.patience = patience
+        self.min_delta = min_delta
+        self.counter = 0
+        self.min_validation_loss = float('inf')
+
+    def early_stop(self, validation_loss: float) -> bool:
+        """ Computes if the early stop condition is met at the current step.
+
+        Parameters
+        ----------
+        validation_loss: float
+            Current value of the validation loss
+
+        Returns
+        -------
+        bool
+            It returns True if the training has met the stop condition.
+        """
+        if validation_loss < self.min_validation_loss:
+            self.min_validation_loss = validation_loss
+            self.counter = 0
+        elif validation_loss > self.min_validation_loss * (1 + self.min_delta):
+            self.counter += 1
+            if self.counter >= self.patience:
+                return True
+        return False

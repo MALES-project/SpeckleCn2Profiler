@@ -8,7 +8,7 @@ from torch import nn, optim
 
 from speckcn2.io import save
 from speckcn2.loss import ComposableLoss
-from speckcn2.mlmodels import EnsembleModel
+from speckcn2.mlmodels import EarlyStopper, EnsembleModel
 from speckcn2.plots import score_plot
 from speckcn2.preprocess import Normalizer
 from speckcn2.utils import ensure_directory
@@ -51,10 +51,25 @@ def train(model: nn.Module, last_model_state: int, conf: dict, train_set: list,
     datadirectory = conf['speckle']['datadirectory']
     batch_size = conf['hyppar']['batch_size']
 
+    if getattr(model, 'early_stop', False):
+        print(
+            'Warning: Training reached early stop in a previous training instance'
+        )
+        return model, 0
+
+    print(f'Training the model from epoch {last_model_state} to {final_epoch}')
+
     # Setup the EnsembleModel wrapper
     ensemble = EnsembleModel(conf, device)
 
-    print(f'Training the model from epoch {last_model_state} to {final_epoch}')
+    # Early stopper
+    early_stopping = conf['hyppar'].get('early_stopping', -1)
+    if early_stopping > 0:
+        print('Using early stopping')
+        min_delta = conf['hyppar'].get('early_stop_delta', 0.1)
+        early_stopper = EarlyStopper(patience=early_stopping,
+                                     min_delta=min_delta)
+
     average_loss = 0.0
     model.train()
     for epoch in range(last_model_state, final_epoch):
@@ -109,6 +124,10 @@ def train(model: nn.Module, last_model_state: int, conf: dict, train_set: list,
                    f'(in {t_fin:.3g}s),\tTrain-Loss: {average_loss:.5f},\t'
                    f'Test-Loss: {val_loss:.5f}')
         print(message, flush=True)
+
+        if early_stopper.early_stop(val_loss):
+            print('Early stopping triggered')
+            save(model, datadirectory, early_stop=True)
 
         if (epoch + 1) % save_every == 0 or epoch == final_epoch - 1:
             # Save the model state
