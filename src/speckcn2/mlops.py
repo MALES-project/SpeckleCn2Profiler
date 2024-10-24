@@ -65,7 +65,7 @@ def train(model: nn.Module, last_model_state: int, conf: dict, train_set: list,
     # Early stopper
     early_stopping = conf['hyppar'].get('early_stopping', -1)
     if early_stopping > 0:
-        print('Using early stopping')
+        print('Using early stopping (patience = {})'.format(early_stopping))
         min_delta = conf['hyppar'].get('early_stop_delta', 0.1)
         early_stopper = EarlyStopper(patience=early_stopping,
                                      min_delta=min_delta)
