@@ -44,10 +44,20 @@ class ComposableLoss(nn.Module):
         Dictionary containing the configuration
     nz : Normalizer
         Normalizer object to be used to extract J in its original scale
+    device : torch.device
+        The device to use for the computation
+    validation : bool
+        If true, use the validation parameters from config
     """
 
-    def __init__(self, config: dict, nz: Normalizer, device: torch.device):
+    def __init__(self,
+                 config: dict,
+                 nz: Normalizer,
+                 device: torch.device,
+                 validation: bool = False):
         super(ComposableLoss, self).__init__()
+        if validation:
+            config['loss'] = config['val_loss']
         self.device = device
         self.loss_functions: dict[str, Callable] = {
             'MSE': torch.nn.MSELoss(),

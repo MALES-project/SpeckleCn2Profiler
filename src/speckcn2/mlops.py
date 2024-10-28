@@ -16,7 +16,8 @@ from speckcn2.utils import ensure_directory
 
 def train(model: nn.Module, last_model_state: int, conf: dict, train_set: list,
           test_set: list, device: torch.device, optimizer: optim.Optimizer,
-          criterion: ComposableLoss) -> tuple[nn.Module, float]:
+          criterion: ComposableLoss,
+          criterion_val: ComposableLoss) -> tuple[nn.Module, float]:
     """Trains the model for the given number of epochs.
 
     Parameters
@@ -37,6 +38,8 @@ def train(model: nn.Module, last_model_state: int, conf: dict, train_set: list,
         The optimizer to use
     criterion : ComposableLoss
         The loss function to use
+    criterion_val : ComposableLoss
+        The loss function to use for validation
 
     Returns
     -------
@@ -113,7 +116,7 @@ def train(model: nn.Module, last_model_state: int, conf: dict, train_set: list,
                 batch = test_set[i:i + batch_size]
                 # Forward pass
                 outputs, targets, _ = ensemble(model, batch)
-                loss, _ = criterion(outputs, targets)
+                loss, _ = criterion_val(outputs, targets)
                 # sum loss
                 val_loss += loss.item()
         val_loss = val_loss / len(test_set)
