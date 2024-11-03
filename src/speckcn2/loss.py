@@ -57,7 +57,11 @@ class ComposableLoss(nn.Module):
                  validation: bool = False):
         super(ComposableLoss, self).__init__()
         if validation:
-            config['loss'] = config['val_loss']
+            if 'val_loss' in config:
+                config['loss'] = config['val_loss']
+            else:
+                print('[!] Warning: Validation loss not found in config.yaml,',
+                      'keeping track of training loss instead')
         self.device = device
         self.loss_functions: dict[str, Callable] = {
             'MSE': torch.nn.MSELoss(),
