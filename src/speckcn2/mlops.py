@@ -133,7 +133,6 @@ def train(model: nn.Module, last_model_state: int, conf: dict, train_set: list,
             save(model, datadirectory, early_stop=True)
 
         if (epoch + 1) % save_every == 0 or epoch == final_epoch - 1:
-            # Save the model state
             save(model, datadirectory)
 
     return model, average_loss
@@ -188,13 +187,11 @@ def score(
     # Setup the EnsembleModel wrapper
     ensemble = EnsembleModel(conf, device)
 
-    # For scoring the model, you can compose the loss as you did during training
-    # so it is possible to include:
-    # 1. MAE on screen tags
-    # 2. Fried MAE
-    # 3. Isoplanatic angle MAE
-    # 4. Scintillation (weak) index MAE
-    # TODO: this should be controllable in the configuration file
+    # For scoring the model, it is possible to compose the loss
+    # in the same way as you did during training adn validation.
+    # However, at the moment we are forcing the computation
+    # of all the quantities of interest.
+    # This can be changed in the future to save a bit of time.
     criterion.loss_weights = {
         'MSE': 1,
         'MAE': 1,

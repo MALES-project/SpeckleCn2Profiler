@@ -188,7 +188,7 @@ class EnsembleModel(nn.Module):
         """
         # Coordinates
         x = torch.linspace(-1, 1, resolution, device=self.device)
-        X, Y = torch.meshgrid(x, x, indexing='ij')  # XY grid
+        X, Y = torch.meshgrid(x, x, indexing='ij')
         d = self.dO * self.D  # Diameter obscuration
 
         R = torch.sqrt(X**2 + Y**2)
