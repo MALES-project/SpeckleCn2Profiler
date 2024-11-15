@@ -6,6 +6,7 @@ repo_name: Speckcn2
 nav:
   - Home: index.md
   - Installation: installation.md
+  - Examples: example.md
   - Python API:
     - speckcn2: api/api.md
     - Models: api/models.md
