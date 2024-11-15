@@ -2,7 +2,9 @@
 
 Here you find examples on the usage of SpeckleCn2Profiler.
 This page is divided in two sections, corresponding to the two files that the user has to control to use `speckcn2`:  
+
 1. [run.py](#run-file-explanation)
+
 2. [configuration.yaml](#configuration-file-explanation)
 
 Once you have SpeckleCn2Profiler installed, you will run your workflow as:
