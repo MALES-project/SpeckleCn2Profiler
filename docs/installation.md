@@ -1,4 +1,18 @@
 # Installation
+To get started with the project, follow these steps:
+
+- **Install the package:**
+   ```bash
+   python -m pip install speck2cn
+   ```
+
+- **Or: Clone the repository:**
+  ```bash
+  git clone https://github.com/MALES-project/SpeckleCn2Profiler.git
+  cd SpeckleCn2Profiler
+  git submodule init
+  git submodule update
+  ```
 
 ## MacOS M1 arm64
 

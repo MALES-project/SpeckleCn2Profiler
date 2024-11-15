@@ -90,7 +90,7 @@ class ComposableLoss(nn.Module):
         self.k = 2 * torch.pi / (config['speckle'].get('lambda', 550) * 1e-9)
         self.cosz = np.cos(np.deg2rad(config['speckle'].get('z', 0)))
         self.secz = 1 / self.cosz
-        self.L = config['speckle']['L']
+        #self.L = config['speckle']['L']
         self.p_fr = 0.423 * self.k**2 * self.secz
         self.p_iso = self.cosz**(8. / 5.) / ((2.91 * self.k**2)**(3. / 5.))
         self.p_scw = 2.25 * self.k**(7. / 6.) * self.secz**(11. / 6.)

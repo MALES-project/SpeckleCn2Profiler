@@ -22,29 +22,11 @@
 
 ## Overview
 
-Optical satellite communications is a growing research field with bright commercial perspectives. One of the challenges for optical links through the atmosphere is turbulence, which is also apparent by the twinkling of stars. The reduction of the quality can be calculated, but it needs the turbulence strength over the path the optical beam is running. Estimation of the turbulence strength is done at astronomic sites, but not at rural or urban sites. To be able to do this, a simple instrument is required. We want to propose to use a single star Scintillation Detection and Ranging (SCIDAR), which is an instrument that can estimate the turbulence strength, based on the observation of a single star. Here, reliable signal processing of the received images of the star is most challenging. We propose to solve this by Machine Learning.
-
-## Project Goals
-
-The primary objectives of this project are:
-
-1. **Turbulence Strength Estimation:** Develop a robust algorithm using Machine Learning to estimate turbulence strength based on SCIDAR data.
-
-2. **Signal Processing Enhancement:** Implement advanced signal processing techniques to improve the accuracy and reliability of turbulence strength calculations.
-
-3. **Adaptability to Various Sites:** Ensure the proposed solution is versatile enough to be deployed in diverse environments, including rural and urban locations.
+Optical satellite communications is a growing research field with bright commercial perspectives. One of the challenges for optical links through the atmosphere is turbulence, which is also apparent by the twinkling of stars. The reduction of the quality can be calculated, but it needs the turbulence strength over the path the optical beam is running. Estimation of the turbulence strength is done at astronomic sites, but not at rural or urban sites. To be able to do this, a simple instrument is required. We want to propose to use a single star Scintillation Detection and Ranging (SCIDAR), which is an instrument that can estimate the turbulence strength, based on the observation of a single star. In this setting, reliable signal processing of the received images of the star is most challenging. We propose to solve this by Machine Learning.
 
 ## Repository Contents
 
-This repository contains:
-
-- **Machine Learning Models:** Implementation of machine learning models tailored for turbulence strength estimation from SCIDAR data.
-
-- **Signal Processing Algorithms:** Advanced signal processing algorithms aimed at enhancing the quality of received star images.
-
-- **Dataset:** Sample datasets for training and testing the machine learning models.
-
-- **[Documentation](https://males-project.github.io/SpeckleCn2Profiler/):** In-depth documentation explaining the methodology, algorithms used, and guidelines for using the code.
+This repository contains the workflow to implement and train machine learning models for turbulence strength estimation from SCIDAR data. Extensive **[Documentation](https://males-project.github.io/SpeckleCn2Profiler/)** is available to explain the methodology, algorithms used, and guidelines for using the code.
 
 ## Getting Started
 
@@ -62,6 +44,35 @@ To get started with the project, follow these steps:
   git submodule init
   git submodule update
   ```
+
+## Usage
+
+To use the package, you run the commands such as:
+
+```console
+python <mycode.py> <path_to_config.yml>
+```
+
+where `<mycode.py>` is the name of the script that trains/uses the `speckcn2` model and `<path_to_config.yml>` is the path to the configuration file.
+
+[Here](https://males-project.github.io/SpeckleCn2Profiler/example) you can find a typical example run and an explanation of all the main configuration parameter. In the [example submodule](https://github.com/MALES-project/examples_speckcn2/) you can find multiple examples and multiple configuration to take inspiration from.
+
+## What can we predict?
+
+A machine learning model trained using `speckcn2` can predict:
+
+##### 1. Instantaneous turbulence strength
+![prediction](/src/speckcn2/assets/singleprediciton.png)
+Given a speckle pattern, the model can predict the instantaneous turbulence strength and also provide an uncertainty estimate if more patterns are available.
+
+##### 2. Parameters estimation
+The model can also estimate important parameters that are useful for the analysis of the speckle pattern. At the moment we support:
+* Fried parameter `r0`
+* Isoplanatic angle `θ0`
+* Rytov Index `σ`
+
+We also provide histograms of the estimated parameters and the error of the estimation.
+
 
 ## Contribution Guidelines
 
