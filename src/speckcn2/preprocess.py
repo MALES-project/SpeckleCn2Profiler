@@ -68,8 +68,6 @@ def assemble_transform(conf: dict) -> transforms.Compose:
         # Apply the equivariant transform, which makes sense only in polar coordinates
         list_transforms.append(ShiftRowsTransform())
 
-
-#    list_transforms.append(SpiderMask())
     list_transforms.append(ToUnboundTensor())
 
     return transforms.Compose(list_transforms)

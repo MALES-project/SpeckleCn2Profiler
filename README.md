@@ -35,7 +35,7 @@ To get started with the project, follow these steps:
 
 - **Install the package:**
    ```bash
-   python -m pip install speck2cn
+   python -m pip install speckcn2
    ```
 
 - **Or: Clone the repository:**

@@ -85,12 +85,12 @@ class ComposableLoss(nn.Module):
         self._select_loss_needed()
 
         # And get some useful parameters for the loss functions
-        # the parameters are explained in ...
+        # the parameters are explained at:
+        # https://males-project.github.io/SpeckleCn2Profiler/example/#configuration-file-explanation
         self.h = torch.Tensor([float(x) for x in config['speckle']['hArray']])
         self.k = 2 * torch.pi / (config['speckle'].get('lambda', 550) * 1e-9)
         self.cosz = np.cos(np.deg2rad(config['speckle'].get('z', 0)))
         self.secz = 1 / self.cosz
-        #self.L = config['speckle']['L']
         self.p_fr = 0.423 * self.k**2 * self.secz
         self.p_iso = self.cosz**(8. / 5.) / ((2.91 * self.k**2)**(3. / 5.))
         self.p_scw = 2.25 * self.k**(7. / 6.) * self.secz**(11. / 6.)
@@ -146,12 +146,7 @@ class ComposableLoss(nn.Module):
         for loss_name, loss_fn in self.loss_needed.items():
             weight = self.loss_weights[loss_name]
             if loss_name in ['MAE', 'MSE']:
-                #if loss_name == 'MAE':
-                #    normalizing_factor = torch.abs(target) + 1e-7
-                #else:
-                #    normalizing_factor = target * target + 1e-7
                 this_loss = loss_fn(pred, target)
-                #this_loss = (this_loss / normalizing_factor).mean()
             else:
                 this_loss = loss_fn(pred, target, Cn2_pred, Cn2_target)
             total_loss += weight * this_loss
@@ -292,9 +287,6 @@ class ComposableLoss(nn.Module):
         loss : torch.Tensor
             The Pearson correlation coefficient loss
         """
-        # //TODO: discuss about this. Since it is a variance measure,
-        # it would have to be compared not to a single target,
-        # but to the average of the dataset
 
         mean_pred = torch.mean(pred)
         mean_target = torch.mean(target)
@@ -387,7 +379,7 @@ class ComposableLoss(nn.Module):
         # but to the average of the dataset
 
         # throw a not implemented yet warning
-        print('RytovLoss not implemented yet')
+        print('RytovLoss not implemented yet. Use scintillation index instead')
         return 0
 
     def get_ScintillationWeak(self, Cn: torch.Tensor) -> torch.Tensor:

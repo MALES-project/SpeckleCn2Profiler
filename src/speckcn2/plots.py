@@ -152,7 +152,6 @@ def plot_loss(conf: dict, model, data_dir: str) -> None:
     dirname = f'{data_dir}/{model_name}_score'
     ensure_directory(dirname)
 
-    # plot the loss
     fig, axs = plt.subplots(1, 1, figsize=(5, 5))
     axs.plot(model.epoch, model.loss, label='Training loss')
     axs.plot(model.epoch, model.val_loss, label='Validation loss')
@@ -185,7 +184,6 @@ def plot_time(conf: dict, model, data_dir: str) -> None:
     dirname = f'{data_dir}/{model_name}_score'
     ensure_directory(dirname)
 
-    # plot the loss
     fig, axs = plt.subplots(1, 1, figsize=(5, 5))
     axs.plot(model.epoch, model.time, label='Time per epoch')
     axs.set_xlabel('Epoch')
@@ -216,7 +214,6 @@ def plot_histo_losses(conf: dict, test_losses: list[dict],
     dirname = f'{data_dir}/{model_name}_score/histo_losses'
     ensure_directory(dirname)
 
-    # plot the loss
     fig, axs = plt.subplots(1, 1, figsize=(5, 5))
     for key in ['MAE', 'Fried', 'Isoplanatic', 'Scintillation_w']:
         loss = [d[key].detach().cpu() for d in test_losses]
