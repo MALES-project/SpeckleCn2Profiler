@@ -82,6 +82,19 @@ def generate_image_paths(basefolder):
     return image_pairs
 
 
+# Helper function to check if required files exist
+def check_required_files_exist(pattern):
+    if not glob.glob(pattern):
+        print(
+            f"Required '{pattern}' missing. "
+            'If this is the first time you run the test locally, use `python scripts/setup_test.py`'
+        )
+        pytest.fail(
+            f"Required '{pattern}' missing. "
+            'If this is the first time you run the test locally, use `python scripts/setup_test.py`'
+        )
+
+
 @pytest.mark.parametrize(('conf', 'model_type'), CONF_YAML)
 @pytest.mark.dependency(name='test_train_and_score',
                         depends=['random_numbers'])
@@ -104,11 +117,21 @@ def test_train_and_score(conf, model_type):
     post['main'](conf)
 
 
-#@pytest.mark.skipif(
-#    (sys.version_info.major != 3 or sys.version_info.minor != 10),
-#    reason='Test only runs on Python 3.10')
+@pytest.mark.dependency(name='test_data_present',
+                        depends=['test_train_and_score'])
+def test_data_present():
+    check_required_files_exist(
+        'tests/test_data/speckles/expected_results/*resnet*')
+    check_required_files_exist(
+        'tests/test_data/speckles/expected_model_weights/*resnet*')
+    check_required_files_exist(
+        'tests/test_data/speckles/expected_results/*scnn*')
+    check_required_files_exist(
+        'tests/test_data/speckles/expected_model_weights/*scnn*')
+
+
 @pytest.mark.parametrize(('conf', 'model_type'), CONF_YAML)
-@pytest.mark.dependency(depends=['test_train_and_score'])
+@pytest.mark.dependency(depends=['test_train_and_score', 'test_data_present'])
 @pytest.mark.parametrize(
     ('expected', 'test_img'),
     generate_image_paths('tests/test_data/speckles/expected_results/'))
@@ -118,11 +141,8 @@ def test_figures(conf, model_type, expected, test_img, image_diff):
     image_diff(expected, test_img)
 
 
-#@pytest.mark.skipif(
-#    (sys.version_info.major != 3 or sys.version_info.minor != 10),
-#    reason='Test only runs on Python 3.10')
 @pytest.mark.parametrize(('conf', 'model_type'), CONF_YAML)
-@pytest.mark.dependency(depends=['test_train_and_score'])
+@pytest.mark.dependency(depends=['test_train_and_score', 'test_data_present'])
 def test_weights(conf, model_type):
     config = sp2.load_config(conf)
     datadirectory = config['speckle']['datadirectory']

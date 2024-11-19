@@ -77,6 +77,14 @@ SpeckCn2 uses [pytest](https://docs.pytest.org/en/latest/) to run the tests. You
 pytest
 ```
 
+Notice that some of the tests will fail the first time that you run them locally. After you get this failure message you can run
+
+```console  
+python ./scripts/setup_test.py
+```
+
+to stash the test data in the correct location. After that, you can run the tests again and they should pass.
+
 To check coverage:
 
 ```console
