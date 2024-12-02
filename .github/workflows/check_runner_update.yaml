@@ -51,4 +51,3 @@ jobs:
           name: runner-info-artifact
           path: ./runner_info.txt
           retention-days: 2
-
