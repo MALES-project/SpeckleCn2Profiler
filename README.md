@@ -4,7 +4,7 @@
 [![PyPI - Python Version](https://img.shields.io/pypi/pyversions/speckcn2)](https://pypi.org/project/speckcn2/)
 [![PyPI](https://img.shields.io/pypi/v/speckcn2)](https://pypi.org/project/speckcn2/)
 [![FAIR checklist badge](https://fairsoftwarechecklist.net/badge.svg)](https://fairsoftwarechecklist.net/v0.2?f=31&a=30110&i=21202&r=132)
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.11447921.svg)](https://doi.org/10.5281/zenodo.11447921)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.11447920.svg)](https://doi.org/10.5281/zenodo.11447920)
 [![RSD](https://img.shields.io/badge/rsd-speckcn2-00a3e3.svg)](https://research-software-directory.org/software/speckcn2)
 
 ![MALES banner](https://raw.githubusercontent.com/MALES-project/SpeckleCn2Profiler/main/src/speckcn2/assets/logo_on_white.png#gh-light-mode-only)
@@ -61,6 +61,7 @@ To get started with the project, follow these steps:
   cd SpeckleCn2Profiler
   git submodule init
   git submodule update
+  pip install .
   ```
 
 ## Contribution Guidelines
