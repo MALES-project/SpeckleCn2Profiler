@@ -20,7 +20,7 @@ jobs:
 
     strategy:
       matrix:
-        os: ['ubuntu-latest', 'macos-latest', 'windows-latest']    
+        os: ['ubuntu-latest', 'macos-latest', 'windows-latest']
         python-version: ['3.12']
         gcc-version: ['12']
 
@@ -40,7 +40,7 @@ jobs:
         with:
           path: ${{ env.pythonLocation }}
           key: ${{ env.pythonLocation }}-${{ hashFiles('pyproject.toml') }}-${{ matrix.os }}-${{ matrix.python-version }}
-    
+
       - name: Install Fortran compiler on Ubuntu
         if: matrix.os == 'ubuntu-latest'
         run: sudo apt-get update && sudo apt-get install -y gfortran-${{ matrix.gcc-version }}
@@ -53,7 +53,7 @@ jobs:
       - name: Install Fortran compiler on Windows
         if: matrix.os == 'windows-latest'
         run: choco install mingw
-   
+
       - name: Install dependencies
         if: steps.cache-virtualenv.outputs.cache-hit != 'true'
         run: |

@@ -21,7 +21,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        os: ['ubuntu-latest', 'macos-latest', 'windows-latest']    
+        os: ['ubuntu-latest', 'macos-latest', 'windows-latest']
         python-version: ['3.12']
         gcc-version: ['12']
 
@@ -40,7 +40,7 @@ jobs:
       with:
         path: ${{ env.pythonLocation }}
         key: ${{ env.pythonLocation }}-${{ hashFiles('pyproject.toml') }}-${{ matrix.os }}-${{ matrix.python-version }}
-    
+
     - name: Download ResNet results
       id: download-artifact
       uses: dawidd6/action-download-artifact@v6
