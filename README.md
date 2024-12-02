@@ -34,7 +34,7 @@ This repository contains the workflow to implement and train machine learning mo
 To get started with the project, follow these steps:
 
 - **Prerequisites:**
-  In order to correctly install `speckcn2` you need `python3.9` or higher. If you don't have it installed, you can download it from the [official website](https://www.python.org/downloads/). You will also need the header files that are required to compile Python extensions and are contained in `python-dev`. On Ubuntu, you can install them with:
+  In order to correctly install `speckcn2` you need `python3.9` or higher. If you don't have it installed, you can download it from the [official website](https://www.python.org/downloads/). You will also need the header files that are required to compile Python extensions and are contained in `python3-dev`. On Ubuntu, you can install them with:
   ```bash
   apt-get install python-dev
   ```
