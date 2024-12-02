@@ -16,12 +16,13 @@ jobs:
   generate-secret:
     # It runs only if the runner is updated or if manually triggered
     if: ${{ github.event.workflow_run.conclusion == 'failure' || github.event_name == 'workflow_dispatch' }}
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
+
     strategy:
       matrix:
-        python-version: ['3.9', '3.10']
-        toolchain:
-          - {compiler: gcc, version: 13}
+        os: ['ubuntu-latest', 'macos-latest', 'windows-latest']    
+        python-version: ['3.12']
+        gcc-version: 14
 
     steps:
       - name: Check out repository
@@ -38,8 +39,21 @@ jobs:
         id: cache-virtualenv
         with:
           path: ${{ env.pythonLocation }}
-          key: ${{ env.pythonLocation }}-${{ hashFiles('pyproject.toml') }}
-
+          key: ${{ env.pythonLocation }}-${{ hashFiles('pyproject.toml')-${{ matrix.os }}-${{ matrix.python-version }}
+    
+      - name: Install Fortran compiler on Ubuntu
+        if: matrix.os == 'ubuntu-latest'
+        run: sudo apt-get update && sudo apt-get install -y gfortran-${{ matrix.gcc-version }}
+      - name: Install Fortran compiler on macOS
+        if: matrix.os == 'macos-latest'
+        run: |
+          brew install gcc@${{ matrix.gcc-version }}
+          echo "FC=gfortran-${{ matrix.gcc-version }}" >> "$GITHUB_ENV"
+          echo "CC=gcc-${{ matrix.gcc-version }}" >> "$GITHUB_ENV"
+      - name: Install Fortran compiler on Windows
+        if: matrix.os == 'windows-latest'
+        run: choco install mingw
+   
       - name: Install dependencies
         if: steps.cache-virtualenv.outputs.cache-hit != 'true'
         run: |
@@ -54,14 +68,14 @@ jobs:
       - name: Upload ResNet results
         uses: actions/upload-artifact@v4
         with:
-          name: ResNet-results-${{ matrix.python-version }}
+          name: ResNet-results-${{ matrix.python-version }}-${{ matrix.os }}
           path: tests/test_data/speckles/Model_test_resnet_score
           retention-days: 31
 
       - name: Upload ResNet weights
         uses: actions/upload-artifact@v4
         with:
-          name: ResNet-weights-${{ matrix.python-version }}
+          name: ResNet-weights-${{ matrix.python-version }}-${{ matrix.os }}
           path: tests/test_data/speckles/Model_test_resnet_states
           retention-days: 31
 
@@ -73,13 +87,13 @@ jobs:
       - name: Upload SCNN results
         uses: actions/upload-artifact@v4
         with:
-          name: SCNN-results-${{ matrix.python-version }}
+          name: SCNN-results-${{ matrix.python-version }}-${{ matrix.os }}
           path: tests/test_data/speckles/Model_test_scnn_score
           retention-days: 31
 
       - name: Upload SCNN weights
         uses: actions/upload-artifact@v4
         with:
-          name: SCNN-weights-${{ matrix.python-version }}
+          name: SCNN-weights-${{ matrix.python-version }}-${{ matrix.os }}
           path: tests/test_data/speckles/Model_test_scnn_states
           retention-days: 31
