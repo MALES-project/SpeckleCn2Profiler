@@ -36,8 +36,7 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           brew install gcc
-          export CC=gcc-13
-          python -m pip install py3nj
+          CC=gcc-13 pip install py3nj
           python -m pip install -e .[develop]
       - name: Upgrade pip and install dependencies on other OS
         if: matrix.os != 'macos-latest'
