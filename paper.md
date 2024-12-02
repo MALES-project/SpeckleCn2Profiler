@@ -82,3 +82,5 @@ For new users, the extensive documentation and examples provide a great starting
 
 # Acknowledgements
 The authors would like to acknowledge the Netherlands eScience Center for the funding provided under grant number NLESC.SSIML.2022c.021.
+
+# References
