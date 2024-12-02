@@ -23,7 +23,7 @@ jobs:
       matrix:
         os: ['ubuntu-latest', 'macos-latest', 'windows-latest']    
         python-version: ['3.12']
-        gcc-version: ['13']
+        gcc-version: ['12']
 
     steps:
     - uses: actions/checkout@v3
