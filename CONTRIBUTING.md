@@ -104,8 +104,8 @@ pip install -e .[docs]
 mkdocs serve
 ```
 
-You can find the documentation source in the [docs](https://github.com/XXX) directory.
-If you are adding new pages, make sure to update the listing in the [`mkdocs.yml`](https://github.com/XXX) under the `nav` entry.
+You can find the documentation source in the [docs](https://github.com/MALES-project/SpeckleCn2Profiler/tree/main/docs) directory.
+If you are adding new pages, make sure to update the listing in the [`mkdocs.yml`](https://github.com/MALES-project/SpeckleCn2Profiler/blob/main/mkdocs.yml) under the `nav` entry.
 
 ### Making a release
 
@@ -113,6 +113,6 @@ If you are adding new pages, make sure to update the listing in the [`mkdocs.yml
 
 2. Under 'Choose a tag', set the tag to the new version. The versioning scheme we use is [SemVer](http://semver.org/), so bump the version (*major*/*minor*/*patch*) as needed. Bumping the version is handled transparently by `bumpversion` in [this workflow](https://github.com/MALES-project/SpeckleCn2Profiler/blob/main/.github/workflows/publish.yaml).
 
-3. The [upload to pypi](https://pypi.org/project/XXX) is triggered when a release is published and handled by [this workflow](https://github.com/MALES-project/SpeckleCn2Profiler/actions/workflows/publish.yaml).
+3. The [upload to pypi](https://pypi.org/project/speckcn2) is triggered when a release is published and handled by [this workflow](https://github.com/MALES-project/SpeckleCn2Profiler/actions/workflows/publish.yaml).
 
-4. The [upload to zenodo](https://zenodo.org/record/XXX) is triggered when a release is published.
+4. The [upload to zenodo](https://zenodo.org/records/14178688) is triggered when a release is published.
