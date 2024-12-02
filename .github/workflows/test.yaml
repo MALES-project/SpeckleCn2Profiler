@@ -167,16 +167,16 @@ jobs:
     - name: Combine
       run: |
         pip install coverage
-        coverage combine
+        python -m coverage combine
 
     - name: Report coverage
       run: |
-        coverage json
+        python -m coverage json
         export TOTAL=$(python -c "import json;print(json.load(open('coverage.json'))['totals']['percent_covered_display'])")
         echo "total=$TOTAL" >> $GITHUB_ENV
         echo "### Total coverage: ${TOTAL}%" >> $GITHUB_STEP_SUMMARY
         echo $'\n```' >> $GITHUB_STEP_SUMMARY
-        coverage report >> $GITHUB_STEP_SUMMARY
+        python -m coverage report >> $GITHUB_STEP_SUMMARY
         echo $'\n```' >> $GITHUB_STEP_SUMMARY
 
     - name: Make coverage badge
