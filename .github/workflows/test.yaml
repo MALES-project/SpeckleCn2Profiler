@@ -91,8 +91,10 @@ jobs:
 
     - name: Move test baseline to the correct location
       run: |
+        mkdir -p tests/test_data/speckles/expected_results
         rm -rf tests/test_data/speckles/expected_results/*
         mv Model_test_*_score tests/test_data/speckles/expected_results/.
+        mkdir -p tests/test_data/speckles/expected_model_weights
         rm -rf tests/test_data/speckles/expected_model_weights/*
         mv Model_test_*_states tests/test_data/speckles/expected_model_weights/.
 

@@ -10,10 +10,10 @@ This page is divided in two sections, corresponding to the two files that the us
 Once you have SpeckleCn2Profiler installed, you will run your workflow as:
 
 ```console
-python model.py configuration.yaml
+python run.py configuration.yaml
 ```
 
-So let's show you how to set up the `model.py` and `configuration.yaml` files.
+So let's show you how to set up the `run.py` and `configuration.yaml` files.
 
 ## Run File Explanation
 
