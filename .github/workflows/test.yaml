@@ -165,8 +165,8 @@ jobs:
         path: tests/test_data/speckles/Model_test_scnn_states
 
     - name: Combine
-      if: matrix.os == 'ubuntu-latest'
       run: |
+        pip install coverage
         coverage combine
 
     - name: Report coverage
