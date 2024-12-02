@@ -6,7 +6,9 @@ repo_name: Speckcn2
 nav:
   - Home: index.md
   - Installation: installation.md
-  - Examples: example.md
+  - Examples:
+    - Input data: examples/input_data.md
+    - How to run: examples/run.md
   - Python API:
     - speckcn2: api/api.md
     - Models: api/models.md

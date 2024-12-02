@@ -1,4 +1,4 @@
-# Examples SpeckleCn2Profiler
+# Example: How to run SpeckleCn2Profiler
 
 Here you find examples on the usage of SpeckleCn2Profiler.
 This page is divided in two sections, corresponding to the two files that the user has to control to use `speckcn2`:  
