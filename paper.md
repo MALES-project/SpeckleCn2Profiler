@@ -38,26 +38,33 @@ bibliography: paper.bib
 
 # Summary
 
-Optical satellite communications is a growing research field with bright commercial perspectives. One of the challenges for optical links through the atmosphere is turbulence, which is also apparent by the twinkling of stars. The reduction of the quality of signal communication can be calculated and then compensated, but the knowledge og the turbulence strength is required. To be able to quantify the effect of the turbulence, there are several alternative instrument, but each one with its own limitation. One possibility is to use  speckle-based observation, which are highly influenced by the turbulence profile. However the connection between speckle observation and turbulence is not clearly understood, so approximated numerical methods are required to reconstruct the turbulence profile.
+Optical satellite communications is a growing research field with bright commercial perspectives.
+The idea is to use lasers to send signals from the ground to satellites, from satellites to satellites and then back to the ground, and the main advantage of using laser communications over radio waves is increased bandwidth, enabling the transfer of more data in less time.
+However, one of the challenges for this protocol is the turbulence in the atmosphere that perturbs this transmission. The reduction of the quality of signal communication can be calculated and then compensated, but the knowledge of the turbulence strength is required. To be able to quantify the effect of the turbulence, there are several alternative instrument, but each one with its own limitation. One possibility is to use speckle-based observation, which basically consists in looking at the twinkling of the stars and use their pattern to infer the turbulence profile. This is a non-intrusive method that can be used in real-time, but it requires a deep understanding of the turbulence and the observed speckle patterns, which are highly influenced by the turbulence profile.
+The connection between speckle observation and turbulence is not clearly understood, so an analytical theory does not exist.
+Here we present `speckcn2`, a Python package that uses machine learning to provide a numerical reconstruction of the turbulence profile.
 
 ![Example of speckcn2 pipeline: speckle pattern as input to output a prediction of the turbulence profile (J). \label{fig:prediction}](https://github.com/MALES-project/SpeckleCn2Profiler/blob/main/src/speckcn2/assets/singleprediciton.png?raw=true)
 
 # Statement of need
 
-`speckcn2` is a Python package to use machine learning for turbulence reconstruction.
-Using PyTorch framework [@pytorch], it is possible to build, train and deploy deep learning models that are efficient and easy to use.
-The API for `speckcn2` was
-designed to provide a user-friendly interface to build, train and evaluate a machine learning model that predicts turbulence from speckle patterns.
+The turbulence in the atmosphere is a well-known phenomenon that affects the quality of optical communication.
+One way to compensate for this effect is to estimate the turbulence strength and then apply a correction to the signal, but there are not many instruments that can provide this information.
+`speckcn2` is a Python package to use machine learning to estimate the turbulence and reconstruct its profile.
+The idea of using deep learning to compensate for atmospheric turbulence is not new, and it has been already explored in the context of temporal mitigation using videos [@zhang2024spatio] and to compensate static image degradation [@9506614].
+However these tools mainly provide a way to mitigate the effect of turbulence, while `speckcn2` aims to provide a numerical reconstruction of the turbulence profile that can be used to understand the turbulence and improve the communication system by inserting the turbulence profile in the communication model.
 
-
-`speckcn2` was created mainly for research in aerospace engineering, but it can also be useful in other fields. The package is designed to be simple to use and flexible enough to handle a variety of tasks. It works equally well with synthetic data from simulations and real data from experiments, making it versatile for different research needs.
-
+The approach of `speckcn2` is based on the observation of speckle patterns, which are the result of the interference of light waves that have been perturbed by the atmosphere.
+Using PyTorch framework [@pytorch], it is possible to efficiently build, train and deploy deep learning models that predict the turbulence.
+`speckcn2` was created mainly for research in aerospace engineering, that want to insert in their model a real-time estimation of the turbulence, but it can also be useful in other fields. The package is designed to be simple to use and flexible enough to handle a variety of tasks. It works equally well with synthetic data from simulations and real data from experiments, making it versatile for different research needs.
 Another important feature of `speckcn2` is how easy it is to extend. Researchers from other fields can add new functions or adapt the package to solve problems in their own areas. By combining techniques like equivariance and ensemble learning, it offers a strong and reliable tool for turning images into regression models, opening doors for many innovative applications.
 
 
 # Key features
 ## Instrument specialization
-To work with different instruments, `speckcn2` can be trained with various noise profiles. These profiles represent the noise from different instruments and can model different speckle detectors, whether real or simulated. By changing the `apply_noise` function, users can model any type of effect related to their research and instruments.
+When estimating the turbulence, it is of fundamental importance to not mix the instrumental noise with the real effects that is being measured.
+As such a fundamental aspect of `speckcn2` is the possibility to train the model with different noise profiles, that can be used to simulate the noise of different instruments.  
+These profiles represent the noise from different instruments and can model different detectors, whether real or simulated. By changing the `apply_noise` function, users can model any type of effect related to their research and instruments. The current API provides a series of parameters that can be tuned to simulate the noise of different instruments, such as the signal-to-noise ratio, the detector gain, and the obscuration.
 
 ## Equivariant model
 To take advantage of the symmetry in the input data, `speckcn2` uses a concept called equivariance [@cohen2016]. This means the model can learn the same features no matter how the input data is oriented. This is especially helpful for turbulence reconstruction, where the direction of the speckle pattern is not relevant.
