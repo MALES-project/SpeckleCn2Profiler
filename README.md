@@ -20,7 +20,6 @@
 
 ![Graphical abstract](https://github.com/MALES-project/SpeckleCn2Profiler/blob/main/src/speckcn2/assets/cn2_profile.gif?raw=true)
 
-
 ## Overview
 
 Optical satellite communications is a growing research field with bright commercial perspectives. One of the challenges for optical links through the atmosphere is turbulence, which is also apparent by the twinkling of stars. The reduction of the quality can be calculated, but it needs the turbulence strength over the path the optical beam is running. Estimation of the turbulence strength is done at astronomic sites, but not at rural or urban sites. To be able to do this, a simple instrument is required. We want to propose to use a single star Scintillation Detection and Ranging (SCIDAR), which is an instrument that can estimate the turbulence strength, based on the observation of a single star. In this setting, reliable signal processing of the received images of the star is most challenging. We propose to solve this by Machine Learning.
@@ -81,7 +80,6 @@ The model can also estimate important parameters that are useful for the analysi
 
 We also provide histograms of the estimated parameters and the error of the estimation.
 
-
 ## Contribution Guidelines
 
 We welcome contributions to improve and expand the capabilities of this project. If you have ideas, bug fixes, or enhancements, please submit a pull request.
@@ -97,4 +95,4 @@ Please consider citing this software that is published in Zenodo under the DOI [
 
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+This project is licensed under the Apache 2.0 License - see the [LICENSE](LICENSE) file for details.
