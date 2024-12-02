@@ -30,7 +30,7 @@ affiliations:
  - name: Netherlands eScience Center, Amsterdam, The Netherlands
    index: 1
    ror: 00hx57361
- - name: Delft University of Technology, Delft, NL
+ - name: Faculty of Aerospace Engineering, Delft University of Technology, Delft, The Netherlands
    index: 2
 date: 13 December 2024
 bibliography: paper.bib
