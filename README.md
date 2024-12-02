@@ -69,7 +69,7 @@ where `<mycode.py>` is the name of the script that trains/uses the `speckcn2` mo
 A machine learning model trained using `speckcn2` can predict:
 
 ##### 1. Instantaneous turbulence strength
-![prediction](https://github.com/MALES-project/SpeckleCn2Profiler/blob/main/src/speckcn2/assets/singleprediciton.png?raw=true)
+![prediction](https://github.com/MALES-project/SpeckleCn2Profiler/blob/main/src/speckcn2/assets/single_prediction.png?raw=true)
 Given a speckle pattern, the model can predict the instantaneous turbulence strength and also provide an uncertainty estimate if more patterns are available.
 
 ##### 2. Parameters estimation
