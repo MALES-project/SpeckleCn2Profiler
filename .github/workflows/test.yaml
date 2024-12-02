@@ -120,14 +120,8 @@ jobs:
       run: rm -rf .pytest_cache
 
     - name: Test with pytest and coverage
-      if: matrix.os == 'ubuntu-latest'
       run: |
-          coverage run -p -m pytest
-
-    - name: Test with pytest and coverage
-      if: matrix.os != 'ubuntu-latest'
-      run: |
-          python -m pytest
+          python -m coverage run -p -m pytest
 
     - name: Upload test results
       if: failure()
