@@ -14,7 +14,7 @@ authors:
     corresponding: true
     affiliation: 1
   - name: Luisa Orozco
-    orcid: 0000-0002-6668-8042
+    orcid: 0000-0002-9153-650X
     affiliation: 1
   - name: Victor Azizi
     orcid: 0000-0003-3535-8320
@@ -29,7 +29,6 @@ authors:
 affiliations:
  - name: Netherlands eScience Center, Amsterdam, The Netherlands
    index: 1
-   ror: 00hx57361
  - name: Faculty of Aerospace Engineering, Delft University of Technology, Delft, The Netherlands
    index: 2
 date: 13 December 2024
@@ -82,5 +81,4 @@ The package is easy to install via pip and PyPI, and it works on both Linux and 
 For new users, the extensive documentation and examples provide a great starting point, helping them get up to speed quickly. Experienced users will appreciate the flexibility of the package, which allows for customization to meet specific research needs.
 
 # Acknowledgements
-The authors would like to acknowledge the Netherlands eScience Center for the funding
-provided under grant number NLESC.XXXX
+The authors would like to acknowledge the Netherlands eScience Center for the funding provided under grant number NLESC.SSIML.2022c.021.
