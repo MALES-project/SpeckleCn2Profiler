@@ -55,39 +55,72 @@ An example of a postprocessing pipeline starts with scoring the model:
 test_tags, test_losses, test_measures, test_cn2_pred, test_cn2_true, test_recovered_tag_pred, test_recovered_tag_true = sp2.score(
     model, test_set, device, criterion, nz, nimg_plot=0)
 ```
-Then you can plot the results:
+
+### Plotting
+After the model is trained, you can plot the results. Here are some examples:
+
 ```python
 # Plot the distribution of the screen tags
 sp2.plot_J_error_details(config, test_recovered_tag_true, test_recovered_tag_pred)
+```
+![jerr2](https://github.com/MALES-project/SpeckleCn2Profiler/blob/main/src/speckcn2/assets/jerr2.png?raw=true)
+```python
+# Plot the distribution of the screen tags with bin resolved details
 sp2.screen_errors(config, device, test_recovered_tag_pred, test_recovered_tag_true, nbins=20)
-sp2.tags_distribution(config, train_set, test_tags, device, rescale=False)
+```
+![jerr](https://github.com/MALES-project/SpeckleCn2Profiler/blob/main/src/speckcn2/assets/jerr.png?raw=true)
+```python
+# Overview of the tags distribution and how they are predicted
 sp2.tags_distribution(config,
                       train_set,
                       test_tags,
                       device,
                       rescale=True,
                       recover_tag=nz.recover_tag)
+```
+![thist](https://github.com/MALES-project/SpeckleCn2Profiler/blob/main/src/speckcn2/assets/thist.png?raw=true)
+```python
 
 # Plot the histograms of the loss function
 sp2.plot_histo_losses(config, test_losses, datadirectory)
+```
+![hls](https://github.com/MALES-project/SpeckleCn2Profiler/blob/main/src/speckcn2/assets/hls.png?raw=true)
+```python
 
 # Plot the loss during training
 sp2.plot_loss(config, model, datadirectory)
+```
+![ls](https://github.com/MALES-project/SpeckleCn2Profiler/blob/main/src/speckcn2/assets/ls.png?raw=true)
+```python
 
 # Plot the execution time
 sp2.plot_time(config, model, datadirectory)
+```
+![t](https://github.com/MALES-project/SpeckleCn2Profiler/blob/main/src/speckcn2/assets/t.png?raw=true)
+```python
 
 # Plot histograms of the different parameters
 sp2.plot_param_histo(config, test_losses, datadirectory, test_measures)
+```
+![hp](https://github.com/MALES-project/SpeckleCn2Profiler/blob/main/src/speckcn2/assets/hp.png?raw=true)
+```python
 
 # Plot the parameters of the model vs the loss
 sp2.plot_param_vs_loss(config, test_losses, datadirectory, test_measures)
+```
+![pl](https://github.com/MALES-project/SpeckleCn2Profiler/blob/main/src/speckcn2/assets/pl.png?raw=true)
+```python
 
 # Test to see if averaging over speckle patterns improves the results
 sp2.average_speckle_input(config, test_set, device, model, criterion, n_ensembles_to_plot=5)
+```
+![avs](https://github.com/MALES-project/SpeckleCn2Profiler/blob/main/src/speckcn2/assets/pl.png?raw=true)
+```python
+# Test to see if averaging over speckle patterns improves the results
 sp2.average_speckle_output(config, test_set, device, model, criterion, trimming=0.2, n_ensembles_to_plot=20)
 
 ```
+![ave](https://github.com/MALES-project/SpeckleCn2Profiler/blob/main/src/speckcn2/assets/pl.png?raw=true)
 
 Refer to the [documentation](https://males-project.github.io/SpeckleCn2Profiler/) or one of the [examples](https://github.com/MALES-project/examples_speckcn2) if you want to understand and customize your workflow.
 
