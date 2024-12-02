@@ -22,7 +22,7 @@ jobs:
       matrix:
         os: ['ubuntu-latest', 'macos-latest', 'windows-latest']    
         python-version: ['3.12']
-        gcc-version: '14'
+        gcc-version: ['14']
 
     steps:
       - name: Check out repository
