@@ -13,6 +13,25 @@ authors:
     email: s.ciarella@esciencecenter.nl
     affiliation: Netherlands eScience Center
     orcid: 'https://orcid.org/0000-0002-9247-139X'
+  - given-names: Victor
+    family-names: Azizi
+    affiliation: Netherlands eScience Center
+    orcid: 'https://orcid.org/0000-0003-3535-8320'
+  - given-names: Luisa
+    family-names: Orozco
+    email: l.orozco@esciencecenter.nl
+    orcid: 'https://orcid.org/0000-0002-9153-650X'
+    affiliation: Netherlands eScience Center
+  - given-names: Marguerite
+    family-names: Arvis
+    email: m.arvis@tudelft.nl
+    orcid: 'https://orcid.org/0009-0006-7409-3985'
+    affiliation: Delft University of Technology
+  - given-names: Rudolf
+    family-names: Saathof
+    email: r.saathof@tudelft.nl
+    orcid: 'https://orcid.org/0000-0003-0368-0139'
+    affiliation: Delft University of Technology
 repository-code: 'https://github.com/MALES-project/SpeckleCn2Profiler'
 url: 'https://speckcn2.readthedocs.io'
 abstract: >-
@@ -21,8 +40,7 @@ keywords:
   - machine learning
   - equivariant cnn
   - optical satelites
-  - turbolence
+  - turbulence
   - laser communication
 license: Apache-2.0
 version: 1.0.0
-license: MIT
