@@ -44,7 +44,7 @@ The reduction of the quality of signal communication can be calculated and then 
 A common way to model the turbulence is to use the refractive index structure constant, $C_n^2$, which is a measure of the strength of the turbulence. Its profile can be used to estimate the effect of the turbulence on the signal and then apply a correction.
 To measure $C_n^2$, there are several alternative instruments, each one with its own limitations. One possibility is to use speckle-based observation, which consists on looking at the twinkling of the stars and use their pattern to infer the turbulence profile. This is a non-intrusive method that can be used in real time, but it requires a deep understanding of the turbulence and the observed speckle patterns, which are highly influenced by the turbulence profile.
 The connection between speckle observation, and turbulence ($C_n^2$) is not clearly understood, so an analytical theory does not exist.
-Here we present `speckcn2`, a Python package that uses machine learning to provide a numerical reconstruction of the turbulence profile from a speckle pattern.
+Here we present `speckcn2`, a Python package that uses machine learning to provide a numerical reconstruction of the turbulence profile from a speckle pattern [@ciarella2024].
 
 ![Example of `speckcn2` pipeline: speckle pattern as input to output a prediction of the turbulence profile (J). \label{fig:prediction}](https://github.com/MALES-project/SpeckleCn2Profiler/blob/main/src/speckcn2/assets/single_prediction.png?raw=true)
 
@@ -61,7 +61,6 @@ Using PyTorch framework [@pytorch], it is possible to build, train and deploy de
 `speckcn2` was created mainly for research in aerospace engineering in which one would aim at inserting a real-time estimation of the turbulence to a model, but it can also be useful in other fields. The package is designed to be simple to use and flexible enough to handle different image regression ML task. It works equally well with synthetic data from simulations and real data from experiments, making it versatile for different research needs.
 `speckcn2` is extendable to other research fields. By combining techniques like equivariance and ensemble learning, it offers a strong and reliable tool for turning images into regression models, opening doors for many innovative applications.
 
-
 # Key features
 ## Instrument specialization
 When estimating the turbulence features, it is of fundamental importance to not mix the instrumental noise with the real effects that are being measured.
@@ -74,12 +73,8 @@ To take advantage of the symmetry in the input data, `speckcn2` uses a concept c
 
 Strong equivariance is achieved by using the equivariant sparse convolutional neural network (escnn) [@escnn1; @escnn2]. These networks are more powerful for this type of problem but are harder to train.
 
-
-
 ## Ensemble learning
 `speckcn2` can also use ensemble learning by averaging the predictions from multiple input images. This means that the prediction of each model requires a set of multiple input images. This is only useful if the input images change faster than the output. Since this is not the case for laser communications, this feature is optional and can be turned off.
-
-
 
 ## Software implementation
 `speckcn2` is implemented in Python and uses PyTorch [@pytorch] for its machine learning tasks. This allows the user to take advantage of GPU acceleration, making computations faster and more efficient.
