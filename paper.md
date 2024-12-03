@@ -1,6 +1,6 @@
 ---
 title: 'Speckle Cn2 Profiler:
-Improving Satellite Communications with SCIDAR and Machine Learning'
+Improving Satellite Communications with Machine Learning'
 tags:
   - Python
   - machine learning
