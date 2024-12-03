@@ -18,12 +18,12 @@ jobs:
   Build-n-test:
 
     if: github.event.pull_request.draft == false
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        python-version: ['3.9', '3.10']
-        toolchain:
-          - {compiler: gcc, version: 13}
+        os: ['ubuntu-latest', 'macos-latest']
+        python-version: ['3.12']
+        gcc-version: ['12']
 
     steps:
     - uses: actions/checkout@v3
@@ -39,7 +39,7 @@ jobs:
       id: cache-virtualenv
       with:
         path: ${{ env.pythonLocation }}
-        key: ${{ env.pythonLocation }}-${{ hashFiles('pyproject.toml') }}
+        key: ${{ env.pythonLocation }}-${{ hashFiles('pyproject.toml') }}-${{ matrix.os }}-${{ matrix.python-version }}
 
     - name: Download ResNet results
       id: download-artifact
@@ -49,7 +49,7 @@ jobs:
         workflow: generate_test_reference.yaml
         workflow_search: false
         workflow_conclusion: success
-        name: ResNet-results-${{ matrix.python-version }}
+        name: ResNet-results-${{ matrix.python-version }}-${{ matrix.os }}
         path: Model_test_resnet_score
         if_no_artifact_found: fail
 
@@ -61,7 +61,7 @@ jobs:
         workflow: generate_test_reference.yaml
         workflow_search: false
         workflow_conclusion: success
-        name: SCNN-results-${{ matrix.python-version }}
+        name: SCNN-results-${{ matrix.python-version }}-${{ matrix.os }}
         path: Model_test_scnn_score
         if_no_artifact_found: fail
 
@@ -73,7 +73,7 @@ jobs:
         workflow: generate_test_reference.yaml
         workflow_search: false
         workflow_conclusion: success
-        name: ResNet-weights-${{ matrix.python-version }}
+        name: ResNet-weights-${{ matrix.python-version }}-${{ matrix.os }}
         path: Model_test_resnet_states
         if_no_artifact_found: fail
 
@@ -85,7 +85,7 @@ jobs:
         workflow: generate_test_reference.yaml
         workflow_search: false
         workflow_conclusion: success
-        name: SCNN-weights-${{ matrix.python-version }}
+        name: SCNN-weights-${{ matrix.python-version }}-${{ matrix.os }}
         path: Model_test_scnn_states
         if_no_artifact_found: fail
 
@@ -98,6 +98,18 @@ jobs:
         rm -rf tests/test_data/speckles/expected_model_weights/*
         mv Model_test_*_states tests/test_data/speckles/expected_model_weights/.
 
+    - name: Install Fortran compiler on Ubuntu
+      if: matrix.os == 'ubuntu-latest'
+      run: sudo apt-get update && sudo apt-get install -y gfortran
+    - name: Install Fortran compiler on macOS
+      if: matrix.os == 'macos-latest'
+      run: |
+        brew install gcc@${{ matrix.gcc-version }}
+        echo "FC=gfortran-${{ matrix.gcc-version }}" >> "$GITHUB_ENV"
+        echo "CC=gcc-${{ matrix.gcc-version }}" >> "$GITHUB_ENV"
+    - name: Install Fortran compiler on Windows
+      if: matrix.os == 'windows-latest'
+      run: choco install mingw
     - name: Install dependencies
       if: steps.cache-virtualenv.outputs.cache-hit != 'true'
       run: |
@@ -107,61 +119,62 @@ jobs:
     - name: Clean Pytest Cache
       run: rm -rf .pytest_cache
 
-    - name: Test with pytest
+    - name: Test with pytest and coverage
       run: |
-          coverage run -p -m pytest
+          python -m coverage run -p -m pytest
 
     - name: Upload test results
       if: failure()
       uses: actions/upload-artifact@v4
       with:
-        name: testfail-images-${{ matrix.python-version }}
+        name: testfail-images-${{ matrix.python-version }}-${{ matrix.os }}
         path: .tests/image_diff/
 
     - name: Upload ResNet images
       if: failure()
       uses: actions/upload-artifact@v4
       with:
-        name: resnet-images-testfail-${{ matrix.python-version }}
+        name: resnet-images-testfail-${{ matrix.python-version }}-${{ matrix.os }}
         path: tests/test_data/speckles/Model_test_resnet_score
 
     - name: Upload SCNN images
       if: failure()
       uses: actions/upload-artifact@v4
       with:
-        name: scnn-images-testfail-${{ matrix.python-version }}
+        name: scnn-images-testfail-${{ matrix.python-version }}-${{ matrix.os }}
         path: tests/test_data/speckles/Model_test_scnn_score
 
     - name: Upload ResNet weights
       if: failure()
       uses: actions/upload-artifact@v4
       with:
-        name: resnet-weights-testfail-${{ matrix.python-version }}
+        name: resnet-weights-testfail-${{ matrix.python-version }}-${{ matrix.os }}
         path: tests/test_data/speckles/Model_test_resnet_states
 
     - name: Upload SCNN weights
       if: failure()
       uses: actions/upload-artifact@v4
       with:
-        name: scnn-weights-testfail-${{ matrix.python-version }}
+        name: scnn-weights-testfail-${{ matrix.python-version }}-${{ matrix.os }}
         path: tests/test_data/speckles/Model_test_scnn_states
 
     - name: Combine
       run: |
-        coverage combine
+        pip install coverage
+        python -m coverage combine
 
     - name: Report coverage
       run: |
-        coverage json
+        python -m coverage json
         export TOTAL=$(python -c "import json;print(json.load(open('coverage.json'))['totals']['percent_covered_display'])")
         echo "total=$TOTAL" >> $GITHUB_ENV
         echo "### Total coverage: ${TOTAL}%" >> $GITHUB_STEP_SUMMARY
         echo $'\n```' >> $GITHUB_STEP_SUMMARY
-        coverage report >> $GITHUB_STEP_SUMMARY
+        python -m coverage report >> $GITHUB_STEP_SUMMARY
         echo $'\n```' >> $GITHUB_STEP_SUMMARY
 
     - name: Make coverage badge
-      if: github.ref == 'refs/heads/main'
+      if: github.ref == 'refs/heads/main' && matrix.os == 'ubuntu-latest'
       uses: schneegans/dynamic-badges-action@v1.7.0
       with:
         auth: ${{ secrets.GIST_SECRET }}
