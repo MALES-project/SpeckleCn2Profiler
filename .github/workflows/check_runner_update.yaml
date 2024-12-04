@@ -10,7 +10,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: ['ubuntu-latest']
+        os: ['ubuntu-latest', 'macos-latest']
     steps:
       - name: Get runner details
         run: |
@@ -18,8 +18,10 @@ jobs:
           echo "Runner Arch: ${{ runner.arch }}" >> runner_info.txt
           echo "Operating System and Version:" >> runner_info.txt
           uname -srvpio >> runner_info.txt
-          echo "Distribution and Version:" >> runner_info.txt
-          lsb_release -a || cat /etc/os-release >> runner_info.txt
+          if [ "${{ runner.os }}" == "Linux" ]; then
+            echo "Distribution and Version:" >> runner_info.txt
+            lsb_release -a || cat /etc/os-release >> runner_info.txt
+          fi
 
       - name: Download previous runner info
         id: download-artifact4
@@ -29,7 +31,7 @@ jobs:
           workflow: check_runner_update.yaml
           workflow_search: true
           workflow_conclusion: ""
-          name: runner-info-artifact
+          name: runner-info-artifact-${{ matrix.os }}
           path: ./previous_runner_info
           search_artifacts: true
           if_no_artifact_found: fail
@@ -48,6 +50,6 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: runner-info-artifact
+          name: runner-info-artifact-${{ matrix.os }}
           path: ./runner_info.txt
           retention-days: 2
