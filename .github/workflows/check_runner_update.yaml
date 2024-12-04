@@ -17,7 +17,7 @@ jobs:
           echo "Runner OS: ${{ runner.os }}" > runner_info.txt
           echo "Runner Arch: ${{ runner.arch }}" >> runner_info.txt
           echo "Operating System and Version:" >> runner_info.txt
-          uname -srvpio >> runner_info.txt
+          uname -srvp >> runner_info.txt
           if [ "${{ runner.os }}" == "Linux" ]; then
             echo "Distribution and Version:" >> runner_info.txt
             lsb_release -a || cat /etc/os-release >> runner_info.txt
