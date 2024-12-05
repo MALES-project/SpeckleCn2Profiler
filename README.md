@@ -3,7 +3,7 @@
 [![Documentation Status](https://readthedocs.org/projects/gemdat/badge/?version=latest)](https://males-project.github.io/SpeckleCn2Profiler/)
 [![PyPI - Python Version](https://img.shields.io/pypi/pyversions/speckcn2)](https://pypi.org/project/speckcn2/)
 [![PyPI](https://img.shields.io/pypi/v/speckcn2)](https://pypi.org/project/speckcn2/)
-[![FAIR checklist badge](https://fairsoftwarechecklist.net/badge.svg)](https://fairsoftwarechecklist.net/v0.2?f=31&a=30110&i=21202&r=132)
+[![FAIR checklist badge](https://fairsoftwarechecklist.net/badge.svg)](https://fairsoftwarechecklist.net/v0.2?f=31&a=32113&i=32322&r=133)
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.11447920.svg)](https://doi.org/10.5281/zenodo.11447920)
 [![RSD](https://img.shields.io/badge/rsd-speckcn2-00a3e3.svg)](https://research-software-directory.org/software/speckcn2)
 [![status](https://joss.theoj.org/papers/57d48f7e179360b9f5193045ce8270be/status.svg)](https://joss.theoj.org/papers/57d48f7e179360b9f5193045ce8270be)
