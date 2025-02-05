@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import itertools
 from typing import Dict
 
 import matplotlib.pyplot as plt
@@ -129,7 +130,9 @@ def score_plot(
                  color='black')
 
     plt.tight_layout()
-    plt.savefig(f'{dirname}/single_speckle_loss{loss.item():.4g}.png')
+    figure_format = conf.get('figure_format', 'png')
+    plt.savefig(
+        f'{dirname}/single_speckle_loss{loss.item():.4g}.{figure_format}')
     plt.close()
 
 
@@ -161,7 +164,8 @@ def plot_loss(conf: dict, model, data_dir: str) -> None:
     axs.legend()
     plt.title(f'Model: {model_name}')
     plt.tight_layout()
-    plt.savefig(f'{dirname}/loss_{model_name}.png')
+    figure_format = conf.get('figure_format', 'png')
+    plt.savefig(f'{dirname}/loss_{model_name}.{figure_format}')
     plt.close()
 
 
@@ -191,7 +195,8 @@ def plot_time(conf: dict, model, data_dir: str) -> None:
     axs.legend()
     plt.title(f'Model: {model_name}')
     plt.tight_layout()
-    plt.savefig(f'{dirname}/time_{model_name}.png')
+    figure_format = conf.get('figure_format', 'png')
+    plt.savefig(f'{dirname}/time_{model_name}.{figure_format}')
     plt.close()
 
 
@@ -227,7 +232,8 @@ def plot_histo_losses(conf: dict, test_losses: list[dict],
     axs.legend()
     plt.title(f'Model: {model_name}')
     plt.tight_layout()
-    plt.savefig(f'{dirname}/histo_losses_{model_name}.png')
+    figure_format = conf.get('figure_format', 'png')
+    plt.savefig(f'{dirname}/histo_losses_{model_name}.{figure_format}')
     plt.close()
 
 
@@ -360,17 +366,18 @@ def plot_param_vs_loss(conf: dict,
                          -0.5,
                          color='tab:red',
                          alpha=0.1)
-        axs.set_xlabel(f'{name} {units}')
+        axs.set_xlabel(f'{name} {units}', fontsize=12)
         axs.set_xscale('log')
         axs.set_yscale('symlog', linthresh=0.1)
-        axs.set_ylabel('Relative error')
+        axs.set_ylabel('Relative error', fontsize=12)
         yticks = [-1, -0.5, -0.1, 0, 0.1, 0.5, 1]
         plt.yticks(yticks)
         yticklabels = ['-100%', '-50%', '-10%', '0', '10%', '50%', '100%']
         plt.gca().set_yticklabels(yticklabels)
-        plt.title(f'Model: {model_name}')
+        plt.title(f'{name} error', fontsize=15)
         plt.tight_layout()
-        plt.savefig(f'{dirname}/{param}_vs_sum_{model_name}.png')
+        figure_format = conf.get('figure_format', 'png')
+        plt.savefig(f'{dirname}/{param}_vs_sum_{model_name}.{figure_format}')
         plt.close()
 
         # If specified, plot the histogram per single bin
@@ -474,7 +481,9 @@ def plot_param_histo(conf: dict, test_losses: list[dict], data_dir: str,
         axs.legend()
         plt.title(f'Model: {model_name}')
         plt.tight_layout()
-        plt.savefig(f'{dirname}/histo_{param_true}_{model_name}.png')
+        figure_format = conf.get('figure_format', 'png')
+        plt.savefig(
+            f'{dirname}/histo_{param_true}_{model_name}.{figure_format}')
         plt.close()
 
 
@@ -556,7 +565,9 @@ def plot_J_error_details(conf: dict,
                 axs.legend()
                 plt.title(f'J (screen-{screen_id}) value = {single_bin:.3g}')
                 plt.tight_layout()
-                plt.savefig(f'{dirname}/Jscreen{screen_id}_bin{idx}.png')
+                figure_format = conf.get('figure_format', 'png')
+                plt.savefig(
+                    f'{dirname}/Jscreen{screen_id}_bin{idx}.{figure_format}')
                 plt.close()
 
 
@@ -633,7 +644,7 @@ def plot_samples_in_ensemble(conf: dict,
                 _all_tags_pred.append(recovered_tag_pred.detach().cpu())
                 # and get all the measures
                 all_measures = criterion._get_all_measures(
-                    output, target, Cn2_pred, Cn2_true)
+                    target, Cn2_true, output, Cn2_pred)
 
                 if count == 1:
                     fig, ax = plt.subplots(1, 3, figsize=(12, 4))
@@ -646,6 +657,7 @@ def plot_samples_in_ensemble(conf: dict,
                     # (1) Plot J vs nscreens
                     recovered_tag_true = criterion.get_J(target)
                     ax[1].plot(recovered_tag_true.squeeze(0).detach().cpu(),
+                               np.arange(recovered_tag_true.shape[1]),
                                '*',
                                label='True',
                                color='tab:green',
@@ -653,6 +665,7 @@ def plot_samples_in_ensemble(conf: dict,
                                markeredgecolor='black',
                                zorder=100)
                     ax[1].plot(recovered_tag_pred.squeeze(0).detach().cpu(),
+                               np.arange(recovered_tag_pred.shape[1]),
                                'o',
                                label='This speckle',
                                color='tab:red',
@@ -691,56 +704,59 @@ def plot_samples_in_ensemble(conf: dict,
                 percentiles_95 = np.percentile(_all_tags_pred, [2.5, 97.5],
                                                axis=0).squeeze()
 
-                x_vals = np.arange(n_screens)
+                y_vals = np.arange(n_screens)
                 alp = 0.3
                 ax[1].plot(avg_tags_trim,
+                           y_vals,
                            label='Mean',
                            color='tab:red',
                            zorder=50)
-                ax[1].fill_between(x_vals,
-                                   percentiles_50[0],
-                                   percentiles_50[1],
-                                   color='gold',
-                                   alpha=alp,
-                                   label='50% CI',
-                                   zorder=5)
-                ax[1].fill_between(x_vals,
-                                   percentiles_68[0],
-                                   percentiles_50[0],
-                                   color='cadetblue',
-                                   alpha=alp,
-                                   label='68% CI',
-                                   zorder=4)
-                ax[1].fill_between(x_vals,
-                                   percentiles_50[1],
-                                   percentiles_68[1],
-                                   color='cadetblue',
-                                   alpha=alp,
-                                   zorder=4)
-                ax[1].fill_between(x_vals,
-                                   percentiles_95[0],
-                                   percentiles_68[0],
-                                   color='blue',
-                                   label='95% CI',
-                                   alpha=alp,
-                                   zorder=3)
-                ax[1].fill_between(x_vals,
-                                   percentiles_68[1],
-                                   percentiles_95[1],
-                                   color='blue',
-                                   alpha=alp,
-                                   zorder=3)
+                ax[1].fill_betweenx(y_vals,
+                                    percentiles_50[0],
+                                    percentiles_50[1],
+                                    color='gold',
+                                    alpha=alp,
+                                    label='50% CI',
+                                    zorder=5)
+                ax[1].fill_betweenx(y_vals,
+                                    percentiles_68[0],
+                                    percentiles_50[0],
+                                    color='cadetblue',
+                                    alpha=alp,
+                                    label='68% CI',
+                                    zorder=4)
+                ax[1].fill_betweenx(y_vals,
+                                    percentiles_50[1],
+                                    percentiles_68[1],
+                                    color='cadetblue',
+                                    alpha=alp,
+                                    zorder=4)
+                ax[1].fill_betweenx(y_vals,
+                                    percentiles_95[0],
+                                    percentiles_68[0],
+                                    color='blue',
+                                    label='95% CI',
+                                    alpha=alp,
+                                    zorder=3)
+                ax[1].fill_betweenx(y_vals,
+                                    percentiles_68[1],
+                                    percentiles_95[1],
+                                    color='blue',
+                                    alpha=alp,
+                                    zorder=3)
 
-                ax[1].set_yscale('log')
-                ax[1].set_ylabel('J')
-                ax[1].set_xlabel('# screen')
+                ax[1].set_xscale('log')
+                ax[1].set_ylabel('# screen')
+                ax[1].set_xlabel('J')
                 ax[1].legend()
                 fig.tight_layout()
                 plt.subplots_adjust(top=0.92)
                 plt.suptitle(
                     'Prediction from a single speckle, compared to similar')
+                figure_format = conf.get('figure_format', 'png')
                 plt.savefig(
-                    f'{dirname}/single_speckle_loss{loss_0.item():.4g}.png')
+                    f'{dirname}/single_speckle_loss{loss_0.item():.4g}.{figure_format}'
+                )
                 loss_max = max(loss_0, loss_max)
                 loss_min = min(loss_0, loss_min)
                 ensemble_count += 1
@@ -749,3 +765,90 @@ def plot_samples_in_ensemble(conf: dict,
 
             if ensemble_count >= n_max_plots:
                 break
+
+
+def plot_total_statistics(
+    conf: dict,
+    train_set: list,
+    criterion: ComposableLoss,
+    device: Device,
+    bins: int = 50,
+    alpha: float = 0.5,
+) -> None:
+    """Plot the total statistics of:
+        1) Total turbulence integral
+        2) Fried parameter
+        3) Isoplanatic angle
+        4) Rytov index
+    as a 4 panel plot.
+
+    Parameters
+    ----------
+    conf : dict
+        Dictionary containing the configuration
+    train_set : list
+        The full dataset used for training
+    criterion : ComposableLoss
+        The loss function
+    device : torch.device
+        The device to use
+    bins : int
+        The number of bins in which to partition the data
+    alpha : float
+        The transparency of the histogram
+    """
+    data_directory = conf['speckle']['datadirectory']
+    model_name = conf['model']['name']
+    ensemble = conf['preproc'].get('ensemble', 1)
+
+    dirname = f'{data_directory}/{model_name}_score'
+    ensure_directory(dirname)
+
+    # Get the tags from the training set
+    if ensemble > 1:
+        train_set = list(itertools.chain(*train_set))
+    _, tags, _ = zip(*train_set)
+    tags = np.stack(tags)
+    train_tags = np.array([n for n in tags])
+
+    # The total turbulence integral is the sum of J accross all screens
+    tti = np.sum(train_tags, axis=1)
+    # and prepare storage for the other parameters
+    fried = np.zeros_like(tti)
+    iso = np.zeros_like(tti)
+    rytov = np.zeros_like(tti)
+
+    for i in range(tti.shape[0]):
+        tags_tensor = torch.tensor(tags[i, :], device=device).unsqueeze(0)
+        Cn2 = criterion.reconstruct_cn2(tags_tensor)
+        J = criterion.get_J(tags_tensor)
+        tti[i] = J.sum()
+        all_measures = criterion._get_all_measures(tags_tensor, Cn2)
+        fried[i] = all_measures['Fried_true']
+        iso[i] = all_measures['Isoplanatic_true']
+        rytov[i] = all_measures['Scintillation_w_true']
+
+    # Compute the logarithm of the data
+    log_tti = np.log10(tti)
+    log_fried = np.log10(fried)
+    log_iso = np.log10(iso)
+    log_rytov = np.log10(rytov)
+
+    # And now plot a 4 panel figure histogram
+    fig, axs = plt.subplots(2, 2, figsize=(10, 10))
+    axs[0, 0].hist(log_tti, bins=bins, alpha=alpha, density=True)
+    axs[0, 0].set_xlabel('Total turbulence integral (logscale)')
+    axs[0, 0].set_ylabel('Frequency')
+    axs[0, 1].hist(log_fried, bins=bins, alpha=alpha, density=True)
+    axs[0, 1].set_xlabel('Fried parameter [m] (logscale)')
+    axs[0, 1].set_ylabel('Frequency')
+    axs[1, 0].hist(log_iso, bins=bins, alpha=alpha, density=True)
+    axs[1, 0].set_xlabel('Isoplanatic angle [rad] (logscale)')
+    axs[1, 0].set_ylabel('Frequency')
+    axs[1, 1].hist(log_rytov, bins=bins, alpha=alpha, density=True)
+    axs[1, 1].set_xlabel('Rytov index (logscale)')
+    axs[1, 1].set_ylabel('Frequency')
+    plt.tight_layout()
+    figure_format = conf.get('figure_format', 'png')
+    plt.savefig(f'{dirname}/total_statistics_{model_name}.{figure_format}')
+    plt.close()

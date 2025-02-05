@@ -455,20 +455,23 @@ class ComposableLoss(nn.Module):
 
         return loss
 
-    def _get_all_measures(self, pred: torch.Tensor, target: torch.Tensor,
-                          Cn2p: torch.Tensor, Cn2t: torch.Tensor) -> dict:
+    def _get_all_measures(self,
+                          target: torch.Tensor,
+                          Cn2t: torch.Tensor,
+                          pred: torch.Tensor = None,
+                          Cn2p: torch.Tensor = None) -> dict:
         """Get all the measures available.
 
         Parameters
         ----------
-        pred : torch.Tensor
-            The predicted screen tags
         target : torch.Tensor
             The target screen tags
-        Cn2p : torch.Tensor
-            The predicted Cn2
         Cn2t : torch.Tensor
             The target Cn2
+        pred : torch.Tensor, optional
+            The predicted screen tags
+        Cn2p : torch.Tensor, optional
+            The predicted Cn2
 
         Returns
         -------
@@ -477,10 +480,12 @@ class ComposableLoss(nn.Module):
         """
         measures = {}
         measures['Fried_true'] = self.get_FriedParameter(target)
-        measures['Fried_pred'] = self.get_FriedParameter(pred)
         measures['Isoplanatic_true'] = self.get_IsoplanaticAngle(Cn2t)
-        measures['Isoplanatic_pred'] = self.get_IsoplanaticAngle(Cn2p)
         measures['Scintillation_w_true'] = self.get_ScintillationWeak(Cn2t)
-        measures['Scintillation_w_pred'] = self.get_ScintillationWeak(Cn2p)
+
+        if pred is not None and Cn2p is not None:
+            measures['Fried_pred'] = self.get_FriedParameter(pred)
+            measures['Isoplanatic_pred'] = self.get_IsoplanaticAngle(Cn2p)
+            measures['Scintillation_w_pred'] = self.get_ScintillationWeak(Cn2p)
 
         return measures

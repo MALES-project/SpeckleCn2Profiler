@@ -243,7 +243,7 @@ def score(
                 recovered_tag_true = criterion.get_J(targets[i])
                 # and get all the measures
                 all_measures = criterion._get_all_measures(
-                    outputs[i], targets[i], Cn2_pred, Cn2_true)
+                    targets[i], Cn2_true, outputs[i], Cn2_pred)
                 this_loss = loss.item()
 
                 if counter < nimg_plot and (this_loss > loss_max
