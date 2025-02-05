@@ -92,12 +92,13 @@ def load(model: torch.nn.Module,
     """
     if early_stop:
         model_state = torch.load(
-            f'{datadirectory}/{model.name}_states/{model.name}_{epoch}_earlystop.pth'
-        )
+            f'{datadirectory}/{model.name}_states/{model.name}_{epoch}_earlystop.pth',
+            weights_only=False)
         model.early_stop = True
     else:
         model_state = torch.load(
-            f'{datadirectory}/{model.name}_states/{model.name}_{epoch}.pth')
+            f'{datadirectory}/{model.name}_states/{model.name}_{epoch}.pth',
+            weights_only=False)
 
     model.epoch = model_state['epoch']
     model.loss = model_state['loss']

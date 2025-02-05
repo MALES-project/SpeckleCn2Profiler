@@ -105,10 +105,13 @@ def prepare_data(
     if os.path.exists(os.path.join(datadirectory, dataname)):
         print(f'*** Loading preprocessed data from {dataname}')
         # If so, load it
-        all_images = torch.load(os.path.join(datadirectory, dataname))
-        all_tags = torch.load(os.path.join(datadirectory, tagname))
+        all_images = torch.load(os.path.join(datadirectory, dataname),
+                                weights_only=False)
+        all_tags = torch.load(os.path.join(datadirectory, tagname),
+                              weights_only=False)
         all_ensemble_ids = torch.load(os.path.join(datadirectory,
-                                                   ensemblename))
+                                                   ensemblename),
+                                      weights_only=False)
         # print the info about the dataset
         print(f'*** There are {len(all_images)} images in the dataset.')
     else:

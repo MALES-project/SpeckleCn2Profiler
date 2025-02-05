@@ -16,9 +16,9 @@
 #
 #    # Load the preprocessed data files
 #    loaded_images = torch.load(
-#        os.path.join(test_data_dir, 'all_images_test_model.pt'))
+#        os.path.join(test_data_dir, 'all_images_test_model.pt'), weights_only=False)
 #    loaded_tags = torch.load(
-#        os.path.join(test_data_dir, 'all_tags_test_model.pt'))
+#        os.path.join(test_data_dir, 'all_tags_test_model.pt'), weights_only=False)
 #
 #    # Assert the loaded data matches the original data
 #    assert len(loaded_images) == len(all_images)
