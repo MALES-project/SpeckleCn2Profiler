@@ -14,6 +14,7 @@ from .plots import (
     plot_param_vs_loss,
     plot_samples_in_ensemble,
     plot_time,
+    plot_total_statistics,
 )
 from .postprocess import average_speckle_input, average_speckle_output, screen_errors, tags_distribution
 from .preprocess import prepare_data, train_test_split
@@ -39,6 +40,7 @@ __all__ = [
     'plot_J_error_details',
     'plot_loss',
     'plot_time',
+    'plot_total_statistics',
     'save',
     'load',
     'load_model_state',
