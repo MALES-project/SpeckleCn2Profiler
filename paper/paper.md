@@ -46,7 +46,9 @@ To measure $C_n^2$, there are several alternative instruments, each one with its
 The connection between speckle observation, and turbulence ($C_n^2$) is not clearly understood, so an analytical theory does not exist.
 Here we present `speckcn2`, a Python package that uses machine learning to provide a numerical reconstruction of the turbulence profile from a speckle pattern [@ciarella2024].
 
-![Example of `speckcn2` pipeline: speckle pattern as input to output a prediction of the turbulence profile (J). \label{fig:prediction}](https://github.com/MALES-project/SpeckleCn2Profiler/blob/main/src/speckcn2/assets/single_prediction.png?raw=true)
+
+![Example of `speckcn2` pipeline: speckle pattern as input to output a prediction of the turbulence profile (J). \label{fig:prediction}](https://github.com/MALES-project/SpeckleCn2Profiler/blob/main/src/speckcn2/assets/single_prediction.png?raw=true){ width=90% }
+
 
 # Statement of need
 
