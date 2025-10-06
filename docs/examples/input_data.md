@@ -3,7 +3,7 @@
 The `speckcn2` tool expects a set of **2D black-and-white squared** images along with their corresponding prediction labels.
 In its main application, these images are speckle patterns, and the values represent turbulence strength. However, the tool can be adapted for any image regression task, as long as the data is provided in the correct format.
 
-Given the large amount of data, we use **hdf5** format for optimal storage.
+Given the large amount of data, we use **hdf5** format for optimal storage. You can find a small dataset in the [example submodule](https://github.com/MALES-project/examples_speckcn2) (`./data`), that you can use for testing.
 
 Each image should be saved in a separate hdf5 file named `<NAME>-<ID>.h5`. The corresponding prediction value should be stored in a file named `<NAME>_label.h5`. Images with no corresponding label will be ignored.
 Here, `<NAME>` is a common name for the dataset, so we can use `<NAME>='speckle_xxx'` for speckle patterns.

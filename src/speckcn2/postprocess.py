@@ -51,6 +51,7 @@ def tags_distribution(conf: dict,
     data_directory = conf['speckle']['datadirectory']
     model_name = conf['model']['name']
     ensemble = conf['preproc'].get('ensemble', 1)
+    figure_format = conf.get('figure_format', 'png')
 
     dirname = f'{data_directory}/{model_name}_score'
     ensure_directory(dirname)
@@ -104,13 +105,15 @@ def tags_distribution(conf: dict,
                                     density=True,
                                     alpha=0.5,
                                     label='Training data')
-        axs[i // 4, i % 4].set_title(f'Screen {i}')
+        axs[i // 4, i % 4].set_title(f'Layer {i}', fontsize=15)
+        axs[i // 4, i % 4].set_xlabel('Turbulence integral', fontsize=12)
+        axs[i // 4, i % 4].set_ylabel('Frequency', fontsize=12)
     axs[0, 1].legend()
     plt.tight_layout()
     figname = f'{dirname}/{model_name}_tags'
     if not rescale:
         figname += '_unscaled'
-    plt.savefig(f'{figname}.png')
+    plt.savefig(f'{figname}.{figure_format}')
     plt.close()
 
     if rescale and recover_tag is not None:
@@ -131,8 +134,7 @@ def tags_distribution(conf: dict,
         axs.set_title('Sum of J')
         axs.legend()
         plt.tight_layout()
-        plt.savefig(f'{dirname}/{model_name}_sumJ.png')
-
+        plt.savefig(f'{dirname}/{model_name}_sumJ.{figure_format}')
         plt.close()
 
 
@@ -166,6 +168,7 @@ def average_speckle_output(conf: dict,
     data_directory = conf['speckle']['datadirectory']
     model_name = conf['model']['name']
     n_screens = conf['speckle']['nscreens']
+    figure_format = conf.get('figure_format', 'png')
 
     dirname = f'{data_directory}/{model_name}_score/effect_averaging'
     ensure_directory(dirname)
@@ -240,7 +243,7 @@ def average_speckle_output(conf: dict,
                            color=color)
                 # and get all the measures
                 all_measures = criterion._get_all_measures(
-                    avg_output, target, Cn2_pred, Cn2_true)
+                    target, Cn2_true, avg_output, Cn2_pred)
 
                 Fried_err = torch.abs(
                     all_measures['Fried_true'] -
@@ -341,7 +344,8 @@ def average_speckle_output(conf: dict,
                 plt.subplots_adjust(top=0.92)
                 plt.suptitle('Effect of averaging speckle predictions')
                 plt.savefig(
-                    f'{dirname}/average_ensemble_loss{loss.item():.4g}.png')
+                    f'{dirname}/average_ensemble_loss{loss.item():.4g}.{figure_format}'
+                )
                 loss_max = max(loss, loss_max)
                 loss_min = min(loss, loss_min)
                 ensemble_count += 1
@@ -380,6 +384,7 @@ def average_speckle_input(conf: dict,
 
     data_directory = conf['speckle']['datadirectory']
     model_name = conf['model']['name']
+    figure_format = conf.get('figure_format', 'png')
 
     dirname = f'{data_directory}/{model_name}_score/effect_averaging'
     ensure_directory(dirname)
@@ -450,7 +455,7 @@ def average_speckle_input(conf: dict,
                            color=color)
                 # and get all the measures
                 all_measures = criterion._get_all_measures(
-                    output, target, Cn2_pred, Cn2_true)
+                    target, Cn2_true, output, Cn2_pred)
 
                 Fried_err = torch.abs(
                     all_measures['Fried_true'] -
@@ -480,7 +485,9 @@ def average_speckle_input(conf: dict,
             fig.tight_layout()
             plt.subplots_adjust(top=0.92)
             plt.suptitle('Effect of averaging speckle patterns')
-            plt.savefig(f'{dirname}/average_speckle_loss{loss.item():.4g}.png')
+            plt.savefig(
+                f'{dirname}/average_speckle_loss{loss.item():.4g}.{figure_format}'
+            )
             plt.close()
 
 
@@ -510,6 +517,7 @@ def screen_errors(conf: dict,
     data_directory = conf['speckle']['datadirectory']
     model_name = conf['model']['name']
     n_screens = conf['speckle']['nscreens']
+    figure_format = conf.get('figure_format', 'png')
 
     dirname = f'{data_directory}/{model_name}_score'
     ensure_directory(dirname)
@@ -568,7 +576,7 @@ def screen_errors(conf: dict,
                                   label='Mean',
                                   color='tab:red',
                                   zorder=50)
-        axs[si // 4, si % 4].set_title(f'Screen {si}')
+        axs[si // 4, si % 4].set_title(f'Layer {si}')
         # and the percentiles
         axs[si // 4, si % 4].fill_between(bins[:-1],
                                           percentiles_50[:, 0],
@@ -620,5 +628,5 @@ def screen_errors(conf: dict,
     plt.suptitle('Relative Error of J')
     plt.tight_layout()
     figname = f'{dirname}/{model_name}_Jerrors'
-    plt.savefig(f'{figname}.png')
+    plt.savefig(f'{figname}.{figure_format}')
     plt.close()

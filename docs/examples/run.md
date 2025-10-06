@@ -114,13 +114,13 @@ sp2.plot_param_vs_loss(config, test_losses, datadirectory, test_measures)
 # Test to see if averaging over speckle patterns improves the results
 sp2.average_speckle_input(config, test_set, device, model, criterion, n_ensembles_to_plot=5)
 ```
-![avs](https://github.com/MALES-project/SpeckleCn2Profiler/blob/main/src/speckcn2/assets/pl.png?raw=true)
+![avs](https://github.com/MALES-project/SpeckleCn2Profiler/blob/main/src/speckcn2/assets/avs.png?raw=true)
 ```python
 # Test to see if averaging over speckle patterns improves the results
 sp2.average_speckle_output(config, test_set, device, model, criterion, trimming=0.2, n_ensembles_to_plot=20)
 
 ```
-![ave](https://github.com/MALES-project/SpeckleCn2Profiler/blob/main/src/speckcn2/assets/pl.png?raw=true)
+![ave](https://github.com/MALES-project/SpeckleCn2Profiler/blob/main/src/speckcn2/assets/ave.png?raw=true)
 
 Refer to the [documentation](https://males-project.github.io/SpeckleCn2Profiler/) or one of the [examples](https://github.com/MALES-project/examples_speckcn2) if you want to understand and customize your workflow.
 

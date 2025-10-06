@@ -3,7 +3,7 @@
 [![Documentation Status](https://readthedocs.org/projects/gemdat/badge/?version=latest)](https://males-project.github.io/SpeckleCn2Profiler/)
 [![PyPI - Python Version](https://img.shields.io/pypi/pyversions/speckcn2)](https://pypi.org/project/speckcn2/)
 [![PyPI](https://img.shields.io/pypi/v/speckcn2)](https://pypi.org/project/speckcn2/)
-[![FAIR checklist badge](https://fairsoftwarechecklist.net/badge.svg)](https://fairsoftwarechecklist.net/v0.2?f=31&a=30110&i=21202&r=132)
+[![FAIR checklist badge](https://fairsoftwarechecklist.net/badge.svg)](https://fairsoftwarechecklist.net/v0.2?f=31&a=32113&i=32322&r=133)
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.11447920.svg)](https://doi.org/10.5281/zenodo.11447920)
 [![RSD](https://img.shields.io/badge/rsd-speckcn2-00a3e3.svg)](https://research-software-directory.org/software/speckcn2)
 [![status](https://joss.theoj.org/papers/57d48f7e179360b9f5193045ce8270be/status.svg)](https://joss.theoj.org/papers/57d48f7e179360b9f5193045ce8270be)
@@ -33,25 +33,68 @@ This repository contains the workflow to implement and train machine learning mo
 
 To get started with the project, follow these steps:
 
-- **Prerequisites:**
-  In order to correctly install `speckcn2` you need `python3.9` or higher. If you don't have it installed, you can download it from the [official website](https://www.python.org/downloads/). You will also need the header files that are required to compile Python extensions and are contained in `python3-dev`. On Ubuntu, you can install them with:
-  ```bash
-  apt-get install python-dev
-  ```
+### Prerequisites
 
-- **Install the package:**
-   ```bash
-   python -m pip install speckcn2
-   ```
+To correctly install `speckcn2`, you need **Python 3.9 or higher**. If you don't have it installed, you can download it from the [official website](https://www.python.org/downloads/).
 
-- **Or: Clone the repository:**
-  ```bash
-  git clone https://github.com/MALES-project/SpeckleCn2Profiler.git
-  cd SpeckleCn2Profiler
-  git submodule init
-  git submodule update
-  pip install .
-  ```
+You will also need header files required to compile Python extensions (contained in `python3-dev`):
+
+**Ubuntu/Debian:**
+```bash
+sudo apt-get install python3-dev
+```
+
+**Other systems:**
+```bash
+# Fedora/RHEL
+sudo dnf install python3-devel
+
+# macOS
+xcode-select --install
+
+# Windows: Headers are included with the official Python installer
+```
+
+### Installation
+
+#### Option 1: Install from PyPI (Recommended)
+
+```bash
+python -m pip install speckcn2
+```
+
+We **strongly recommend** using a virtual environment:
+
+```bash
+# Create virtual environment
+python -m venv speckcn2-env
+
+# Activate virtual environment
+# On Linux/macOS:
+source speckcn2-env/bin/activate
+# On Windows:
+# speckcn2-env\Scripts\activate
+
+# Install the package
+python -m pip install speckcn2
+```
+
+**Verify installation:**
+```bash
+python -c "import speckcn2; print('Installation successful!')"
+```
+
+#### Option 2: Development Installation
+
+For advanced users and developers who want to modify the code:
+
+```bash
+git clone https://github.com/MALES-project/SpeckleCn2Profiler.git
+cd SpeckleCn2Profiler
+git submodule init
+git submodule update
+pip install -e .
+```
 
 ## Usage
 
@@ -63,7 +106,7 @@ python <mycode.py> <path_to_config.yml>
 
 where `<mycode.py>` is the name of the script that trains/uses the `speckcn2` model and `<path_to_config.yml>` is the path to the configuration file.
 
-[Here](https://males-project.github.io/SpeckleCn2Profiler/example) you can find a typical example run and an explanation of all the main configuration parameter. In the [example submodule](https://github.com/MALES-project/examples_speckcn2/) you can find multiple examples and multiple configuration to take inspiration from.
+[Here](https://males-project.github.io/SpeckleCn2Profiler/examples/run) you can find a typical example run and an explanation of all the main configuration parameter. In the [example submodule](https://github.com/MALES-project/examples_speckcn2/) you can find multiple examples and multiple configuration to take inspiration from.
 
 ## What can we predict?
 

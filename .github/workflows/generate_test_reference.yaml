@@ -50,9 +50,6 @@ jobs:
           brew install gcc@${{ matrix.gcc-version }}
           echo "FC=gfortran-${{ matrix.gcc-version }}" >> "$GITHUB_ENV"
           echo "CC=gcc-${{ matrix.gcc-version }}" >> "$GITHUB_ENV"
-      - name: Install Fortran compiler on Windows
-        if: matrix.os == 'windows-latest'
-        run: choco install mingw
 
       - name: Install dependencies
         if: steps.cache-virtualenv.outputs.cache-hit != 'true'

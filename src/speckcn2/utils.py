@@ -61,7 +61,7 @@ def plot_preprocessed_image(image_orig: torch.tensor,
     # Plot the tags
     axs[2].plot(tags, 'o')
     axs[2].set_yscale('log')
-    axs[2].set_title('Screen Tags')
+    axs[2].set_title('Layer Tags')
     axs[2].legend()
 
     fig.subplots_adjust(wspace=0.3)
