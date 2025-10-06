@@ -25,6 +25,17 @@
 
 Optical satellite communications is a growing research field with bright commercial perspectives. One of the challenges for optical links through the atmosphere is turbulence, which is also apparent by the twinkling of stars. The reduction of the quality can be calculated, but it needs the turbulence strength over the path the optical beam is running. Estimation of the turbulence strength is done at astronomic sites, but not at rural or urban sites. To be able to do this, a simple instrument is required. We want to propose to use a single star Scintillation Detection and Ranging (SCIDAR), which is an instrument that can estimate the turbulence strength, based on the observation of a single star. In this setting, reliable signal processing of the received images of the star is most challenging. We propose to solve this by Machine Learning.
 
+## Statement of Need
+
+`SpeckleCn2Profiler` addresses the challenge of atmospheric turbulence profiling for optical satellite communications using machine learning-based analysis of SCIDAR data. The primary target users include:
+
+- **Aerospace engineers** working on free-space optical communication systems
+- **Atmospheric scientists** studying turbulence profiles and optical propagation
+- **Astronomers** characterizing atmospheric seeing conditions
+- **Researchers** in adaptive optics and atmospheric characterization
+
+While traditional SCIDAR instruments require complex signal processing, `SpeckleCn2Profiler` provides a machine learning-based approach that enables simpler, more accessible turbulence profiling. Unlike classical methods that rely on analytical inversion techniques, our ML-based approach can handle noisy data more robustly and provides uncertainty quantification through ensemble predictions.
+
 ## Repository Contents
 
 This repository contains the workflow to implement and train machine learning models for turbulence strength estimation from SCIDAR data. Extensive **[Documentation](https://males-project.github.io/SpeckleCn2Profiler/)** is available to explain the methodology, algorithms used, and guidelines for using the code.
@@ -108,6 +119,45 @@ where `<mycode.py>` is the name of the script that trains/uses the `speckcn2` mo
 
 [Here](https://males-project.github.io/SpeckleCn2Profiler/examples/run) you can find a typical example run and an explanation of all the main configuration parameter. In the [example submodule](https://github.com/MALES-project/examples_speckcn2/) you can find multiple examples and multiple configuration to take inspiration from.
 
+### Quick Example
+
+Here's a minimal working example to train a model on sample data:
+
+```python
+import speckcn2 as sp2
+import torch
+
+# Load configuration
+config = sp2.load_config('path/to/config.yaml')
+
+# Prepare data
+all_images, all_tags, all_ensemble_ids = sp2.prepare_data(config)
+
+# Normalize tags
+nz = sp2.Normalizer(config)
+
+# Split data
+train_set, test_set = sp2.train_test_split(all_images, all_tags, 
+                                            all_ensemble_ids, nz)
+
+# Setup model
+device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+model, last_model_state = sp2.setup_model(config)
+model = model.to(device)
+
+# Define loss and optimizer
+criterion = sp2.ComposableLoss(config, nz, device)
+optimizer = sp2.setup_optimizer(config, model)
+
+# Train
+model, avg_loss = sp2.train(model, last_model_state, config, 
+                            train_set, test_set, device, 
+                            optimizer, criterion, criterion)
+print(f'Training complete. Final loss: {avg_loss:.5f}')
+```
+
+Sample data and configuration files are available in the [examples/](examples/) directory.
+
 ## What can we predict?
 
 A machine learning model trained using `speckcn2` can predict:
@@ -123,6 +173,23 @@ The model can also estimate important parameters that are useful for the analysi
 * Rytov Index `σ`
 
 We also provide histograms of the estimated parameters and the error of the estimation.
+
+## Running Tests
+
+To verify your installation and ensure everything works correctly, you can run the test suite using [pytest](https://docs.pytest.org/):
+
+```bash
+pytest
+```
+
+**Note:** Some tests may fail on first run because test data needs to be set up. If this happens, run:
+
+```bash
+python ./scripts/setup_test.py
+pytest
+```
+
+For more details on testing and development, see our [Contributing Guidelines](CONTRIBUTING.md#Running-tests).
 
 ## Contribution Guidelines
 
