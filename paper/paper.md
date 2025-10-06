@@ -52,16 +52,13 @@ Here we present `speckcn2`, a Python package that uses machine learning to provi
 
 # Statement of need
 
-The turbulence in the atmosphere is a well-known phenomenon that affects the quality of optical communication.
-One way to compensate for this effect is to estimate the turbulence strength and then apply a correction to the signal. However, there are not many instruments that can provide this information.
-`speckcn2` is a Python package that enables the use of machine learning to estimate the turbulence and reconstruct its profile.
-Using deep learning to compensate for atmospheric turbulence is not a new idea, and it has been already explored in the context of temporal mitigation using videos [@zhang2024spatio] and to compensate static image degradation [@9506614].
-However, these tools mainly provide a way to mitigate the effect of turbulence, while `speckcn2` aims to provide a numerical reconstruction of the turbulence profile that can be used to: a) understand the turbulence and b) improve the communication system by inserting the turbulence profile in the communication model.
+While deep learning has been applied to mitigate atmospheric turbulence effects in imaging through temporal mitigation using videos [@zhang2024spatio] and static image degradation compensation [@9506614], these approaches focus on visual correction rather than quantitative turbulence characterization. In contrast, `speckcn2` addresses the critical need for numerical reconstruction of $C_n^2$ profiles, enabling both scientific understanding of atmospheric turbulence and practical integration into communication system models for performance optimization.
 
-The approach of `speckcn2` is based on the observation of speckle patterns, which are the result of the interference of light waves that have been perturbed by the atmosphere.
-Using PyTorch framework [@pytorch], it is possible to build, train and deploy deep learning models that predict the turbulence.
-`speckcn2` was created mainly for research in aerospace engineering in which one would aim at inserting a real-time estimation of the turbulence to a model, but it can also be useful in other fields. The package is designed to be simple to use and flexible enough to handle different image regression ML task. It works equally well with synthetic data from simulations and real data from experiments, making it versatile for different research needs.
-`speckcn2` is extendable to other research fields. By combining techniques like equivariance and ensemble learning, it offers a strong and reliable tool for turning images into regression models, opening doors for many innovative applications.
+The primary target users of `speckcn2` are aerospace engineers working on optical satellite communication systems, atmospheric scientists studying turbulence phenomena, and astronomers developing adaptive optics systems. The package provides these communities with a tool to estimate turbulence profiles from speckle observations where analytical theories are lacking, using machine learning to bridge this gap.
+
+Existing software packages address atmospheric turbulence from different perspectives. AOtools [@AOtools] provides general-purpose adaptive optics utilities including phase screen generation and turbulence parameter conversions, but lacks ML-based profile reconstruction from observations. FAST [@FAST] (Fourier domain Adaptive optics Simulation Tool) offers rapid Monte Carlo characterization of free space optical links with turbulence modeling, while OOPAO [@OOPAO] (Object-Oriented Python Adaptive Optics) provides end-to-end adaptive optics simulation. However, both focus on forward modeling—simulating turbulence effects given known profiles—rather than the inverse problem of reconstructing profiles from measurements. Traditional $C_n^2$ profiling instruments such as radiosondes, SCIDAR, or MASS require specialized hardware and intrusive deployment. `speckcn2` uniquely combines ML-based inverse modeling with speckle pattern analysis to provide explicit turbulence profile reconstruction in real-time, using only optical detection systems without specialized hardware. This fills a critical gap for applications requiring quantitative atmospheric characterization from passive observations.
+
+Built on PyTorch [@pytorch], the package is designed to handle diverse image regression tasks with both synthetic and experimental data. By combining techniques like equivariance and ensemble learning, `speckcn2` provides a robust framework applicable beyond aerospace engineering to any field requiring image-to-profile regression. Complete documentation and API references are available at https://males-project.github.io/SpeckleCn2Profiler/, with installation instructions and examples to facilitate adoption across different research communities.
 
 # Key features
 ## Instrument specialization
@@ -77,6 +74,10 @@ Strong equivariance is achieved by using the equivariant sparse convolutional ne
 
 ## Ensemble learning
 `speckcn2` can also use ensemble learning by averaging the predictions from multiple input images. This means that the prediction of each model requires a set of multiple input images. This is only useful if the input images change faster than the output. Since this is not the case for laser communications, this feature is optional and can be turned off.
+
+# Applications: STORM for Laser Satellite Communications
+
+A notable application of `speckcn2` is STORM (Speckle-based Turbulence Observation and Reconstruction via Machine learning) [@arvis2024storm], designed for line-of-sight turbulence profiling in laser satellite communications. STORM reconstructs 8-layer $C_n^2(h)$ profiles from single-shot speckle patterns, addressing limitations of traditional methods like SCIDAR or SLODAR that require binary sources or time-series measurements. This single-source-single-shot capability is crucial for tracking fast-moving LEO satellites where the air column changes rapidly between measurements. Simulation results show over 90% accuracy on the Fried parameter, isoplanatic angle, and Rytov index, enabling improved adaptive optics design and communication link optimization for optical space communications.
 
 ## Software implementation
 `speckcn2` is implemented in Python and uses PyTorch [@pytorch] for its machine learning tasks. This allows the user to take advantage of GPU acceleration, making computations faster and more efficient.
