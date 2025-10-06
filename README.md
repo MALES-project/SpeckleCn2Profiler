@@ -33,25 +33,68 @@ This repository contains the workflow to implement and train machine learning mo
 
 To get started with the project, follow these steps:
 
-- **Prerequisites:**
-  In order to correctly install `speckcn2` you need `python3.9` or higher. If you don't have it installed, you can download it from the [official website](https://www.python.org/downloads/). You will also need the header files that are required to compile Python extensions and are contained in `python3-dev`. On Ubuntu, you can install them with:
-  ```bash
-  apt-get install python3-dev
-  ```
+### Prerequisites
 
-- **Install the package:**
-   ```bash
-   python -m pip install speckcn2
-   ```
+To correctly install `speckcn2`, you need **Python 3.9 or higher**. If you don't have it installed, you can download it from the [official website](https://www.python.org/downloads/).
 
-- **Or: Clone the repository:**
-  ```bash
-  git clone https://github.com/MALES-project/SpeckleCn2Profiler.git
-  cd SpeckleCn2Profiler
-  git submodule init
-  git submodule update
-  pip install .
-  ```
+You will also need header files required to compile Python extensions (contained in `python3-dev`):
+
+**Ubuntu/Debian:**
+```bash
+sudo apt-get install python3-dev
+```
+
+**Other systems:**
+```bash
+# Fedora/RHEL
+sudo dnf install python3-devel
+
+# macOS
+xcode-select --install
+
+# Windows: Headers are included with the official Python installer
+```
+
+### Installation
+
+#### Option 1: Install from PyPI (Recommended)
+
+```bash
+python -m pip install speckcn2
+```
+
+We **strongly recommend** using a virtual environment:
+
+```bash
+# Create virtual environment
+python -m venv speckcn2-env
+
+# Activate virtual environment
+# On Linux/macOS:
+source speckcn2-env/bin/activate
+# On Windows:
+# speckcn2-env\Scripts\activate
+
+# Install the package
+python -m pip install speckcn2
+```
+
+**Verify installation:**
+```bash
+python -c "import speckcn2; print('Installation successful!')"
+```
+
+#### Option 2: Development Installation
+
+For advanced users and developers who want to modify the code:
+
+```bash
+git clone https://github.com/MALES-project/SpeckleCn2Profiler.git
+cd SpeckleCn2Profiler
+git submodule init
+git submodule update
+pip install -e .
+```
 
 ## Usage
 
