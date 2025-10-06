@@ -44,10 +44,10 @@ We **strongly recommend** using a virtual environment to avoid dependency confli
     ```bash
     # Create virtual environment
     python -m venv speckcn2-env
-    
+
     # Activate virtual environment
     source speckcn2-env/bin/activate
-    
+
     # Install the package
     python -m pip install speckcn2
     ```
@@ -56,10 +56,10 @@ We **strongly recommend** using a virtual environment to avoid dependency confli
     ```cmd
     # Create virtual environment
     python -m venv speckcn2-env
-    
+
     # Activate virtual environment
     speckcn2-env\Scripts\activate
-    
+
     # Install the package
     python -m pip install speckcn2
     ```
