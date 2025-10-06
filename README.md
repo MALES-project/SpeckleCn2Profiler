@@ -137,7 +137,7 @@ all_images, all_tags, all_ensemble_ids = sp2.prepare_data(config)
 nz = sp2.Normalizer(config)
 
 # Split data
-train_set, test_set = sp2.train_test_split(all_images, all_tags, 
+train_set, test_set = sp2.train_test_split(all_images, all_tags,
                                             all_ensemble_ids, nz)
 
 # Setup model
@@ -150,8 +150,8 @@ criterion = sp2.ComposableLoss(config, nz, device)
 optimizer = sp2.setup_optimizer(config, model)
 
 # Train
-model, avg_loss = sp2.train(model, last_model_state, config, 
-                            train_set, test_set, device, 
+model, avg_loss = sp2.train(model, last_model_state, config,
+                            train_set, test_set, device,
                             optimizer, criterion, criterion)
 print(f'Training complete. Final loss: {avg_loss:.5f}')
 ```
