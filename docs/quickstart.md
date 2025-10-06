@@ -56,31 +56,31 @@ import torch
 def main():
     # Load configuration (you'll need to provide your own config file)
     config = sp2.load_config('path/to/config.yaml')
-    
+
     # Prepare data
     print("Preparing data...")
     all_images, all_tags, all_ensemble_ids = sp2.prepare_data(config)
-    
+
     # Normalize tags (helps the model work with reasonable numbers)
     nz = sp2.Normalizer(config)
-    
+
     # Split data into training and testing sets
     train_set, test_set = sp2.train_test_split(
         all_images, all_tags, all_ensemble_ids, nz
     )
-    
+
     # Setup device (GPU if available, otherwise CPU)
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     print(f'Using device: {device}')
-    
+
     # Load and configure the model
     model, last_model_state = sp2.setup_model(config)
     model = model.to(device)
-    
+
     # Define loss function and optimizer
     criterion = sp2.ComposableLoss(config, nz, device)
     optimizer = sp2.setup_optimizer(config, model)
-    
+
     # Train the model
     print("Training model...")
     model, avg_loss = sp2.train(
@@ -88,7 +88,7 @@ def main():
         train_set, test_set, device,
         optimizer, criterion, criterion
     )
-    
+
     print(f'Training complete! Final loss: {avg_loss:.5f}')
 
 if __name__ == '__main__':
