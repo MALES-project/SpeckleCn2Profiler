@@ -5,6 +5,7 @@ repo_name: Speckcn2
 
 nav:
   - Home: index.md
+  - Quickstart: quickstart.md
   - Installation: installation.md
   - Examples:
     - Input data: examples/input_data.md
