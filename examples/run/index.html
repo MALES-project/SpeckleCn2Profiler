@@ -1,0 +1,1384 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+        <link rel="canonical" href="https://github.com/MALES-project/SpeckleCn2Profiler/examples/run/">
+      
+      
+        <link rel="prev" href="../input_data/">
+      
+      
+        <link rel="next" href="../../api/api/">
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.6.22">
+    
+    
+      
+        <title>How to run - Speckcn2</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.84d31ad4.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.06af60db.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/_mkdocstrings.css">
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="yellow">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#example-how-to-run-specklecn2profiler" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="Speckcn2" class="md-header__button md-logo" aria-label="Speckcn2" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Speckcn2
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              How to run
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="yellow"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="yellow"  aria-label="Switch to system preference"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to system preference" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/MALES-project/SpeckleCn2Profiler" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    Speckcn2
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="Speckcn2" class="md-nav__button md-logo" aria-label="Speckcn2" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    Speckcn2
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/MALES-project/SpeckleCn2Profiler" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    Speckcn2
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Home
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../quickstart/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Quickstart
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../installation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Installation
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    Examples
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            Examples
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../input_data/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Input data
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    How to run
+    
+  </span>
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    How to run
+    
+  </span>
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#run-file-explanation" class="md-nav__link">
+    <span class="md-ellipsis">
+      Run File Explanation
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Run File Explanation">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#plotting" class="md-nav__link">
+    <span class="md-ellipsis">
+      Plotting
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#configuration-file-explanation" class="md-nav__link">
+    <span class="md-ellipsis">
+      Configuration File Explanation
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Configuration File Explanation">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#speckle" class="md-nav__link">
+    <span class="md-ellipsis">
+      speckle
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#preproc" class="md-nav__link">
+    <span class="md-ellipsis">
+      preproc
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#noise" class="md-nav__link">
+    <span class="md-ellipsis">
+      noise
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#model" class="md-nav__link">
+    <span class="md-ellipsis">
+      model
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#hyppar" class="md-nav__link">
+    <span class="md-ellipsis">
+      hyppar
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#loss" class="md-nav__link">
+    <span class="md-ellipsis">
+      loss
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#val_loss" class="md-nav__link">
+    <span class="md-ellipsis">
+      val_loss
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#scnn" class="md-nav__link">
+    <span class="md-ellipsis">
+      scnn
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#final_block" class="md-nav__link">
+    <span class="md-ellipsis">
+      final_block
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    Python API
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            Python API
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/api/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    speckcn2
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/models/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Models
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/io/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    I/O
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/mlops/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    MLOps
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/loss/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Loss
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/normalizer/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Normalizer
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/plot/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Plot
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/preprocess/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Preprocess
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/postprocess/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Postprocess
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/utils/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Utils
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/scnn/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    SCNN
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/transformations/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Transformations
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../CONTRIBUTING/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Contributing
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../CODE_OF_CONDUCT/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Code of Conduct
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="https://github.com/MALES-project/SpeckleCn2Profiler" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    🔗 Source code
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="https://github.com/MALES-project/SpeckleCn2Profiler/issues" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    🔗 Issues
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#run-file-explanation" class="md-nav__link">
+    <span class="md-ellipsis">
+      Run File Explanation
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Run File Explanation">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#plotting" class="md-nav__link">
+    <span class="md-ellipsis">
+      Plotting
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#configuration-file-explanation" class="md-nav__link">
+    <span class="md-ellipsis">
+      Configuration File Explanation
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Configuration File Explanation">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#speckle" class="md-nav__link">
+    <span class="md-ellipsis">
+      speckle
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#preproc" class="md-nav__link">
+    <span class="md-ellipsis">
+      preproc
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#noise" class="md-nav__link">
+    <span class="md-ellipsis">
+      noise
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#model" class="md-nav__link">
+    <span class="md-ellipsis">
+      model
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#hyppar" class="md-nav__link">
+    <span class="md-ellipsis">
+      hyppar
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#loss" class="md-nav__link">
+    <span class="md-ellipsis">
+      loss
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#val_loss" class="md-nav__link">
+    <span class="md-ellipsis">
+      val_loss
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#scnn" class="md-nav__link">
+    <span class="md-ellipsis">
+      scnn
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#final_block" class="md-nav__link">
+    <span class="md-ellipsis">
+      final_block
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="example-how-to-run-specklecn2profiler">Example: How to run SpeckleCn2Profiler</h1>
+<p>Here you find examples on the usage of SpeckleCn2Profiler.
+This page is divided in two sections, corresponding to the two files that the user has to control to use <code>speckcn2</code>:  </p>
+<ol>
+<li>
+<p><a href="#run-file-explanation">run.py</a></p>
+</li>
+<li>
+<p><a href="#configuration-file-explanation">configuration.yaml</a></p>
+</li>
+</ol>
+<p>Once you have SpeckleCn2Profiler installed, you will run your workflow as:</p>
+<div class="highlight"><pre><span></span><code><span class="go">python run.py configuration.yaml</span>
+</code></pre></div>
+<p>So let's show you how to set up the <code>run.py</code> and <code>configuration.yaml</code> files.</p>
+<h2 id="run-file-explanation">Run File Explanation</h2>
+<p>The first step of the run is to load the configuration file and the required packages:</p>
+<p><div class="highlight"><pre><span></span><code><span class="kn">import</span><span class="w"> </span><span class="nn">speckcn2</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">sp2</span>
+
+<span class="n">config</span> <span class="o">=</span> <span class="n">sp2</span><span class="o">.</span><span class="n">load_config</span><span class="p">(</span><span class="n">conf_name</span><span class="p">)</span>
+</code></pre></div>
+then you usually want to load and preprocess the data:
+<div class="highlight"><pre><span></span><code><span class="n">all_images</span><span class="p">,</span> <span class="n">all_tags</span><span class="p">,</span> <span class="n">all_ensemble_ids</span> <span class="o">=</span> <span class="n">sp2</span><span class="o">.</span><span class="n">prepare_data</span><span class="p">(</span><span class="n">config</span><span class="p">,</span>
+                                                          <span class="n">nimg_print</span><span class="o">=</span><span class="mi">15</span><span class="p">)</span>
+<span class="n">nz</span> <span class="o">=</span> <span class="n">sp2</span><span class="o">.</span><span class="n">Normalizer</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
+<span class="n">train_set</span><span class="p">,</span> <span class="n">test_set</span> <span class="o">=</span> <span class="n">sp2</span><span class="o">.</span><span class="n">train_test_split</span><span class="p">(</span><span class="n">all_images</span><span class="p">,</span> <span class="n">all_tags</span><span class="p">,</span>
+                                           <span class="n">all_ensemble_ids</span><span class="p">,</span> <span class="n">nz</span><span class="p">)</span>
+</code></pre></div>
+after that you have to define the loss function and the optimizer:
+<div class="highlight"><pre><span></span><code><span class="n">criterion</span> <span class="o">=</span> <span class="n">sp2</span><span class="o">.</span><span class="n">ComposableLoss</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">nz</span><span class="p">,</span> <span class="n">device</span><span class="p">)</span>
+<span class="n">criterion</span> <span class="o">=</span> <span class="n">criterion</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">device</span><span class="p">)</span>
+<span class="n">optimizer</span> <span class="o">=</span> <span class="n">sp2</span><span class="o">.</span><span class="n">setup_optimizer</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">model</span><span class="p">)</span>
+<span class="n">criterion_val</span> <span class="o">=</span> <span class="n">sp2</span><span class="o">.</span><span class="n">ComposableLoss</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">nz</span><span class="p">,</span> <span class="n">device</span><span class="p">,</span> <span class="n">validation</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</code></pre></div></p>
+<p>Then you can load or create the model and train it:
+<div class="highlight"><pre><span></span><code><span class="n">model</span><span class="p">,</span> <span class="n">last_model_state</span> <span class="o">=</span> <span class="n">sp2</span><span class="o">.</span><span class="n">setup_model</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
+<span class="n">model</span><span class="p">,</span> <span class="n">average_loss</span> <span class="o">=</span> <span class="n">sp2</span><span class="o">.</span><span class="n">train</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">last_model_state</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">train_set</span><span class="p">,</span>
+                                <span class="n">test_set</span><span class="p">,</span> <span class="n">device</span><span class="p">,</span> <span class="n">optimizer</span><span class="p">,</span> <span class="n">criterion</span><span class="p">,</span> <span class="n">criterion_val</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Finished Training, Loss: </span><span class="si">{</span><span class="n">average_loss</span><span class="si">:</span><span class="s1">.5f</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">flush</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</code></pre></div>
+Once the training is done, you can <code>score</code> the model evaluating its performance on the test set and measuring the desired observables.
+If you want to do only inference and the model is already trained, you can skip the previous part.
+An example of a postprocessing pipeline starts with scoring the model:
+<div class="highlight"><pre><span></span><code><span class="n">test_tags</span><span class="p">,</span> <span class="n">test_losses</span><span class="p">,</span> <span class="n">test_measures</span><span class="p">,</span> <span class="n">test_cn2_pred</span><span class="p">,</span> <span class="n">test_cn2_true</span><span class="p">,</span> <span class="n">test_recovered_tag_pred</span><span class="p">,</span> <span class="n">test_recovered_tag_true</span> <span class="o">=</span> <span class="n">sp2</span><span class="o">.</span><span class="n">score</span><span class="p">(</span>
+    <span class="n">model</span><span class="p">,</span> <span class="n">test_set</span><span class="p">,</span> <span class="n">device</span><span class="p">,</span> <span class="n">criterion</span><span class="p">,</span> <span class="n">nz</span><span class="p">,</span> <span class="n">nimg_plot</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+</code></pre></div></p>
+<h3 id="plotting">Plotting</h3>
+<p>After the model is trained, you can plot the results. Here are some examples:</p>
+<p><div class="highlight"><pre><span></span><code><span class="c1"># Plot the distribution of the screen tags</span>
+<span class="n">sp2</span><span class="o">.</span><span class="n">plot_J_error_details</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">test_recovered_tag_true</span><span class="p">,</span> <span class="n">test_recovered_tag_pred</span><span class="p">)</span>
+</code></pre></div>
+<img alt="jerr2" src="https://github.com/MALES-project/SpeckleCn2Profiler/blob/main/src/speckcn2/assets/jerr2.png?raw=true" />
+<div class="highlight"><pre><span></span><code><span class="c1"># Plot the distribution of the screen tags with bin resolved details</span>
+<span class="n">sp2</span><span class="o">.</span><span class="n">screen_errors</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">device</span><span class="p">,</span> <span class="n">test_recovered_tag_pred</span><span class="p">,</span> <span class="n">test_recovered_tag_true</span><span class="p">,</span> <span class="n">nbins</span><span class="o">=</span><span class="mi">20</span><span class="p">)</span>
+</code></pre></div>
+<img alt="jerr" src="https://github.com/MALES-project/SpeckleCn2Profiler/blob/main/src/speckcn2/assets/jerr.png?raw=true" />
+<div class="highlight"><pre><span></span><code><span class="c1"># Overview of the tags distribution and how they are predicted</span>
+<span class="n">sp2</span><span class="o">.</span><span class="n">tags_distribution</span><span class="p">(</span><span class="n">config</span><span class="p">,</span>
+                      <span class="n">train_set</span><span class="p">,</span>
+                      <span class="n">test_tags</span><span class="p">,</span>
+                      <span class="n">device</span><span class="p">,</span>
+                      <span class="n">rescale</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                      <span class="n">recover_tag</span><span class="o">=</span><span class="n">nz</span><span class="o">.</span><span class="n">recover_tag</span><span class="p">)</span>
+</code></pre></div>
+<img alt="thist" src="https://github.com/MALES-project/SpeckleCn2Profiler/blob/main/src/speckcn2/assets/thist.png?raw=true" />
+<div class="highlight"><pre><span></span><code><span class="c1"># Plot the histograms of the loss function</span>
+<span class="n">sp2</span><span class="o">.</span><span class="n">plot_histo_losses</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">test_losses</span><span class="p">,</span> <span class="n">datadirectory</span><span class="p">)</span>
+</code></pre></div>
+<img alt="hls" src="https://github.com/MALES-project/SpeckleCn2Profiler/blob/main/src/speckcn2/assets/hls.png?raw=true" />
+<div class="highlight"><pre><span></span><code><span class="c1"># Plot the loss during training</span>
+<span class="n">sp2</span><span class="o">.</span><span class="n">plot_loss</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">model</span><span class="p">,</span> <span class="n">datadirectory</span><span class="p">)</span>
+</code></pre></div>
+<img alt="ls" src="https://github.com/MALES-project/SpeckleCn2Profiler/blob/main/src/speckcn2/assets/ls.png?raw=true" />
+<div class="highlight"><pre><span></span><code><span class="c1"># Plot the execution time</span>
+<span class="n">sp2</span><span class="o">.</span><span class="n">plot_time</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">model</span><span class="p">,</span> <span class="n">datadirectory</span><span class="p">)</span>
+</code></pre></div>
+<img alt="t" src="https://github.com/MALES-project/SpeckleCn2Profiler/blob/main/src/speckcn2/assets/t.png?raw=true" />
+<div class="highlight"><pre><span></span><code><span class="c1"># Plot histograms of the different parameters</span>
+<span class="n">sp2</span><span class="o">.</span><span class="n">plot_param_histo</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">test_losses</span><span class="p">,</span> <span class="n">datadirectory</span><span class="p">,</span> <span class="n">test_measures</span><span class="p">)</span>
+</code></pre></div>
+<img alt="hp" src="https://github.com/MALES-project/SpeckleCn2Profiler/blob/main/src/speckcn2/assets/hp.png?raw=true" />
+<div class="highlight"><pre><span></span><code><span class="c1"># Plot the parameters of the model vs the loss</span>
+<span class="n">sp2</span><span class="o">.</span><span class="n">plot_param_vs_loss</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">test_losses</span><span class="p">,</span> <span class="n">datadirectory</span><span class="p">,</span> <span class="n">test_measures</span><span class="p">)</span>
+</code></pre></div>
+<img alt="pl" src="https://github.com/MALES-project/SpeckleCn2Profiler/blob/main/src/speckcn2/assets/pl.png?raw=true" />
+<div class="highlight"><pre><span></span><code><span class="c1"># Test to see if averaging over speckle patterns improves the results</span>
+<span class="n">sp2</span><span class="o">.</span><span class="n">average_speckle_input</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">test_set</span><span class="p">,</span> <span class="n">device</span><span class="p">,</span> <span class="n">model</span><span class="p">,</span> <span class="n">criterion</span><span class="p">,</span> <span class="n">n_ensembles_to_plot</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
+</code></pre></div>
+<img alt="avs" src="https://github.com/MALES-project/SpeckleCn2Profiler/blob/main/src/speckcn2/assets/avs.png?raw=true" />
+<div class="highlight"><pre><span></span><code><span class="c1"># Test to see if averaging over speckle patterns improves the results</span>
+<span class="n">sp2</span><span class="o">.</span><span class="n">average_speckle_output</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">test_set</span><span class="p">,</span> <span class="n">device</span><span class="p">,</span> <span class="n">model</span><span class="p">,</span> <span class="n">criterion</span><span class="p">,</span> <span class="n">trimming</span><span class="o">=</span><span class="mf">0.2</span><span class="p">,</span> <span class="n">n_ensembles_to_plot</span><span class="o">=</span><span class="mi">20</span><span class="p">)</span>
+</code></pre></div>
+<img alt="ave" src="https://github.com/MALES-project/SpeckleCn2Profiler/blob/main/src/speckcn2/assets/ave.png?raw=true" /></p>
+<p>Refer to the <a href="https://males-project.github.io/SpeckleCn2Profiler/">documentation</a> or one of the <a href="https://github.com/MALES-project/examples_speckcn2">examples</a> if you want to understand and customize your workflow.</p>
+<h2 id="configuration-file-explanation">Configuration File Explanation</h2>
+<p>Here we explain what it is expected in a typical <code>configuration.yaml</code> file.
+Notice that many fields are optional and have default values, so you can start with a minimal configuration file and add more details as you need them. In the <a href="https://github.com/MALES-project/examples_speckcn2">example submodule</a> you can find multiple examples and multiple configuration to take inspiration from.</p>
+<p>A typical configuration file is divided in the following sections:</p>
+<h4 id="speckle">speckle</h4>
+<ul>
+<li><strong>nscreens</strong>: The number of screens used in the simulation.</li>
+<li><strong>hArray</strong>: array corresponding to the altitudes of the screens.</li>
+<li><strong>split</strong>: The distance from the next screen.</li>
+<li><strong>lambda</strong>: The wavelength of the laser.</li>
+<li><strong>original_res</strong>: The original resolution of the images.</li>
+<li><strong>datadirectory</strong>: The directory where the data files are located.</li>
+</ul>
+<h4 id="preproc">preproc</h4>
+<ul>
+<li><strong>polarize</strong>: A boolean value indicating whether the images should be transformed into polar coordinate.</li>
+<li><strong>polresize</strong>: The size to which the polarized images are resized.</li>
+<li><strong>equivariant</strong>: A boolean value indicating whether the images should be made pseudo-equivariant, by setting the azimutal angle to the maximum pixel intensity.</li>
+<li><strong>randomrotate</strong>: A boolean value indicating whether the images should be randomly rotated.</li>
+<li><strong>centercrop</strong>: The size of the central crop of the images. Test this value to guarantee that the empty boundaries are removed.</li>
+<li><strong>resize</strong>: The size to which the images are resized.</li>
+<li><strong>speckreps</strong>: The number of times that we want to repeat each speckle pattern in order to augment the data. Use only in combination with random rotations.</li>
+<li><strong>ensemble</strong>: The number of speckle patterns to use as ensemble. This is to train multi-shoot models.</li>
+<li><strong>ensemble_unif</strong>: A boolean value indicating whether the ensemble is uniformly sampled.</li>
+<li><strong>normalization</strong>: How to normalize the tags: <code>unif</code>, <code>lin</code>, <code>log</code> or <code>zscore</code>.</li>
+<li><strong>img_normalization</strong>: if <code>true</code> normalize the pixel values of the images.</li>
+<li><strong>dataname</strong>: The name of the file where the preprocessed images are saved.</li>
+<li><strong>XXX_details</strong>: If <code>true</code> then plot the bin resolved details of <code>XXX</code> metrics</li>
+</ul>
+<h4 id="noise">noise</h4>
+<ul>
+<li><strong>D</strong>: Fraction of the field.</li>
+<li><strong>t</strong>: Width of the spider.</li>
+<li><strong>snr</strong>: Signal to noise ratio.</li>
+<li><strong>dT</strong>: Telescope diameter.</li>
+<li><strong>dO</strong>: Fraction of obscuration.</li>
+<li><strong>rn</strong>: Amplitude of the noise.</li>
+<li><strong>fw</strong>: Full well capacity.</li>
+<li><strong>bit</strong>: Bit level (sample depth).</li>
+<li><strong>discretize</strong>: A boolean value indicating whether the images should be discretized.</li>
+<li><strong>rotation_sym</strong>: Values in degrees of the rotation symmetry of the pattern. It is defined in the noise section since random rotations multiple of this value are applied to the images.</li>
+</ul>
+<h4 id="model">model</h4>
+<ul>
+<li><strong>name</strong>: String representing the name of the model. Used to store states and plots. It can be any name.</li>
+<li><strong>type</strong>: The type of the model. We have implemented <code>resnet18</code>, <code>resnet50</code>, <code>resnet152</code> from the ResNet family, and <code>scnnC8</code>, <code>scnnC16</code>, <code>small_scnnC16</code>, which are equivariant CNN.</li>
+<li><strong>save_every</strong>: The frequency (in epochs) at which the model is saved.</li>
+<li><strong>pretrained</strong>: A boolean value indicating whether a pretrained model should be used. It is available only for the ResNet.</li>
+</ul>
+<h4 id="hyppar">hyppar</h4>
+<ul>
+<li><strong>maxepochs</strong>: The maximum number of epochs for training the model.</li>
+<li><strong>batch_size</strong>: The size of the batches used in training.</li>
+<li><strong>lr</strong>: The learning rate for the optimizer.</li>
+<li><strong>lr_scheduler</strong>: The learning rate scheduler used in training. We have implemented <code>StepLR</code>, <code>ReduceLROnPlateau</code> and <code>CosineAnnealingLR</code>.</li>
+<li><strong>loss</strong>: The loss function used in training. We have implemented <code>MSELoss</code>, <code>BCELoss</code> and <code>Pearson</code>.</li>
+<li><strong>early_stopping</strong>: The number of epochs of plateau to wait before stopping the training.</li>
+<li><strong>optimizer</strong>: The optimizer used in training.</li>
+</ul>
+<h4 id="loss">loss</h4>
+<ul>
+<li><strong>XXX</strong>: The weight of the loss <code>XXX</code> in the total loss. The total loss is the sum of all the losses weighted by their respective weights. A value of 0 means that the loss is not used. The list of available losses includes:</li>
+<li>This section of the YAML file defines the configuration for different loss functions used in a machine learning model. Each key represents a specific type of loss function, and the corresponding value indicates whether that loss function is enabled (1) or disabled (0). Here is a brief explanation of each loss function:</li>
+<li><strong>MAE (Mean Absolute Error)</strong>: Measures the average magnitude of errors between predicted and actual values.</li>
+<li><strong>MSE (Mean Squared Error)</strong>: Measures the average of the squares of the errors between predicted and actual values.</li>
+<li><strong>JMAE</strong>: A variant of MAE that is computed over J, so the screen tag are reconstructed before the evaluation.</li>
+<li><strong>JMSE</strong>: A variant of MSE that is computed over J, so the screen tag are reconstructed before the evaluation.</li>
+<li><strong>Cn2MAE</strong>: Mean Absolute Error specific to Cn2 (a parameter related to atmospheric turbulence).</li>
+<li><strong>Cn2MSE</strong>: Mean Squared Error specific to Cn2.</li>
+<li><strong>Pearson</strong>: Measures the Pearson correlation coefficient between predicted and actual values.</li>
+<li><strong>Fried</strong>: A loss function related to the Fried parameter, which is used in optical turbulence.</li>
+<li><strong>Isoplanatic</strong>: A loss function related to the isoplanatic angle, another parameter in optical turbulence.</li>
+<li><strong>Rytov</strong>: A loss function related to the Rytov variance, which is used in wave propagation.</li>
+<li><strong>Scintillation_w</strong>: A loss function related to the weak scintillation index.</li>
+<li><strong>Scintillation_ms</strong>: A loss function related to the medium-strong scintillation index.</li>
+</ul>
+<h4 id="val_loss">val_loss</h4>
+<p>Same structure as the loss section, but for the validation loss measured at each step over the test set.</p>
+<h4 id="scnn">scnn</h4>
+<p>This block is used to define the architecture of the SCNN models. The keys are the names of the layers, and the values are the number of filters in each layer. The SCNN models are equivariant CNNs that are used to process the speckle images. A reference example is provided in the <code>configuration.yaml</code> file.</p>
+<h4 id="final_block">final_block</h4>
+<p>This block is used to define the architecture of the final block of any model to get from the image features to the tag predictions. This block has usually a fully connected structure, but here you can control the number of layers, the number of neurons in each layer, regularization, activation, ecc. A reference example is provided in the <code>configuration.yaml</code> file.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      <script id="__config" type="application/json">{"base": "../..", "features": [], "search": "../../assets/javascripts/workers/search.973d3a69.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.f55a23d4.min.js"></script>
+      
+        <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+      
+        <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+      
+    
+  </body>
+</html>
