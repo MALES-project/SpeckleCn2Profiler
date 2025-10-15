@@ -20,7 +20,7 @@ from .postprocess import average_speckle_input, average_speckle_output, screen_e
 from .preprocess import prepare_data, train_test_split
 from .utils import setup_optimizer
 
-__version__ = '1.0.1'
+__version__ = '2.0.1'
 __all__ = [
     'load_config',
     'prepare_data',
