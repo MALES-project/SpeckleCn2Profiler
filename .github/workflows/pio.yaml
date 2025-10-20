@@ -1,6 +1,7 @@
 name: Test macos15 build
 
 on:
+  push:
   # Allow manual triggering
   workflow_dispatch:
 
