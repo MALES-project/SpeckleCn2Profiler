@@ -5,11 +5,24 @@ on:
       - main
 permissions:
   contents: write
+  actions: read
 jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      # Overrides the committed docs/covbadge.json with the data of the last
+      # successful test run, which is what gets published on GitHub Pages.
+      - name: Download coverage badge data
+        uses: dawidd6/action-download-artifact@v6
+        with:
+          workflow: test.yaml
+          branch: main
+          event: push
+          workflow_conclusion: success
+          name: coverage-badge
+          path: docs
+          if_no_artifact_found: warn
       - name: Configure Git Credentials
         run: |
           git config user.name github-actions[bot]

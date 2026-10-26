@@ -171,15 +171,36 @@ jobs:
         python -m coverage report >> $GITHUB_STEP_SUMMARY
         echo $'\n```' >> $GITHUB_STEP_SUMMARY
 
-    - name: Make coverage badge
+    - name: Make coverage badge data
       if: github.ref == 'refs/heads/main' && matrix.os == 'ubuntu-latest'
-      uses: schneegans/dynamic-badges-action@v1.7.0
+      run: |
+        python - <<'EOF'
+        import colorsys
+        import json
+        import os
+
+        # Red at 50% coverage, green at 90%.
+        min_range, max_range = 50.0, 90.0
+        total = float(os.environ["total"])
+        ratio = min(max((total - min_range) / (max_range - min_range), 0.0), 1.0)
+        red, green, blue = colorsys.hls_to_rgb(ratio * 120.0 / 360.0, 0.40, 1.0)
+        badge = {
+            "schemaVersion": 1,
+            "label": "Coverage",
+            "message": f"{os.environ['total']}%",
+            "color": "#{:02x}{:02x}{:02x}".format(
+                round(red * 255), round(green * 255), round(blue * 255)
+            ),
+        }
+        with open("covbadge.json", "w") as badge_file:
+            json.dump(badge, badge_file, indent=2)
+            badge_file.write("\n")
+        EOF
+
+    - name: Upload coverage badge data
+      if: github.ref == 'refs/heads/main' && matrix.os == 'ubuntu-latest'
+      uses: actions/upload-artifact@v4
       with:
-        auth: ${{ secrets.GIST_SECRET }}
-        gistID: ee30d5a40792fc1de92e9dcf0d0e092a
-        filename: covbadge.json
-        label: Coverage
-        message: ${{ env.total }}%
-        minColorRange: 50
-        maxColorRange: 90
-        valColorRange: ${{ env.total }}
+        name: coverage-badge
+        path: covbadge.json
+        retention-days: 90
